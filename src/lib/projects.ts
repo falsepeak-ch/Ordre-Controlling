@@ -1,14 +1,20 @@
 import {
   addDoc,
+  collection,
+  deleteDoc,
   deleteField,
+  getDocs,
+  limit,
   onSnapshot,
   query,
   serverTimestamp,
   setDoc,
   updateDoc,
   where,
+  writeBatch,
   type Unsubscribe,
 } from 'firebase/firestore';
+import { db } from './firebase';
 import { findUserByEmail, projectDoc, projectsCol, userDoc } from './firestore';
 import type { Project, Role } from '~/types';
 
@@ -128,4 +134,108 @@ export async function renameProject(projectId: string, name: string): Promise<vo
     name: trimmed,
     initial: deriveInitial(trimmed),
   });
+}
+
+export interface ProjectMetaPatch {
+  name?: string;
+  description?: string;
+}
+
+/**
+ * Owner-only edit of the project's non-member metadata (name, initial
+ * and description). Enforced by firestore.rules which insist that
+ * the members map is unchanged unless the caller is the owner.
+ */
+export async function updateProjectMeta(
+  projectId: string,
+  patch: ProjectMetaPatch,
+): Promise<void> {
+  const payload: Record<string, unknown> = {};
+  if (patch.name !== undefined) {
+    const trimmed = patch.name.trim();
+    if (!trimmed) throw new Error('name-required');
+    payload.name = trimmed;
+    payload.initial = deriveInitial(trimmed);
+  }
+  if (patch.description !== undefined) {
+    payload.description = patch.description.trim();
+  }
+  if (Object.keys(payload).length === 0) return;
+  await updateDoc(projectDoc(projectId), payload);
+}
+
+export async function archiveProject(projectId: string): Promise<void> {
+  await updateDoc(projectDoc(projectId), {
+    archived: true,
+    archivedAt: serverTimestamp(),
+  });
+}
+
+export async function unarchiveProject(projectId: string): Promise<void> {
+  await updateDoc(projectDoc(projectId), {
+    archived: false,
+    archivedAt: null,
+  });
+}
+
+/**
+ * Hand the `owner` role to another member. The previous owner is
+ * demoted to `editor` in the same batched write so the project never
+ * ends up ownerless.
+ */
+export async function transferOwnership(
+  projectId: string,
+  fromUid: string,
+  toUid: string,
+): Promise<void> {
+  if (fromUid === toUid) return;
+  if (!toUid) throw new Error('target-required');
+  const batch = writeBatch(db);
+  batch.update(projectDoc(projectId), {
+    [`members.${toUid}`]: 'owner',
+    [`members.${fromUid}`]: 'editor',
+  });
+  await batch.commit();
+}
+
+export interface ProjectContentsCheck {
+  supplierCount: number;
+  categoryCount: number;
+  poCount: number;
+  isEmpty: boolean;
+}
+
+/**
+ * Count-but-bounded check used by the Delete Project flow. We cap each
+ * sub-collection read at 10 just to know whether the project is empty —
+ * a cascading delete across thousands of docs + Storage files isn't
+ * safe to do client-side, so we refuse and suggest Archive instead.
+ */
+export async function inspectProjectContents(
+  projectId: string,
+): Promise<ProjectContentsCheck> {
+  const cap = 10;
+  const [sup, cat, po] = await Promise.all([
+    getDocs(query(collection(db, 'projects', projectId, 'suppliers'), limit(cap))),
+    getDocs(query(collection(db, 'projects', projectId, 'categories'), limit(cap))),
+    getDocs(query(collection(db, 'projects', projectId, 'purchaseOrders'), limit(cap))),
+  ]);
+  return {
+    supplierCount: sup.size,
+    categoryCount: cat.size,
+    poCount: po.size,
+    isEmpty: sup.empty && cat.empty && po.empty,
+  };
+}
+
+/**
+ * Delete a project document. Refuses when the project still has
+ * content — callers must check first (see `inspectProjectContents`)
+ * or use Archive. The full cascading delete across all sub-collections
+ * and Storage objects needs a Cloud Function and is deferred.
+ */
+export async function deleteEmptyProject(projectId: string): Promise<void> {
+  const check = await inspectProjectContents(projectId);
+  if (!check.isEmpty) throw new Error('project-not-empty');
+  await deleteDoc(projectDoc(projectId));
 }

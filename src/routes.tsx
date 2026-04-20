@@ -14,6 +14,7 @@ import { PODetailPage } from '~/pages/PODetailPage';
 import { POFormPage } from '~/pages/POFormPage';
 import { ApprovalsQueuePage } from '~/pages/ApprovalsQueuePage';
 import { CategoriesPage } from '~/pages/CategoriesPage';
+import { ProjectSettingsPage } from '~/pages/ProjectSettingsPage';
 import { NotFoundPage } from '~/pages/NotFoundPage';
 
 export const router = createBrowserRouter([
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
       { path: 'suppliers', element: <SuppliersPage /> },
       { path: 'categories', element: <CategoriesPage /> },
       { path: 'approvals', element: <ApprovalsQueuePage /> },
+      { path: 'settings', element: <ProjectSettingsPage /> },
       { path: 'purchase-orders', element: <PurchaseOrdersPage /> },
       { path: 'purchase-orders/new', element: <POFormPage /> },
       { path: 'purchase-orders/:poId', element: <PODetailPage /> },

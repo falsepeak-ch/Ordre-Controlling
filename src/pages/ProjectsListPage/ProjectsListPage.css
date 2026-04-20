@@ -138,6 +138,18 @@
   gap: var(--s-4);
 }
 
+.projects-group-archived .project-card { opacity: 0.72; }
+.projects-group-archived .project-card:hover { opacity: 1; }
+
+.project-card-archived {
+  box-shadow: inset 0 0 0 1px var(--ring-border-strong), var(--elevation-1);
+}
+.project-card-archived .project-card-monogram {
+  background: var(--surface-muted);
+  color: var(--fg-muted);
+  box-shadow: inset 0 0 0 1px var(--ring-border);
+}
+
 /* ===== Card ===== */
 .project-card {
   background: var(--surface);

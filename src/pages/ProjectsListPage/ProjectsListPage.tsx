@@ -40,17 +40,26 @@ export function ProjectsListPage() {
     else setCreateOpen(true);
   }
 
+  const { activeProjects, archivedProjects } = useMemo(() => {
+    const active: Project[] = [];
+    const archived: Project[] = [];
+    for (const p of projects) {
+      (p.archived ? archived : active).push(p);
+    }
+    return { activeProjects: active, archivedProjects: archived };
+  }, [projects]);
+
   const grouped = useMemo(() => {
     const byRole: Record<Role, Project[]> = { owner: [], editor: [], viewer: [] };
-    for (const p of projects) {
+    for (const p of activeProjects) {
       const role = user ? (p.members[user.uid] as Role | undefined) : undefined;
       if (!role) continue;
       byRole[role].push(p);
     }
     return byRole;
-  }, [projects, user]);
+  }, [activeProjects, user]);
 
-  const total = projects.length;
+  const total = activeProjects.length;
 
   return (
     <div className="projects-page">
@@ -122,10 +131,15 @@ export function ProjectsListPage() {
           <div className="projects-loader">
             <Spinner size={22} />
           </div>
-        ) : total === 0 ? (
+        ) : total === 0 && archivedProjects.length === 0 ? (
           <EmptyState onCreate={onNewProject} />
         ) : (
-          <ProjectGroups grouped={grouped} uid={user?.uid} />
+          <>
+            <ProjectGroups grouped={grouped} uid={user?.uid} />
+            {archivedProjects.length > 0 ? (
+              <ArchivedGroup projects={archivedProjects} uid={user?.uid} />
+            ) : null}
+          </>
         )}
       </main>
 
@@ -189,6 +203,29 @@ function ProjectGroups({
   );
 }
 
+function ArchivedGroup({
+  projects,
+  uid,
+}: {
+  projects: Project[];
+  uid: string | undefined;
+}) {
+  const { t } = useTranslation();
+  return (
+    <section className="projects-group projects-group-archived reveal reveal-d2">
+      <div className="projects-group-head">
+        <h3 className="display-sm">{t('projectSettings.archiveTitle')}</h3>
+        <span className="muted" style={{ fontSize: 12 }}>{projects.length}</span>
+      </div>
+      <div className="projects-grid">
+        {projects.map((p) => (
+          <ProjectCard key={p.id} project={p} uid={uid} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function RoleLabel({ role }: { role: Role }) {
   const { t } = useTranslation();
   return (
@@ -205,7 +242,12 @@ function ProjectCard({ project, uid }: { project: Project; uid: string | undefin
   const memberEntries = Object.entries(project.memberProfiles ?? {}).slice(0, 3);
 
   return (
-    <Link to={`/app/p/${project.id}`} className="project-card">
+    <Link
+      to={`/app/p/${project.id}`}
+      className={['project-card', project.archived ? 'project-card-archived' : null]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <div className="project-card-head">
         <div className="project-card-monogram" aria-hidden="true">{project.initial}</div>
         <div className="project-card-heading">

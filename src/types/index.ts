@@ -20,6 +20,13 @@ export interface Project {
   createdBy: string;
   initial: string;
   description?: string;
+  /**
+   * When true, the project is archived — UI surfaces a banner and the
+   * projects list groups it under a collapsed "Archived" section. Writes
+   * aren't hard-blocked so an owner can always reactivate.
+   */
+  archived?: boolean;
+  archivedAt?: string | null;
 }
 
 export interface SupplierDocument {

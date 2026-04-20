@@ -45,7 +45,7 @@ export function Sidebar() {
     { key: 'members', labelKey: 'nav.members', to: `${base}/members`, icon: 'person-circle-fill' },
     { key: 'invoices', labelKey: 'nav.invoices', to: `${base}/invoices`, icon: 'file-earmark-text-fill', disabled: true },
     { key: 'reports', labelKey: 'nav.reports', to: `${base}/reports`, icon: 'bar-chart-fill', disabled: true },
-    { key: 'settings', labelKey: 'nav.settings', to: `${base}/settings`, icon: 'gear-fill', disabled: true, ownerOnly: true },
+    { key: 'settings', labelKey: 'nav.settings', to: `${base}/settings`, icon: 'gear-fill', ownerOnly: true },
   ];
 
   async function handleSignOut() {
