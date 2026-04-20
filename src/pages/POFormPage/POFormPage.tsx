@@ -9,6 +9,7 @@ import { Field, Input, Textarea } from '~/components/ui/Input';
 import { Spinner } from '~/components/ui/Spinner';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { useSuppliers } from '~/hooks/useSuppliers';
+import { useCategories } from '~/hooks/useCategories';
 import { usePurchaseOrder } from '~/hooks/usePurchaseOrder';
 import { useAuth } from '~/hooks/useAuth';
 import { useToast } from '~/hooks/useToast';
@@ -36,12 +37,14 @@ export function POFormPage() {
   const editing = Boolean(poId);
 
   const { suppliers, loading: suppliersLoading } = useSuppliers(project.id);
+  const { categories } = useCategories(project.id);
   const { po, loading: poLoading, notFound } = usePurchaseOrder(
     project.id,
     poId,
   );
 
   const [supplierId, setSupplierId] = useState('');
+  const [categoryId, setCategoryId] = useState<string>('');
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<POLine[]>([blankLine()]);
   const [savingDraft, setSavingDraft] = useState(false);
@@ -55,10 +58,16 @@ export function POFormPage() {
     if (po.status !== 'draft') return;
     if (initialized) return;
     setSupplierId(po.supplierId);
+    setCategoryId(po.categoryId ?? '');
     setNotes(po.notes ?? '');
     setLines(po.lines.length ? po.lines : [blankLine()]);
     setInitialized(true);
   }, [editing, po, initialized]);
+
+  const selectedCategory = useMemo(
+    () => categories.find((c) => c.id === categoryId) ?? null,
+    [categories, categoryId],
+  );
 
   // Guard clauses
   if (!canEdit(role)) {
@@ -120,11 +129,17 @@ export function POFormPage() {
     }
     setSavingDraft(true);
     try {
+      const categoryFields = {
+        categoryId: selectedCategory?.id ?? null,
+        categoryCode: selectedCategory?.code ?? null,
+        categoryConcept: selectedCategory?.concept ?? null,
+      };
       if (editing && po) {
         await updateDraftPO(project.id, po.id, {
           supplierId,
           notes,
           lines: lines.filter((l) => l.description.trim()),
+          ...categoryFields,
         });
         push({ message: t('poForm.savedDraftToast'), icon: 'check-circle-fill' });
         return po.id;
@@ -133,6 +148,7 @@ export function POFormPage() {
         supplierId,
         notes,
         lines: lines.filter((l) => l.description.trim()),
+        ...categoryFields,
       });
       push({ message: t('poForm.savedDraftToast'), icon: 'check-circle-fill' });
       return id;
@@ -296,7 +312,7 @@ export function POFormPage() {
                   <Field
                     label={
                       <span>
-                        {t('poForm.notesLabel')}
+                        {t('poCategory.label')}
                         <span
                           style={{
                             color: 'var(--fg-muted)',
@@ -304,20 +320,64 @@ export function POFormPage() {
                             marginLeft: 6,
                           }}
                         >
-                          {t('poForm.notesHint')}
+                          {t('poCategory.hint')}
                         </span>
                       </span>
                     }
                   >
-                    <Textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      rows={3}
-                      placeholder={t('poForm.notesPlaceholder')}
-                      maxLength={500}
-                    />
+                    {categories.length === 0 ? (
+                      <div className="po-form-missing">
+                        <span className="muted" style={{ fontSize: 13 }}>
+                          {t('poCategory.noneAvailable')}
+                        </span>
+                        <Link
+                          to={`/app/p/${project.id}/categories`}
+                          className="btn btn-link btn-size-sm"
+                        >
+                          {t('poCategory.manageLink')} →
+                        </Link>
+                      </div>
+                    ) : (
+                      <select
+                        className="input po-form-select"
+                        value={categoryId}
+                        onChange={(e) => setCategoryId(e.target.value)}
+                      >
+                        <option value="">{t('poCategory.pickerPlaceholder')}</option>
+                        {categories.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.code} · {c.concept}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </Field>
                 </div>
+
+                <Field
+                  label={
+                    <span>
+                      {t('poForm.notesLabel')}
+                      <span
+                        style={{
+                          color: 'var(--fg-muted)',
+                          fontWeight: 400,
+                          marginLeft: 6,
+                        }}
+                      >
+                        {t('poForm.notesHint')}
+                      </span>
+                    </span>
+                  }
+                >
+                  <Textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={3}
+                    placeholder={t('poForm.notesPlaceholder')}
+                    maxLength={500}
+                  />
+                </Field>
               </Card>
 
               <Card size="md" className="po-form-lines">

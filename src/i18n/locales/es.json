@@ -12,6 +12,7 @@
     "reports": "Informes",
     "settings": "Configuración",
     "members": "Miembros",
+    "categories": "Códigos y conceptos",
     "login": "Inicia sesión",
     "signup": "Empieza gratis",
     "logout": "Cerrar sesión",
@@ -432,6 +433,75 @@
     "rejectedToast": "Orden rechazada",
     "closedToast": "Orden cerrada",
     "closeConfirm": "¿Cerrar la orden? Dejará de poder recibir facturas."
+  },
+  "categories": {
+    "pageTitle": "Códigos y conceptos",
+    "heroSubtitle": "El catálogo de partidas contables del proyecto {{project}}. Cada orden de compra se asocia a uno de estos códigos.",
+    "countOne": "1 partida",
+    "countOther": "{{count}} partidas",
+    "newCta": "Nueva partida",
+    "importCta": "Importar CSV",
+    "exportCta": "Exportar CSV",
+    "searchPlaceholder": "Busca por código o concepto…",
+    "tableCode": "Código",
+    "tableConcept": "Concepto",
+    "empty": {
+      "title": "Aún no has creado ninguna partida.",
+      "body": "Añade una a mano o importa un listado en CSV con las columnas de código y concepto (como el plan contable del rodaje).",
+      "import": "Importa tu listado",
+      "manual": "Crea una"
+    },
+    "emptyFilter": {
+      "title": "Sin coincidencias",
+      "body": "Prueba con otro texto."
+    },
+    "viewerNotice": "Solo lectura. Los editores y propietarios pueden crear o modificar partidas.",
+    "form": {
+      "createTitle": "Nueva partida",
+      "editTitle": "Editar partida",
+      "codeLabel": "Código",
+      "codePlaceholder": "p. ej. 1201",
+      "conceptLabel": "Concepto",
+      "conceptPlaceholder": "p. ej. EXECUTIVE PRODUCERS",
+      "saveCreate": "Crear partida",
+      "saveEdit": "Guardar cambios",
+      "saving": "Guardando…",
+      "createdToast": "Partida creada",
+      "updatedToast": "Partida actualizada",
+      "deletedToast": "Partida eliminada",
+      "confirmDelete": "¿Seguro que quieres eliminar {{code}} — {{concept}}?",
+      "duplicateError": "Ya existe una partida con este código.",
+      "error": "No hemos podido guardar la partida. Inténtalo de nuevo."
+    },
+    "import": {
+      "title": "Importar partidas",
+      "subtitle": "Pega el contenido del CSV o sube el archivo. Esperamos dos columnas: código y concepto. La primera fila de cabecera es opcional.",
+      "pasteLabel": "Pegar CSV",
+      "pastePlaceholder": "1201,EXECUTIVE PRODUCERS\n1204,LINE PRODUCERS\n…",
+      "fileLabel": "O sube un archivo",
+      "dropPrompt": "Arrastra un CSV",
+      "dropOr": "o",
+      "dropBrowse": "selecciónalo desde tu ordenador",
+      "dropLimit": "Hasta 2 MB",
+      "dropAccept": "CSV, TSV",
+      "previewTitle": "Previsualización",
+      "previewHint": "Primeras 8 filas. Al importar, las partidas existentes con el mismo código se actualizarán.",
+      "previewEmpty": "Aún no hay nada que importar. Pega el CSV o sube el archivo.",
+      "collisionsWarning": "Hay {{count}} códigos repetidos en el CSV. Guardaremos la última ocurrencia.",
+      "importCta": "Importar {{count}} partidas",
+      "importing": "Importando…",
+      "resultToast": "Se han importado {{total}} partidas (creadas {{created}}, actualizadas {{updated}}).",
+      "resultError": "No hemos podido terminar la importación. Inténtalo de nuevo.",
+      "cancel": "Cancelar"
+    }
+  },
+  "poCategory": {
+    "label": "Partida contable",
+    "hint": "opcional",
+    "pickerPlaceholder": "Elige una partida…",
+    "noneAvailable": "No hay partidas en el proyecto. Crea o importa antes.",
+    "manageLink": "Gestiona partidas",
+    "clear": "Ninguna partida"
   },
   "invoiceForm": {
     "createTitle": "Nueva factura",

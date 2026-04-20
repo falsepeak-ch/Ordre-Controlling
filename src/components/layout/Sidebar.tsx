@@ -38,6 +38,7 @@ export function Sidebar() {
     { key: 'orders', labelKey: 'nav.purchaseOrders', to: `${base}/purchase-orders`, icon: 'receipt-fill' },
     { key: 'approvals', labelKey: 'nav.approvals', to: `${base}/approvals`, icon: 'shield-fill-check' },
     { key: 'suppliers', labelKey: 'nav.suppliers', to: `${base}/suppliers`, icon: 'building-fill' },
+    { key: 'categories', labelKey: 'nav.categories', to: `${base}/categories`, icon: 'clipboard-fill' },
   ];
 
   const secondary: Item[] = [

@@ -38,6 +38,10 @@ export interface NewPODraftInput {
   supplierId: string;
   notes?: string | null;
   lines: POLine[];
+  /** Optional project category (chart of accounts). */
+  categoryId?: string | null;
+  categoryCode?: string | null;
+  categoryConcept?: string | null;
 }
 
 export interface POAuthor {
@@ -107,6 +111,9 @@ export async function createDraftPO(
     closedAt: null,
     notes: (input.notes ?? '').trim(),
     lines: input.lines.map(sanitizeLine),
+    categoryId: input.categoryId ?? null,
+    categoryCode: input.categoryCode ?? null,
+    categoryConcept: input.categoryConcept ?? null,
     // We leave approvals + invoices as subcollections, created on demand.
   } as never);
   return ref.id;
@@ -121,6 +128,9 @@ export async function updateDraftPO(
   if (patch.supplierId !== undefined) payload.supplierId = patch.supplierId;
   if (patch.notes !== undefined) payload.notes = (patch.notes ?? '').trim();
   if (patch.lines !== undefined) payload.lines = patch.lines.map(sanitizeLine);
+  if ('categoryId' in patch) payload.categoryId = patch.categoryId ?? null;
+  if ('categoryCode' in patch) payload.categoryCode = patch.categoryCode ?? null;
+  if ('categoryConcept' in patch) payload.categoryConcept = patch.categoryConcept ?? null;
   if (Object.keys(payload).length === 0) return;
   await updateDoc(doc(purchaseOrdersCol(projectId), poId), payload);
 }

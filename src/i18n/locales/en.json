@@ -12,6 +12,7 @@
     "reports": "Reports",
     "settings": "Settings",
     "members": "Members",
+    "categories": "Codes & concepts",
     "login": "Log in",
     "signup": "Start free",
     "logout": "Sign out",
@@ -432,6 +433,75 @@
     "rejectedToast": "PO rejected",
     "closedToast": "PO closed",
     "closeConfirm": "Close this PO? It won't accept new invoices."
+  },
+  "categories": {
+    "pageTitle": "Codes & concepts",
+    "heroSubtitle": "The chart of accounts for {{project}}. Every PO rolls up to one of these codes.",
+    "countOne": "1 category",
+    "countOther": "{{count}} categories",
+    "newCta": "New category",
+    "importCta": "Import CSV",
+    "exportCta": "Export CSV",
+    "searchPlaceholder": "Search by code or concept…",
+    "tableCode": "Code",
+    "tableConcept": "Concept",
+    "empty": {
+      "title": "No categories yet.",
+      "body": "Add one by hand or import a CSV with a code + concept column (like a production chart of accounts).",
+      "import": "Import your list",
+      "manual": "Add one"
+    },
+    "emptyFilter": {
+      "title": "No matches",
+      "body": "Try a different search term."
+    },
+    "viewerNotice": "Read-only. Editors and owners can add or change categories.",
+    "form": {
+      "createTitle": "New category",
+      "editTitle": "Edit category",
+      "codeLabel": "Code",
+      "codePlaceholder": "e.g. 1201",
+      "conceptLabel": "Concept",
+      "conceptPlaceholder": "e.g. EXECUTIVE PRODUCERS",
+      "saveCreate": "Create category",
+      "saveEdit": "Save changes",
+      "saving": "Saving…",
+      "createdToast": "Category created",
+      "updatedToast": "Category updated",
+      "deletedToast": "Category deleted",
+      "confirmDelete": "Delete {{code}} — {{concept}}?",
+      "duplicateError": "A category with that code already exists.",
+      "error": "Couldn't save the category. Please try again."
+    },
+    "import": {
+      "title": "Import categories",
+      "subtitle": "Paste the CSV content or upload a file. Two columns expected: code and concept. The first header row is optional.",
+      "pasteLabel": "Paste CSV",
+      "pastePlaceholder": "1201,EXECUTIVE PRODUCERS\n1204,LINE PRODUCERS\n…",
+      "fileLabel": "Or upload a file",
+      "dropPrompt": "Drop a CSV",
+      "dropOr": "or",
+      "dropBrowse": "browse from your computer",
+      "dropLimit": "Up to 2 MB",
+      "dropAccept": "CSV, TSV",
+      "previewTitle": "Preview",
+      "previewHint": "First 8 rows. On import, existing categories with the same code will be updated.",
+      "previewEmpty": "Nothing to import yet. Paste the CSV or upload a file.",
+      "collisionsWarning": "{{count}} codes appear more than once in the CSV. We'll keep the last occurrence.",
+      "importCta": "Import {{count}} categories",
+      "importing": "Importing…",
+      "resultToast": "Imported {{total}} categories ({{created}} new, {{updated}} updated).",
+      "resultError": "Import couldn't finish. Please try again.",
+      "cancel": "Cancel"
+    }
+  },
+  "poCategory": {
+    "label": "Accounting category",
+    "hint": "optional",
+    "pickerPlaceholder": "Pick a category…",
+    "noneAvailable": "No categories in this project yet. Create or import some first.",
+    "manageLink": "Manage categories",
+    "clear": "No category"
   },
   "invoiceForm": {
     "createTitle": "New invoice",

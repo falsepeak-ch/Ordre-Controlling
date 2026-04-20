@@ -152,6 +152,21 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.pos-row-category {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface-inverted);
+  color: var(--fg-on-inverted);
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 .pos-row-supplier-meta { font-size: 11px; }
 .pos-row-amount {

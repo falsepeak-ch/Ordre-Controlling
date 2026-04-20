@@ -161,6 +161,14 @@ export function PODetailPage() {
         <section className="po-hero reveal">
           <div className="po-hero-status">
             <Pill status={po.status}>{t(`pos.statusLabel.${po.status}`)}</Pill>
+            {po.categoryCode ? (
+              <span className="po-hero-category">
+                <span className="po-hero-category-code mono">{po.categoryCode}</span>
+                {po.categoryConcept ? (
+                  <span className="po-hero-category-concept">{po.categoryConcept}</span>
+                ) : null}
+              </span>
+            ) : null}
             {supplier?.tags?.[0] ? (
               <span className="po-hero-tag">{supplier.tags[0]}</span>
             ) : null}

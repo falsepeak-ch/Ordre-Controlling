@@ -70,6 +70,11 @@ service cloud.firestore {
         allow create, update, delete: if canWriteProject(projectId);
       }
 
+      match /categories/{id} {
+        allow read: if isProjectMember(projectId);
+        allow create, update, delete: if canWriteProject(projectId);
+      }
+
       match /purchaseOrders/{poId} {
         allow read: if isProjectMember(projectId);
         allow create, update, delete: if canWriteProject(projectId);

@@ -212,12 +212,16 @@ export function PurchaseOrdersPage() {
                     <div className="pos-row-supplier-text">
                       <span className="pos-row-supplier-name">
                         {supplier?.tradeName ?? po.supplierId}
+                        {po.categoryCode ? (
+                          <span className="pos-row-category mono">{po.categoryCode}</span>
+                        ) : null}
                       </span>
                       <span className="pos-row-supplier-meta muted">
                         {po.lines.length === 1
                           ? t('pos.table.linesOne')
                           : t('pos.table.linesOther', { count: po.lines.length })}{' '}
                         · {relDate(po.createdAt)}
+                        {po.categoryConcept ? ` · ${po.categoryConcept}` : ''}
                       </span>
                     </div>
                   </div>

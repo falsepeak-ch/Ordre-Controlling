@@ -12,6 +12,7 @@
     "reports": "Informes",
     "settings": "Configuració",
     "members": "Membres",
+    "categories": "Codis i conceptes",
     "login": "Inicia sessió",
     "signup": "Començar gratis",
     "logout": "Tanca sessió",
@@ -432,6 +433,75 @@
     "rejectedToast": "Ordre rebutjada",
     "closedToast": "Ordre tancada",
     "closeConfirm": "Tanques l'ordre? Deixarà de poder rebre factures."
+  },
+  "categories": {
+    "pageTitle": "Codis i conceptes",
+    "heroSubtitle": "El catàleg de partides comptables del projecte {{project}}. Cada ordre de compra s'associa a un d'aquests codis.",
+    "countOne": "1 partida",
+    "countOther": "{{count}} partides",
+    "newCta": "Nova partida",
+    "importCta": "Importa CSV",
+    "exportCta": "Exporta CSV",
+    "searchPlaceholder": "Cerca per codi o concepte…",
+    "tableCode": "Codi",
+    "tableConcept": "Concepte",
+    "empty": {
+      "title": "Encara no has creat cap partida.",
+      "body": "Afegeix-ne una a mà o importa un llistat en CSV amb la columna de codi i la de concepte (com el plan comptable del rodatge).",
+      "import": "Importa el teu llistat",
+      "manual": "Crea'n una"
+    },
+    "emptyFilter": {
+      "title": "Cap coincidència",
+      "body": "Prova amb un altre text."
+    },
+    "viewerNotice": "Només lectura. Els editors i propietaris poden crear o modificar partides.",
+    "form": {
+      "createTitle": "Nova partida",
+      "editTitle": "Edita partida",
+      "codeLabel": "Codi",
+      "codePlaceholder": "p. ex. 1201",
+      "conceptLabel": "Concepte",
+      "conceptPlaceholder": "p. ex. EXECUTIVE PRODUCERS",
+      "saveCreate": "Crea partida",
+      "saveEdit": "Desa canvis",
+      "saving": "Desant…",
+      "createdToast": "Partida creada",
+      "updatedToast": "Partida actualitzada",
+      "deletedToast": "Partida eliminada",
+      "confirmDelete": "Segur que vols eliminar {{code}} — {{concept}}?",
+      "duplicateError": "Ja existeix una partida amb aquest codi.",
+      "error": "No hem pogut desar la partida. Torna-ho a provar."
+    },
+    "import": {
+      "title": "Importa partides",
+      "subtitle": "Enganxa el contingut del CSV o puja el fitxer directament. Esperem dues columnes: codi i concepte. La primera fila de capçalera és opcional.",
+      "pasteLabel": "Enganxa CSV",
+      "pastePlaceholder": "1201,EXECUTIVE PRODUCERS\n1204,LINE PRODUCERS\n…",
+      "fileLabel": "O puja un fitxer",
+      "dropPrompt": "Arrossega un CSV",
+      "dropOr": "o",
+      "dropBrowse": "tria'l del teu ordinador",
+      "dropLimit": "Fins a 2 MB",
+      "dropAccept": "CSV, TSV",
+      "previewTitle": "Previsualització",
+      "previewHint": "Primeres 8 files. En importar, les partides existents amb el mateix codi s'actualitzaran.",
+      "previewEmpty": "Encara no hi ha res per importar. Enganxa el CSV o puja el fitxer.",
+      "collisionsWarning": "Hi ha {{count}} codis repetits al CSV. Guardarem l'última ocurrència.",
+      "importCta": "Importa {{count}} partides",
+      "importing": "Important…",
+      "resultToast": "S'han importat {{total}} partides (creades {{created}}, actualitzades {{updated}}).",
+      "resultError": "No hem pogut acabar la importació. Torna-ho a provar.",
+      "cancel": "Cancel·la"
+    }
+  },
+  "poCategory": {
+    "label": "Partida comptable",
+    "hint": "opcional",
+    "pickerPlaceholder": "Tria una partida…",
+    "noneAvailable": "No hi ha partides al projecte. Crea'n o importa'n primer.",
+    "manageLink": "Gestiona partides",
+    "clear": "Cap partida"
   },
   "invoiceForm": {
     "createTitle": "Nova factura",

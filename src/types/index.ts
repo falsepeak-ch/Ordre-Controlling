@@ -47,6 +47,19 @@ export interface Supplier {
 
 export type LineCategory = 'shoot' | 'office' | 'travel' | 'services';
 
+/**
+ * A project-level accounting category — the "code + concept" that a PO
+ * rolls up to in the chart of accounts. In film-production accounting
+ * this is the account number (e.g. "1201") plus its description
+ * (e.g. "EXECUTIVE PRODUCERS").
+ */
+export interface Category {
+  id: string;
+  code: string;
+  concept: string;
+  createdAt?: string;
+}
+
 export interface POLine {
   id: string;
   description: string;
@@ -109,6 +122,15 @@ export interface PurchaseOrder {
   lines: POLine[];
   approvals: Approval[];
   invoices: Invoice[];
+  /**
+   * Optional link to a project Category (account code + concept).
+   * Stored alongside denormalised code/concept so we can render the PO
+   * list without an extra fetch or broken reference if the Category is
+   * later renamed.
+   */
+  categoryId?: string | null;
+  categoryCode?: string | null;
+  categoryConcept?: string | null;
 }
 
 export interface ProjectMetrics {
