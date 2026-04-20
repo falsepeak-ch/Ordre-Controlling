@@ -1,0 +1,159 @@
+.invoice-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+.invoice-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.invoice-form-section-title {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.invoice-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s-3);
+}
+
+.invoice-form-mapping-hint {
+  font-size: 13px;
+  line-height: 1.55;
+  margin: -4px 0 0;
+}
+
+.invoice-form-lines {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.invoice-form-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px auto;
+  gap: var(--s-3);
+  align-items: center;
+  padding: var(--s-3) var(--s-4);
+  background: var(--surface-muted);
+  border-radius: var(--r-8);
+  box-shadow: inset 0 0 0 1px var(--ring-border);
+}
+.invoice-form-line-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.invoice-form-line-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--fg);
+}
+.invoice-form-line-meta {
+  font-size: 11.5px;
+}
+
+.invoice-form-line-input {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border-radius: var(--r-8);
+  box-shadow: 0 0 0 1px var(--ring-border), var(--elevation-inset);
+  overflow: hidden;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+.invoice-form-line-input:focus-within {
+  box-shadow: 0 0 0 2px var(--fg), var(--elevation-inset);
+}
+.invoice-form-line-prefix {
+  display: grid;
+  place-items: center;
+  padding: 0 12px;
+  font-size: 13px;
+  color: var(--fg-muted);
+  font-weight: 500;
+  background: var(--surface-muted);
+  box-shadow: inset -1px 0 0 var(--ring-border);
+  min-width: 36px;
+  height: 100%;
+}
+.invoice-form-line-input .input {
+  background: transparent;
+  box-shadow: none !important;
+  border-radius: 0;
+  padding: 9px 10px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.invoice-form-line-input .input:focus { outline: none; }
+
+.invoice-form-line-over {
+  display: grid;
+  place-items: center;
+  color: #c72020;
+  min-width: 20px;
+}
+[data-theme='dark'] .invoice-form-line-over { color: #ff7272; }
+
+/* ===== Summary ===== */
+.invoice-form-summary {
+  padding: var(--s-4);
+  border-radius: var(--r-10);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px var(--s-5);
+  align-items: baseline;
+  background: var(--surface-muted);
+  box-shadow: inset 0 0 0 1px var(--ring-border);
+}
+.invoice-form-summary-match {
+  box-shadow: inset 0 0 0 1px var(--ring-border-strong);
+}
+.invoice-form-summary-over {
+  box-shadow: inset 0 0 0 1.5px rgba(199, 32, 32, 0.45);
+}
+[data-theme='dark'] .invoice-form-summary-over {
+  box-shadow: inset 0 0 0 1.5px rgba(255, 114, 114, 0.35);
+}
+
+.invoice-form-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  align-items: baseline;
+}
+.invoice-form-summary-num {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--fg);
+}
+.invoice-form-summary-status {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--fg-deep);
+  padding-top: 6px;
+  box-shadow: inset 0 1px 0 var(--ring-border);
+  margin-top: 4px;
+}
+.invoice-form-summary-match .invoice-form-summary-status { color: var(--fg); }
+.invoice-form-summary-match .invoice-form-summary-status > svg { color: var(--fg); }
+.invoice-form-summary-over .invoice-form-summary-status { color: #c72020; }
+.invoice-form-summary-over .invoice-form-summary-status > svg { color: #c72020; }
+[data-theme='dark'] .invoice-form-summary-over .invoice-form-summary-status,
+[data-theme='dark'] .invoice-form-summary-over .invoice-form-summary-status > svg { color: #ff7272; }
+
+@media (max-width: 640px) {
+  .invoice-form-grid { grid-template-columns: 1fr; }
+  .invoice-form-line { grid-template-columns: 1fr; }
+}

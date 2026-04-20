@@ -1,6 +1,7 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { getAnalytics, type Analytics, isSupported } from 'firebase/analytics';
 
 const firebaseConfig = {
@@ -22,6 +23,23 @@ if (!firebaseConfig.apiKey) {
 export const app: FirebaseApp = initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);
+
+/**
+ * Firebase Storage is initialised lazily — the service component isn't
+ * always registered at module-load time (can throw
+ * "Service storage is not available"), and we don't need it on the
+ * landing or auth screens. Lib code calls `getStorageInstance()` when it
+ * actually needs to upload / delete a file.
+ */
+let _storage: FirebaseStorage | null = null;
+export function getStorageInstance(): FirebaseStorage {
+  if (_storage) return _storage;
+  const bucket = firebaseConfig.storageBucket;
+  _storage = bucket
+    ? getStorage(app, `gs://${bucket}`)
+    : getStorage(app);
+  return _storage;
+}
 
 export let analytics: Analytics | null = null;
 if (!import.meta.env.DEV) {

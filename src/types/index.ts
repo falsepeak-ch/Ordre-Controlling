@@ -79,10 +79,19 @@ export interface Invoice {
   issueDate: string;
   dueDate: string;
   total: number;
-  file: string;
-  fileSize: string;
+  /** Legacy: original filename (seed data). */
+  file?: string;
+  /** Display-friendly size e.g. "312 KB". */
+  fileSize?: string;
+  /** Preferred modern field: original filename as uploaded. */
+  fileName?: string;
+  /** Public download URL from Firebase Storage. */
+  fileUrl?: string;
+  /** Storage path, kept for deletion. */
+  storagePath?: string;
   lines: InvoiceLine[];
   uploadedBy: string;
+  uploadedAt?: string;
 }
 
 export interface PurchaseOrder {

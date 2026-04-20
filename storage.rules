@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Firebase Storage security rules for Ordre.
+//
+// Files live under:
+//   projects/{projectId}/purchaseOrders/{poId}/invoices/{invoiceId}/{fileName}
+//
+// Access follows the same membership model as Firestore: anyone in the
+// project's `members` map can read / write / delete its files. Non-members
+// are denied outright. Max file size: 25 MB (per the product spec).
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isProjectMember(projectId) {
+      return isSignedIn() &&
+        firestore.get(/databases/(default)/documents/projects/$(projectId))
+          .data.members[request.auth.uid] != null;
+    }
+
+    function canWriteProject(projectId) {
+      return isSignedIn() && (
+        firestore.get(/databases/(default)/documents/projects/$(projectId))
+          .data.members[request.auth.uid] == 'owner' ||
+        firestore.get(/databases/(default)/documents/projects/$(projectId))
+          .data.members[request.auth.uid] == 'editor'
+      );
+    }
+
+    function isUnder25MB() {
+      return request.resource.size < 25 * 1024 * 1024;
+    }
+
+    match /projects/{projectId}/purchaseOrders/{poId}/invoices/{invoiceId}/{fileName} {
+      allow read: if isProjectMember(projectId);
+      allow create, update: if canWriteProject(projectId) && isUnder25MB();
+      allow delete: if canWriteProject(projectId);
+    }
+
+    // Everything else is denied by default.
+  }
+}

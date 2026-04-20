@@ -10,6 +10,7 @@ import { Progress } from '~/components/ui/Progress';
 import { Avatar } from '~/components/ui/Avatar';
 import { Spinner } from '~/components/ui/Spinner';
 import { PODecisionModal } from '~/components/PODecisionModal';
+import { InvoiceFormModal } from '~/components/InvoiceFormModal';
 import { useAuth } from '~/hooks/useAuth';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { usePurchaseOrder } from '~/hooks/usePurchaseOrder';
@@ -18,8 +19,9 @@ import { useToast } from '~/hooks/useToast';
 import { poTotals, lineCommitted, lineInvoiced } from '~/lib/reconcile';
 import { canEdit } from '~/lib/roles';
 import { closePO, isApproverFor, submitPOForApproval } from '~/lib/purchaseOrders';
+import { deleteInvoice } from '~/lib/invoices';
 import { eur, eurFull, formatDate } from '~/lib/format';
-import type { POLine, PurchaseOrder } from '~/types';
+import type { Invoice, POLine, PurchaseOrder } from '~/types';
 import './PODetailPage.css';
 
 export function PODetailPage() {
@@ -33,6 +35,8 @@ export function PODetailPage() {
   const navigate = useNavigate();
   const [decisionMode, setDecisionMode] = useState<null | 'approve' | 'reject'>(null);
   const [busyAction, setBusyAction] = useState<null | 'submit' | 'close'>(null);
+  const [invoiceFormOpen, setInvoiceFormOpen] = useState(false);
+  const [invoiceBeingEdited, setInvoiceBeingEdited] = useState<Invoice | null>(null);
 
   const supplier = useMemo(
     () => suppliers.find((s) => s.id === po?.supplierId),
@@ -41,10 +45,24 @@ export function PODetailPage() {
 
   const totals = useMemo(() => (po ? poTotals(po) : null), [po]);
 
-  function comingSoon() {
-    push({ message: t('app.stubTitle'), icon: 'clock-fill' });
+  function openNewInvoice() {
+    setInvoiceBeingEdited(null);
+    setInvoiceFormOpen(true);
   }
-  void comingSoon; // upload-invoice stub — reserved for the next iteration.
+  function openEditInvoice(inv: Invoice) {
+    setInvoiceBeingEdited(inv);
+    setInvoiceFormOpen(true);
+  }
+  async function handleDeleteInvoice(inv: Invoice) {
+    if (!window.confirm(t('invoiceForm.confirmDelete'))) return;
+    try {
+      await deleteInvoice(project.id, po?.id ?? '', inv);
+      push({ message: t('invoiceForm.deletedToast'), icon: 'check-circle-fill' });
+    } catch (err) {
+      console.warn('[poDetail] invoice delete failed', err);
+      push({ message: t('invoiceForm.error'), icon: 'x-circle-fill', tone: 'error' });
+    }
+  }
 
   if (notFound) return <Navigate to={`/app/p/${project.id}/purchase-orders`} replace />;
   if (loading || !po || !totals) {
@@ -129,6 +147,15 @@ export function PODetailPage() {
           onClose={() => setDecisionMode(null)}
         />
       ) : null}
+
+      <InvoiceFormModal
+        open={invoiceFormOpen}
+        onClose={() => setInvoiceFormOpen(false)}
+        projectId={project.id}
+        po={po}
+        invoice={invoiceBeingEdited}
+        uploadedBy={user?.displayName ?? user?.email ?? 'You'}
+      />
 
       <div className="po-detail-page">
         <section className="po-hero reveal">
@@ -255,6 +282,17 @@ export function PODetailPage() {
               <div className="po-block-head">
                 <h3 className="display-sm mb-0">{t('poDetail.invoicesTitle')}</h3>
                 <span className="count-chip">{po.invoices.length}</span>
+                <span className="grow" />
+                {canEdit(role) && po.status === 'approved' ? (
+                  <Button
+                    variant="subtle"
+                    size="sm"
+                    onClick={openNewInvoice}
+                    leading={<Icon name="plus" size={13} />}
+                  >
+                    {t('poDetail.addInvoiceCta')}
+                  </Button>
+                ) : null}
               </div>
 
               {po.invoices.length === 0 ? (
@@ -270,17 +308,37 @@ export function PODetailPage() {
                 <ul className="po-invoices">
                   {po.invoices.map((inv) => (
                     <li key={inv.id} className="po-invoice">
-                      <div className="po-invoice-doc">
+                      <button
+                        type="button"
+                        className="po-invoice-doc po-invoice-doc-btn"
+                        onClick={() => inv.fileUrl && window.open(inv.fileUrl, '_blank', 'noopener')}
+                        disabled={!inv.fileUrl}
+                        aria-label={inv.fileName ?? inv.file ?? inv.number}
+                      >
                         <Icon name="file-earmark-text-fill" size={18} />
-                      </div>
+                      </button>
                       <div className="po-invoice-main">
-                        <span className="po-invoice-number mono">{inv.number}</span>
+                        <span className="po-invoice-number mono">
+                          {inv.fileUrl ? (
+                            <a
+                              href={inv.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="po-invoice-link"
+                            >
+                              {inv.number}
+                            </a>
+                          ) : (
+                            inv.number
+                          )}
+                        </span>
                         <span className="po-invoice-meta">
                           {t('poDetail.invoiceIssued', {
                             date: formatDate(inv.issueDate),
                           })}{' '}
                           · {t('poDetail.invoiceDue', { date: formatDate(inv.dueDate) })} ·{' '}
                           {t('poDetail.invoiceUploadedBy', { by: inv.uploadedBy })}
+                          {inv.fileSize ? ` · ${inv.fileSize}` : ''}
                         </span>
                         <ul className="po-invoice-lines">
                           {inv.lines.map((il) => {
@@ -299,7 +357,29 @@ export function PODetailPage() {
                           })}
                         </ul>
                       </div>
-                      <div className="po-invoice-total num">{eurFull(inv.total)}</div>
+                      <div className="po-invoice-right">
+                        <div className="po-invoice-total num">{eurFull(inv.total)}</div>
+                        {canEdit(role) ? (
+                          <div className="po-invoice-actions">
+                            <button
+                              type="button"
+                              className="po-invoice-action"
+                              onClick={() => openEditInvoice(inv)}
+                              aria-label={t('common.edit')}
+                            >
+                              <Icon name="pencil-fill" size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              className="po-invoice-action"
+                              onClick={() => handleDeleteInvoice(inv)}
+                              aria-label={t('common.remove')}
+                            >
+                              <Icon name="trash-fill" size={12} />
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
                     </li>
                   ))}
                 </ul>

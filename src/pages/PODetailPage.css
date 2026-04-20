@@ -315,6 +315,43 @@
   font-variant-numeric: tabular-nums;
 }
 
+.po-invoice-doc-btn {
+  background: var(--surface);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.po-invoice-doc-btn:disabled { cursor: default; }
+.po-invoice-doc-btn:not(:disabled):hover {
+  background: var(--surface-muted);
+  transform: translateY(-1px);
+}
+
+.po-invoice-link {
+  color: var(--fg);
+  text-decoration: none;
+}
+.po-invoice-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.po-invoice-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+.po-invoice-actions { display: inline-flex; gap: 4px; }
+.po-invoice-action {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-6);
+  display: grid;
+  place-items: center;
+  color: var(--fg-muted);
+  background: transparent;
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.po-invoice-action:hover { background: var(--surface); color: var(--fg); }
+
 .po-empty-inline {
   display: flex;
   align-items: center;
