@@ -321,5 +321,58 @@
     "printCta": "Imprimeix",
     "exportPdfCta": "Exporta PDF",
     "overBudgetWarning": "Aquesta ordre està sobre-facturada. Revisa les línies marcades en vermell."
+  },
+  "pricing": {
+    "eyebrow": "Preus simples",
+    "title": "Fàcil de començar, creix al teu ritme.",
+    "subtitle": "Un sol projecte per provar-ho tot. Passa a Pro quan vulguis afegir-ne més.",
+    "monthlyBadge": "Mensual",
+    "annualBadge": "Anual",
+    "annualSavings": "−16%",
+    "pricePerMonth": "/ mes",
+    "pricePerYear": "/ any",
+    "billedAnnually": "facturats anualment",
+    "billedMonthly": "facturats mensualment",
+    "ctaFree": "Prova-ho gratis",
+    "ctaPro": "Comença amb Pro",
+    "ctaUpgrade": "Passa a Pro",
+    "plans": {
+      "freeTitle": "Free",
+      "freePrice": "€0",
+      "freePeriod": "sempre",
+      "freeSubtitle": "Per provar Ordre amb un projecte.",
+      "proTitle": "Ordre Pro",
+      "proMarketingMonthly": "€9",
+      "proMarketingYearly": "€90",
+      "proSubtitle": "Per a equips que gestionen diversos projectes."
+    },
+    "featureFree1": "1 projecte",
+    "featureFree2": "Proveïdors, ordres i factures il·limitats al projecte",
+    "featureFree3": "Aprovacions i conciliació",
+    "featureFree4": "Català / Espanyol / Anglès",
+    "featurePro1": "Projectes il·limitats",
+    "featurePro2": "Membres il·limitats amb rols",
+    "featurePro3": "Exports PDF i CSV",
+    "featurePro4": "Suport prioritari",
+    "featurePro5": "Tot el que arriba a les properes versions",
+    "loadingLive": "Carregant preus actuals…",
+    "fallbackNote": "El preu final el confirmem al checkout, en la teva moneda."
+  },
+  "paywall": {
+    "unlockProjectsTitle": "Desbloqueja projectes il·limitats",
+    "unlockProjectsBody": "El pla Free inclou 1 projecte. Amb Ordre Pro en crees tants com necessitis i convides tot l'equip.",
+    "upgradeCta": "Passa a Pro",
+    "cancel": "Ara no",
+    "dismissedToast": "T'hem mantingut al pla Free. Pots passar a Pro quan vulguis.",
+    "purchasedToast": "Benvingut a Ordre Pro. Gràcies!",
+    "disabledNotice": "La facturació web no està disponible en aquest entorn."
+  },
+  "subscription": {
+    "proBadge": "Pro",
+    "freeBadge": "Free",
+    "manage": "Gestiona la subscripció",
+    "openPortal": "Obre el portal",
+    "portalUnavailable": "El portal de facturació estarà disponible després de la primera compra.",
+    "upgrade": "Passa a Pro"
   }
 }

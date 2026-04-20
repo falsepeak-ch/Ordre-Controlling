@@ -1,0 +1,24 @@
+.pro-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: var(--r-4);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+.pro-badge-sm { font-size: 9.5px; padding: 1px 6px; }
+
+.pro-badge-pro {
+  background: var(--surface-inverted);
+  color: var(--fg-on-inverted);
+  box-shadow: var(--button-highlight), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+.pro-badge-free {
+  background: var(--surface-muted);
+  color: var(--fg-muted);
+  box-shadow: inset 0 0 0 1px var(--ring-border);
+}

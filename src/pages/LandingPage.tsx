@@ -4,6 +4,7 @@ import { Button, ButtonAnchor } from '~/components/ui/Button';
 import { Icon } from '~/components/ui/Icon';
 import { Progress } from '~/components/ui/Progress';
 import { Pill } from '~/components/ui/Pill';
+import { useSubscription } from '~/hooks/useSubscription';
 import type { IconName } from '~/icons/manifest';
 import { eur } from '~/lib/format';
 import './LandingPage.css';
@@ -69,7 +70,119 @@ export function LandingPage() {
           ))}
         </div>
       </section>
+
+      {/* ===== Pricing ===== */}
+      <LandingPricing />
     </>
+  );
+}
+
+function LandingPricing() {
+  const { t } = useTranslation();
+  const { offerings, loading } = useSubscription();
+
+  const monthly = offerings?.current?.monthly ?? null;
+  const annual = offerings?.current?.annual ?? null;
+
+  const monthlyPriceLive = monthly?.webBillingProduct?.currentPrice?.formattedPrice ?? null;
+  const annualPriceLive = annual?.webBillingProduct?.currentPrice?.formattedPrice ?? null;
+
+  const monthlyPrice = monthlyPriceLive ?? t('pricing.plans.proMarketingMonthly');
+  const annualPrice = annualPriceLive ?? t('pricing.plans.proMarketingYearly');
+
+  return (
+    <section className="landing-pricing" id="pricing">
+      <div className="landing-pricing-inner">
+        <div className="landing-pricing-head">
+          <span className="eyebrow">{t('pricing.eyebrow')}</span>
+          <h2 className="display-xl">{t('pricing.title')}</h2>
+          <p className="landing-pricing-sub">{t('pricing.subtitle')}</p>
+        </div>
+
+        <div className="landing-pricing-grid">
+          {/* ---- Free ---- */}
+          <article className="pricing-card pricing-card-free reveal reveal-d1">
+            <header className="pricing-card-head">
+              <h3 className="display-md">{t('pricing.plans.freeTitle')}</h3>
+              <p className="pricing-card-subtitle">{t('pricing.plans.freeSubtitle')}</p>
+            </header>
+            <div className="pricing-card-price">
+              <span className="pricing-card-amount">{t('pricing.plans.freePrice')}</span>
+              <span className="pricing-card-period">{t('pricing.plans.freePeriod')}</span>
+            </div>
+            <ul className="pricing-card-features">
+              {[1, 2, 3, 4].map((n) => (
+                <li key={n}>
+                  <Icon name="check-circle-fill" size={13} />
+                  <span>{t(`pricing.featureFree${n}`)}</span>
+                </li>
+              ))}
+            </ul>
+            <ButtonAnchor
+              href="/signup"
+              variant="ghost"
+              size="lg"
+              fullWidth
+            >
+              {t('pricing.ctaFree')}
+            </ButtonAnchor>
+          </article>
+
+          {/* ---- Pro ---- */}
+          <article className="pricing-card pricing-card-pro reveal reveal-d2">
+            <header className="pricing-card-head">
+              <div className="pricing-card-head-row">
+                <h3 className="display-md">{t('pricing.plans.proTitle')}</h3>
+                <span className="pricing-card-tag">{t('pricing.annualSavings')}</span>
+              </div>
+              <p className="pricing-card-subtitle">{t('pricing.plans.proSubtitle')}</p>
+            </header>
+
+            <div className="pricing-card-toggle" aria-hidden="true">
+              <div className="pricing-toggle">
+                <div className="pricing-toggle-option">
+                  <span className="pricing-toggle-label">{t('pricing.annualBadge')}</span>
+                  <span className="pricing-toggle-price num">{annualPrice}</span>
+                  <span className="pricing-toggle-meta">
+                    {t('pricing.billedAnnually')}
+                  </span>
+                </div>
+                <div className="pricing-toggle-sep" />
+                <div className="pricing-toggle-option">
+                  <span className="pricing-toggle-label">{t('pricing.monthlyBadge')}</span>
+                  <span className="pricing-toggle-price num">{monthlyPrice}</span>
+                  <span className="pricing-toggle-meta">
+                    {t('pricing.billedMonthly')}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <ul className="pricing-card-features">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <li key={n}>
+                  <Icon name="check-circle-fill" size={13} />
+                  <span>{t(`pricing.featurePro${n}`)}</span>
+                </li>
+              ))}
+            </ul>
+
+            <ButtonAnchor
+              href="/signup"
+              variant="primary"
+              size="lg"
+              fullWidth
+            >
+              {t('pricing.ctaPro')}
+            </ButtonAnchor>
+
+            <p className="pricing-card-footnote">
+              {loading ? t('pricing.loadingLive') : t('pricing.fallbackNote')}
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
   );
 }
 

@@ -6,20 +6,39 @@ import { Button } from '~/components/ui/Button';
 import { Icon } from '~/components/ui/Icon';
 import { Avatar } from '~/components/ui/Avatar';
 import { RolePill } from '~/components/ui/RolePill';
+import { ProBadge } from '~/components/ui/ProBadge';
 import { ThemeToggle } from '~/components/ui/ThemeToggle';
 import { LocaleToggle } from '~/components/ui/LocaleToggle';
 import { Spinner } from '~/components/ui/Spinner';
 import { CreateProjectModal } from '~/components/CreateProjectModal';
+import { UpgradeModal } from '~/components/UpgradeModal';
 import { useAuth } from '~/hooks/useAuth';
 import { useProjects } from '~/hooks/useProjects';
+import { useSubscription } from '~/hooks/useSubscription';
 import type { Project, Role } from '~/types';
 import './ProjectsListPage.css';
+
+const FREE_PROJECT_LIMIT = 1;
 
 export function ProjectsListPage() {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const { projects, loading } = useProjects();
+  const { isPro, managementUrl } = useSubscription();
   const [createOpen, setCreateOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+
+  const ownedCount = useMemo(
+    () => projects.filter((p) => user && p.members[user.uid] === 'owner').length,
+    [projects, user],
+  );
+
+  const gated = !isPro && ownedCount >= FREE_PROJECT_LIMIT;
+
+  function onNewProject() {
+    if (gated) setUpgradeOpen(true);
+    else setCreateOpen(true);
+  }
 
   const grouped = useMemo(() => {
     const byRole: Record<Role, Project[]> = { owner: [], editor: [], viewer: [] };
@@ -40,9 +59,28 @@ export function ProjectsListPage() {
         <div className="projects-topbar-actions">
           <LocaleToggle />
           <ThemeToggle />
+          {isPro && managementUrl ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.open(managementUrl, '_blank', 'noopener')}
+              leading={<Icon name="gear-fill" size={13} />}
+            >
+              {t('subscription.manage')}
+            </Button>
+          ) : !isPro ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setUpgradeOpen(true)}
+            >
+              {t('subscription.upgrade')}
+            </Button>
+          ) : null}
           <div className="projects-user">
             <Avatar name={user?.displayName ?? undefined} photoURL={user?.photoURL} size="sm" />
             <span className="projects-user-name">{user?.displayName ?? user?.email}</span>
+            <ProBadge variant={isPro ? 'pro' : 'free'} size="sm" />
           </div>
           <Button
             variant="ghost"
@@ -73,7 +111,7 @@ export function ProjectsListPage() {
               variant="primary"
               size="md"
               leading={<Icon name="plus" size={13} />}
-              onClick={() => setCreateOpen(true)}
+              onClick={onNewProject}
             >
               {t('projects.newCta')}
             </Button>
@@ -85,13 +123,14 @@ export function ProjectsListPage() {
             <Spinner size={22} />
           </div>
         ) : total === 0 ? (
-          <EmptyState onCreate={() => setCreateOpen(true)} />
+          <EmptyState onCreate={onNewProject} />
         ) : (
           <ProjectGroups grouped={grouped} uid={user?.uid} />
         )}
       </main>
 
       <CreateProjectModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </div>
   );
 }

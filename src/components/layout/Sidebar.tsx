@@ -1,12 +1,16 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Logo } from '~/components/ui/Logo';
 import { Avatar } from '~/components/ui/Avatar';
 import { Icon } from '~/components/ui/Icon';
 import { Button } from '~/components/ui/Button';
+import { ProBadge } from '~/components/ui/ProBadge';
 import { ProjectSwitcher } from './ProjectSwitcher';
+import { UpgradeModal } from '~/components/UpgradeModal';
 import { useAuth } from '~/hooks/useAuth';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
+import { useSubscription } from '~/hooks/useSubscription';
 import { useToast } from '~/hooks/useToast';
 import type { IconName } from '~/icons/manifest';
 import './Sidebar.css';
@@ -25,6 +29,8 @@ export function Sidebar() {
   const { user, signOut } = useAuth();
   const { project, role } = useCurrentProject();
   const { push } = useToast();
+  const { isPro, managementUrl } = useSubscription();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const base = `/app/p/${project.id}`;
   const primary: Item[] = [
@@ -92,10 +98,36 @@ export function Sidebar() {
         <div className="sidebar-user">
           <Avatar name={user?.displayName ?? undefined} photoURL={user?.photoURL} size="md" />
           <div className="sidebar-user-meta">
-            <span className="sidebar-user-name">{user?.displayName ?? '—'}</span>
+            <span className="sidebar-user-name">
+              {user?.displayName ?? '—'}{' '}
+              <ProBadge variant={isPro ? 'pro' : 'free'} size="sm" />
+            </span>
             <span className="sidebar-user-email">{user?.email ?? ''}</span>
           </div>
         </div>
+
+        {isPro && managementUrl ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            fullWidth
+            onClick={() => window.open(managementUrl, '_blank', 'noopener')}
+            leading={<Icon name="gear-fill" size={13} />}
+          >
+            {t('subscription.manage')}
+          </Button>
+        ) : !isPro ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            fullWidth
+            onClick={() => setUpgradeOpen(true)}
+            leading={<Icon name="shield-fill-check" size={13} />}
+          >
+            {t('subscription.upgrade')}
+          </Button>
+        ) : null}
+
         <Button
           variant="ghost"
           size="sm"
@@ -106,6 +138,8 @@ export function Sidebar() {
           {t('nav.logout')}
         </Button>
       </div>
+
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </aside>
   );
 }

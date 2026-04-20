@@ -321,5 +321,58 @@
     "printCta": "Print",
     "exportPdfCta": "Export PDF",
     "overBudgetWarning": "This PO is over-invoiced. Review the lines highlighted in red."
+  },
+  "pricing": {
+    "eyebrow": "Simple pricing",
+    "title": "Easy to start, grow at your pace.",
+    "subtitle": "One project to try the whole thing. Upgrade to Pro when you want more.",
+    "monthlyBadge": "Monthly",
+    "annualBadge": "Annual",
+    "annualSavings": "−16%",
+    "pricePerMonth": "/ month",
+    "pricePerYear": "/ year",
+    "billedAnnually": "billed annually",
+    "billedMonthly": "billed monthly",
+    "ctaFree": "Try it free",
+    "ctaPro": "Start with Pro",
+    "ctaUpgrade": "Upgrade to Pro",
+    "plans": {
+      "freeTitle": "Free",
+      "freePrice": "€0",
+      "freePeriod": "forever",
+      "freeSubtitle": "To try Ordre with a single project.",
+      "proTitle": "Ordre Pro",
+      "proMarketingMonthly": "€9",
+      "proMarketingYearly": "€90",
+      "proSubtitle": "For teams running several projects."
+    },
+    "featureFree1": "1 project",
+    "featureFree2": "Unlimited suppliers, POs and invoices per project",
+    "featureFree3": "Approvals and reconciliation",
+    "featureFree4": "Catalan / Spanish / English",
+    "featurePro1": "Unlimited projects",
+    "featurePro2": "Unlimited members with roles",
+    "featurePro3": "PDF and CSV export",
+    "featurePro4": "Priority support",
+    "featurePro5": "Everything we ship next",
+    "loadingLive": "Loading live prices…",
+    "fallbackNote": "Final price confirmed at checkout, in your currency."
+  },
+  "paywall": {
+    "unlockProjectsTitle": "Unlock unlimited projects",
+    "unlockProjectsBody": "The Free plan covers 1 project. Upgrade to Ordre Pro to create as many as you need and invite your whole team.",
+    "upgradeCta": "Upgrade to Pro",
+    "cancel": "Not now",
+    "dismissedToast": "You're still on Free. You can upgrade any time.",
+    "purchasedToast": "Welcome to Ordre Pro. Thanks!",
+    "disabledNotice": "Web billing isn't configured in this environment."
+  },
+  "subscription": {
+    "proBadge": "Pro",
+    "freeBadge": "Free",
+    "manage": "Manage subscription",
+    "openPortal": "Open portal",
+    "portalUnavailable": "The billing portal becomes available after your first purchase.",
+    "upgrade": "Upgrade to Pro"
   }
 }
