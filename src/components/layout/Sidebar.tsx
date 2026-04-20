@@ -36,7 +36,7 @@ export function Sidebar() {
   const primary: Item[] = [
     { key: 'dashboard', labelKey: 'nav.dashboard', to: base, icon: 'grid-fill' },
     { key: 'orders', labelKey: 'nav.purchaseOrders', to: `${base}/purchase-orders`, icon: 'receipt-fill' },
-    { key: 'approvals', labelKey: 'nav.approvals', to: `${base}/approvals`, icon: 'shield-fill-check', disabled: true },
+    { key: 'approvals', labelKey: 'nav.approvals', to: `${base}/approvals`, icon: 'shield-fill-check' },
     { key: 'suppliers', labelKey: 'nav.suppliers', to: `${base}/suppliers`, icon: 'building-fill' },
   ];
 

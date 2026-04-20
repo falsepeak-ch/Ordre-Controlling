@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Topbar } from '~/components/layout/Topbar';
 import { Card } from '~/components/ui/Card';
@@ -12,7 +12,6 @@ import { Spinner } from '~/components/ui/Spinner';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { useProjectData } from '~/hooks/useProjectData';
 import { useSuppliers } from '~/hooks/useSuppliers';
-import { useToast } from '~/hooks/useToast';
 import { canEdit } from '~/lib/roles';
 import { poTotals } from '~/lib/reconcile';
 import { eur, eurFull, relDate } from '~/lib/format';
@@ -33,7 +32,6 @@ export function PurchaseOrdersPage() {
   const { project, role } = useCurrentProject();
   const { purchaseOrders, loading } = useProjectData(project.id);
   const { suppliers } = useSuppliers(project.id);
-  const { push } = useToast();
 
   const [filter, setFilter] = useState<POStatus | 'all'>('all');
   const [query, setQuery] = useState('');
@@ -75,9 +73,8 @@ export function PurchaseOrdersPage() {
     return { committed, invoiced, remaining: committed - invoiced, active };
   }, [purchaseOrders]);
 
-  function comingSoon() {
-    push({ message: t('app.stubTitle'), icon: 'clock-fill' });
-  }
+  const navigate = useNavigate();
+  const goNew = () => navigate(`/app/p/${project.id}/purchase-orders/new`);
 
   return (
     <>
@@ -89,7 +86,7 @@ export function PurchaseOrdersPage() {
               variant="primary"
               size="sm"
               leading={<Icon name="plus" size={13} />}
-              onClick={comingSoon}
+              onClick={goNew}
             >
               {t('pos.newCta')}
             </Button>
@@ -176,7 +173,7 @@ export function PurchaseOrdersPage() {
             <Spinner size={22} />
           </div>
         ) : purchaseOrders.length === 0 ? (
-          <EmptyState writable={writable} onCreate={comingSoon} />
+          <EmptyState writable={writable} onCreate={goNew} />
         ) : filtered.length === 0 ? (
           <Card size="lg" tone="muted" className="pos-empty-filter">
             <h3 className="display-sm">{t('pos.emptyFilter.title')}</h3>

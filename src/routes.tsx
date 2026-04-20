@@ -11,6 +11,8 @@ import { MembersPage } from '~/pages/MembersPage';
 import { SuppliersPage } from '~/pages/SuppliersPage';
 import { PurchaseOrdersPage } from '~/pages/PurchaseOrdersPage';
 import { PODetailPage } from '~/pages/PODetailPage';
+import { POFormPage } from '~/pages/POFormPage';
+import { ApprovalsQueuePage } from '~/pages/ApprovalsQueuePage';
 import { NotFoundPage } from '~/pages/NotFoundPage';
 
 export const router = createBrowserRouter([
@@ -41,8 +43,11 @@ export const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: 'members', element: <MembersPage /> },
       { path: 'suppliers', element: <SuppliersPage /> },
+      { path: 'approvals', element: <ApprovalsQueuePage /> },
       { path: 'purchase-orders', element: <PurchaseOrdersPage /> },
+      { path: 'purchase-orders/new', element: <POFormPage /> },
       { path: 'purchase-orders/:poId', element: <PODetailPage /> },
+      { path: 'purchase-orders/:poId/edit', element: <POFormPage /> },
       { path: '*', element: <Navigate to="." replace /> },
     ],
   },

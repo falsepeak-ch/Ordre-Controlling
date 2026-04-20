@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { Navigate, useParams, Link } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Navigate, useNavigate, useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Topbar } from '~/components/layout/Topbar';
 import { Card } from '~/components/ui/Card';
@@ -9,12 +9,15 @@ import { Pill } from '~/components/ui/Pill';
 import { Progress } from '~/components/ui/Progress';
 import { Avatar } from '~/components/ui/Avatar';
 import { Spinner } from '~/components/ui/Spinner';
+import { PODecisionModal } from '~/components/PODecisionModal';
+import { useAuth } from '~/hooks/useAuth';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { usePurchaseOrder } from '~/hooks/usePurchaseOrder';
 import { useSuppliers } from '~/hooks/useSuppliers';
 import { useToast } from '~/hooks/useToast';
 import { poTotals, lineCommitted, lineInvoiced } from '~/lib/reconcile';
 import { canEdit } from '~/lib/roles';
+import { closePO, isApproverFor, submitPOForApproval } from '~/lib/purchaseOrders';
 import { eur, eurFull, formatDate } from '~/lib/format';
 import type { POLine, PurchaseOrder } from '~/types';
 import './PODetailPage.css';
@@ -22,10 +25,14 @@ import './PODetailPage.css';
 export function PODetailPage() {
   const { t } = useTranslation();
   const { project, role } = useCurrentProject();
+  const { user } = useAuth();
   const { poId } = useParams<{ poId: string }>();
   const { po, loading, notFound } = usePurchaseOrder(project.id, poId);
   const { suppliers } = useSuppliers(project.id);
   const { push } = useToast();
+  const navigate = useNavigate();
+  const [decisionMode, setDecisionMode] = useState<null | 'approve' | 'reject'>(null);
+  const [busyAction, setBusyAction] = useState<null | 'submit' | 'close'>(null);
 
   const supplier = useMemo(
     () => suppliers.find((s) => s.id === po?.supplierId),
@@ -37,6 +44,7 @@ export function PODetailPage() {
   function comingSoon() {
     push({ message: t('app.stubTitle'), icon: 'clock-fill' });
   }
+  void comingSoon; // upload-invoice stub — reserved for the next iteration.
 
   if (notFound) return <Navigate to={`/app/p/${project.id}/purchase-orders`} replace />;
   if (loading || !po || !totals) {
@@ -68,28 +76,59 @@ export function PODetailPage() {
           </Link>
         }
         actions={
-          <>
-            <Button
-              variant="ghost"
-              size="sm"
-              leading={<Icon name="download-fill" size={13} />}
-              onClick={comingSoon}
-            >
-              {t('poDetail.exportPdfCta')}
-            </Button>
-            {canEdit(role) && po.status === 'approved' ? (
-              <Button
-                variant="primary"
-                size="sm"
-                leading={<Icon name="upload-fill" size={13} />}
-                onClick={comingSoon}
-              >
-                {t('poDetail.addInvoiceCta')}
-              </Button>
-            ) : null}
-          </>
+          <POActions
+            po={po}
+            projectId={project.id}
+            userRole={role}
+            userUid={user?.uid}
+            busy={busyAction}
+            onEditDraft={() =>
+              navigate(`/app/p/${project.id}/purchase-orders/${po.id}/edit`)
+            }
+            onSubmit={async () => {
+              setBusyAction('submit');
+              try {
+                await submitPOForApproval(project.id, po, project);
+                push({ message: t('poForm.submittedToast'), icon: 'check-circle-fill' });
+              } catch (err) {
+                const code = (err as Error).message;
+                if (code === 'no-approvers-available') {
+                  push({ message: t('poForm.noApprovers'), icon: 'x-circle-fill', tone: 'error' });
+                } else {
+                  push({ message: t('poForm.error'), icon: 'x-circle-fill', tone: 'error' });
+                }
+              } finally {
+                setBusyAction(null);
+              }
+            }}
+            onApprove={() => setDecisionMode('approve')}
+            onReject={() => setDecisionMode('reject')}
+            onClose={async () => {
+              if (!window.confirm(t('poActions.closeConfirm'))) return;
+              setBusyAction('close');
+              try {
+                await closePO(project.id, po.id);
+                push({ message: t('poActions.closedToast'), icon: 'check-circle-fill' });
+              } catch {
+                push({ message: t('poForm.error'), icon: 'x-circle-fill', tone: 'error' });
+              } finally {
+                setBusyAction(null);
+              }
+            }}
+          />
         }
       />
+
+      {user ? (
+        <PODecisionModal
+          open={decisionMode !== null}
+          mode={decisionMode ?? 'approve'}
+          po={po}
+          projectId={project.id}
+          approverUid={user.uid}
+          onClose={() => setDecisionMode(null)}
+        />
+      ) : null}
 
       <div className="po-detail-page">
         <section className="po-hero reveal">
@@ -373,6 +412,101 @@ export function PODetailPage() {
       </div>
     </>
   );
+}
+
+// --- Top-bar actions, wired to the PO's current status + user's role ---
+function POActions({
+  po,
+  projectId: _projectId,
+  userRole,
+  userUid,
+  busy,
+  onEditDraft,
+  onSubmit,
+  onApprove,
+  onReject,
+  onClose,
+}: {
+  po: PurchaseOrder;
+  projectId: string;
+  userRole: 'owner' | 'editor' | 'viewer';
+  userUid: string | undefined;
+  busy: null | 'submit' | 'close';
+  onEditDraft: () => void;
+  onSubmit: () => void;
+  onApprove: () => void;
+  onReject: () => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const writable = canEdit(userRole);
+  const approverHere = isApproverFor(po, userUid);
+  const canClose = userRole === 'owner' && po.status === 'approved';
+
+  // Draft: editor+ can edit draft or submit it.
+  if (po.status === 'draft' && writable) {
+    return (
+      <>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onEditDraft}
+          leading={<Icon name="pencil-fill" size={13} />}
+        >
+          {t('poActions.editDraftCta')}
+        </Button>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={onSubmit}
+          isLoading={busy === 'submit'}
+          leading={<Icon name="shield-fill-check" size={13} />}
+        >
+          {t('poActions.submitForApproval')}
+        </Button>
+      </>
+    );
+  }
+
+  // Pending approval: the assigned approver can decide.
+  if (po.status === 'pending_approval' && approverHere) {
+    return (
+      <>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onReject}
+          leading={<Icon name="x-circle-fill" size={13} />}
+        >
+          {t('poActions.rejectCta')}
+        </Button>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={onApprove}
+          leading={<Icon name="check-circle-fill" size={13} />}
+        >
+          {t('poActions.approveCta')}
+        </Button>
+      </>
+    );
+  }
+
+  // Approved: owners can close.
+  if (canClose) {
+    return (
+      <Button
+        variant="primary"
+        size="sm"
+        onClick={onClose}
+        isLoading={busy === 'close'}
+      >
+        {t('poActions.closeCta')}
+      </Button>
+    );
+  }
+
+  return null;
 }
 
 function LineRow({ line, po }: { line: POLine; po: PurchaseOrder }) {
