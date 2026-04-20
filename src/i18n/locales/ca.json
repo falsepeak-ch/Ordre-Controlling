@@ -118,6 +118,7 @@
     "roles": {
       "owner": "Propietari",
       "editor": "Editor",
+      "approver": "Aprovador",
       "viewer": "Lector"
     }
   },
@@ -166,7 +167,14 @@
     "roleCaption": {
       "owner": "Pot editar-ho tot i gestionar membres.",
       "editor": "Pot crear i modificar ordres, proveïdors i factures.",
+      "approver": "Pot aprovar ordres i registrar pagaments de factures. No pot editar ordres.",
       "viewer": "Només pot llegir."
+    },
+    "roleName": {
+      "owner": "Propietari",
+      "editor": "Editor",
+      "approver": "Aprovador",
+      "viewer": "Lector"
     },
     "you": "tu",
     "changeRole": "Canvia el rol",
@@ -182,12 +190,21 @@
     "stubTitle": "Properament",
     "stubBody": "El tauler, el llistat d'ordres, el detall de conciliació, el creador d'ordres, el directori de proveïdors i la cua d'aprovacions estan en preparació."
   },
+  "errorPage": {
+    "title": "Alguna cosa ha fallat.",
+    "body": "Un error inesperat ha interromput aquesta pàgina. Les teves dades estan segures — torna enrere o recarrega.",
+    "back": "Enrere",
+    "home": "Torna a l'inici",
+    "projects": "Ves als projectes",
+    "contact": "Necessites ajuda? Escriu-nos a"
+  },
   "notFound": {
     "title": "Aquesta pàgina no existeix.",
     "body": "L'enllaç potser està obsolet o l'ordre s'ha mogut.",
     "cta": "Torna a l'inici",
     "projectTitle": "Projecte no disponible.",
-    "projectBody": "O bé no existeix, o bé no hi tens accés. Torna al llistat de projectes."
+    "projectBody": "O bé no existeix, o bé no hi tens accés. Torna al llistat de projectes.",
+    "contact": "Necessites ajuda? Escriu-nos a"
   },
   "suppliers": {
     "pageTitle": "Proveïdors",
@@ -242,6 +259,50 @@
       "viewDetails": "Veure detall"
     },
     "viewerNotice": "Només lectura. Els editors i propietaris poden crear i modificar proveïdors."
+  },
+  "attachments": {
+    "uploadCta": "Puja fitxer",
+    "uploading": "Pujant…",
+    "replaceCta": "Substitueix",
+    "removeCta": "Treu",
+    "empty": "Encara no hi ha fitxers.",
+    "emptyReadOnly": "Aquest projecte és només lectura per a tu.",
+    "kindLabel": "Tipus",
+    "kindPlaceholder": "Etiqueta opcional: contracte, factura pro-forma…",
+    "uploadedBy": "per {{name}}",
+    "uploadedAt": "Pujat {{date}}",
+    "deleteConfirm": "Eliminar aquest fitxer? També s'esborra del teu Storage.",
+    "deletedToast": "Fitxer eliminat",
+    "addedToast": "Fitxer pujat",
+    "uploadError": "No hem pogut pujar el fitxer. Torna-ho a provar.",
+    "fileTooLarge": "El fitxer és massa gran. Màxim 25 MB."
+  },
+  "supplierDocs": {
+    "sectionTitle": "Documents",
+    "headerCta": "Afegeix document",
+    "countOne": "1 document",
+    "countOther": "{{count}} documents",
+    "modalTitle": "Documents de {{supplier}}",
+    "modalSubtitle": "Contractes, certificats i qualsevol fitxer que vulguis tenir a mà. Fins a 25 MB per fitxer.",
+    "kinds": {
+      "contract": "Contracte",
+      "tax": "Fiscal",
+      "insurance": "Assegurança",
+      "pricing": "Llista de preus",
+      "other": "Altres"
+    },
+    "pickKind": "Tipus",
+    "uploadCta": "Puja document",
+    "docsLink": "Documents ({{count}})"
+  },
+  "poAttachments": {
+    "sectionTitle": "Documentació de suport",
+    "subtitle": "Pressupost, fil de correu, albarà de lliurament o qualsevol fitxer que doni context a l'ordre.",
+    "empty": "Cap document adjunt. Puja el pressupost o el fil de correu per tenir-ho tot en un mateix lloc.",
+    "emptyReadOnly": "Cap document adjunt.",
+    "countOne": "1 fitxer",
+    "countOther": "{{count}} fitxers",
+    "uploadCta": "Puja fitxer"
   },
   "pos": {
     "pageTitle": "Ordres de compra",
@@ -397,10 +458,6 @@
     "lineUnitPrice": "Preu unitari",
     "lineSubtotal": "Subtotal",
     "lineRemove": "Treu línia",
-    "categoryShoot": "Rodatge",
-    "categoryOffice": "Oficina",
-    "categoryTravel": "Viatges",
-    "categoryServices": "Serveis",
     "totalCommitted": "Total compromès",
     "saveDraft": "Desa com a esborrany",
     "saveDraftShort": "Desa esborrany",
@@ -429,10 +486,28 @@
     "rejectTitle": "Rebutjar {{number}}",
     "approveSubtitle": "Queda constància de qui, quan i amb quin comentari.",
     "rejectSubtitle": "Indica breument per què. El sol·licitant podrà re-escopar i tornar-la a enviar.",
-    "approvedToast": "Ordre aprovada",
+    "approvedToast": "Factura registrada i ordre actualitzada",
     "rejectedToast": "Ordre rebutjada",
     "closedToast": "Ordre tancada",
-    "closeConfirm": "Tanques l'ordre? Deixarà de poder rebre factures."
+    "closeConfirm": "Tanques l'ordre? Deixarà de poder rebre factures.",
+    "deleteCta": "Elimina",
+    "deleteConfirm": "Elimines permanentment aquesta ordre i totes les seves dades? No es pot desfer.",
+    "deletedToast": "Ordre de compra eliminada"
+  },
+  "poDecision": {
+    "approveTitle": "Registra factura — {{number}}",
+    "approveSubtitle": "Puja la factura i introdueix l'import. El pressupost restant s'actualitza de manera immediata.",
+    "billTitle": "Dades de la factura",
+    "committed": "Compromès",
+    "alreadyInvoiced": "Ja facturat",
+    "remainingAfter": "Restant après aquesta factura",
+    "willClose": "L'ordre es tancarà",
+    "approveAndRecordCta": "Registra factura",
+    "approveAndCloseCta": "Registra i tanca l'ordre",
+    "approvedClosedToast": "Factura registrada — l'ordre queda completament facturada i tancada",
+    "amountRequired": "Introdueix l'import de la factura.",
+    "fileRequired": "Puja el fitxer de la factura.",
+    "mappingMismatch": "L'assignació per línies ({{mapped}}) no coincideix amb el total ({{total}})."
   },
   "projectSettings": {
     "pageTitle": "Configuració del projecte",
@@ -591,6 +666,68 @@
       "decided": "Decidides"
     },
     "requestedBy": "Demanat per {{name}}",
-    "waitingFor": "També espera {{list}}"
+    "waitingFor": "També espera {{list}}",
+    "youActed": "Ja has registrat una factura"
+  },
+  "invoices": {
+    "pageTitle": "Factures",
+    "heroSubtitle": "Totes les factures de cada ordre de compra a {{project}}.",
+    "countOne": "1 factura",
+    "countOther": "{{count}} factures",
+    "searchPlaceholder": "Cerca per número de factura…",
+    "allSuppliers": "Tots els proveïdors",
+    "allPOs": "Totes les OC",
+    "dateFrom": "Des de",
+    "dateTo": "Fins a",
+    "table": {
+      "number": "Número",
+      "poRef": "OC",
+      "supplier": "Proveïdor",
+      "issueDate": "Emesa",
+      "dueDate": "Venciment",
+      "total": "Total",
+      "uploadedBy": "Pujada per"
+    },
+    "totals": {
+      "totalInvoiced": "Total facturat",
+      "invoiceCount": "Factures",
+      "avgInvoice": "Mitjana per factura"
+    },
+    "empty": {
+      "title": "Encara no hi ha factures.",
+      "body": "Les factures apareixeran aquí quan es pugin a una ordre de compra."
+    },
+    "emptyFilter": {
+      "title": "Cap resultat",
+      "body": "Prova altres filtres o termes de cerca."
+    }
+  },
+  "reports": {
+    "pageTitle": "Informes",
+    "heroSubtitle": "Analítica financera de {{project}}.",
+    "dateFrom": "Des de",
+    "dateTo": "Fins a",
+    "clearDates": "Netejar",
+    "kpi": {
+      "committed": "Compromès",
+      "invoiced": "Facturat",
+      "remaining": "Restant",
+      "activePOs": "OC actives"
+    },
+    "charts": {
+      "budgetOverview": "Resum pressupostari",
+      "spendByCategory": "Despesa per categoria",
+      "spendBySupplier": "Despesa per proveïdor (top 10)",
+      "spendOverTime": "Evolució de la despesa",
+      "poStatusDistribution": "Distribució d'estats",
+      "committed": "Compromès",
+      "invoiced": "Facturat",
+      "remaining": "Restant",
+      "noData": "No hi ha prou dades per mostrar aquest gràfic."
+    },
+    "empty": {
+      "title": "Sense dades encara.",
+      "body": "Els informes es mostraran quan s'afegeixin ordres de compra i factures al projecte."
+    }
   }
 }

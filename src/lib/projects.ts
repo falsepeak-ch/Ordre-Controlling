@@ -14,9 +14,31 @@ import {
   writeBatch,
   type Unsubscribe,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { httpsCallable } from 'firebase/functions';
+import i18next from 'i18next';
+import { db, functions } from './firebase';
 import { findUserByEmail, projectDoc, projectsCol, userDoc } from './firestore';
 import type { Project, Role } from '~/types';
+
+type InviteLocale = 'ca' | 'es' | 'en';
+
+interface SendProjectInvitePayload {
+  projectId: string;
+  email: string;
+  role: Role;
+  recipientName?: string;
+  locale: InviteLocale;
+}
+
+const sendProjectInviteCallable = httpsCallable<SendProjectInvitePayload, { ok: boolean }>(
+  functions,
+  'sendProjectInvite',
+);
+
+function currentInviteLocale(): InviteLocale {
+  const raw = (i18next.language || 'ca').slice(0, 2).toLowerCase();
+  return raw === 'es' || raw === 'en' ? raw : 'ca';
+}
 
 export interface NewProjectInput {
   name: string;
@@ -72,7 +94,7 @@ export function listenProjectsForUser(
   uid: string,
   onData: (projects: Project[]) => void,
 ): Unsubscribe {
-  const q = query(projectsCol(), where(`members.${uid}`, 'in', ['owner', 'editor', 'viewer']));
+  const q = query(projectsCol(), where(`members.${uid}`, 'in', ['owner', 'editor', 'approver', 'viewer']));
   return onSnapshot(q, (snap) => {
     const items: Project[] = snap.docs.map((d) => ({ ...d.data(), id: d.id }));
     items.sort((a, b) => a.name.localeCompare(b.name));
@@ -109,6 +131,20 @@ export async function addMemberByEmail(
       photoURL: user.photoURL ?? null,
     },
   });
+
+  // Fire-and-forget invite email. A failure here should never block the
+  // role write — the member already has access; the email is a courtesy.
+  try {
+    await sendProjectInviteCallable({
+      projectId,
+      email: normalized,
+      role,
+      recipientName: user.displayName,
+      locale: currentInviteLocale(),
+    });
+  } catch (err) {
+    console.warn('[addMemberByEmail] invite email failed', err);
+  }
 }
 
 export async function updateMemberRole(

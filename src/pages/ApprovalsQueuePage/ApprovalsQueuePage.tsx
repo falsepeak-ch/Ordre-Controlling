@@ -6,7 +6,6 @@ import { Card } from '~/components/ui/Card';
 import { Icon } from '~/components/ui/Icon';
 import { Button } from '~/components/ui/Button';
 import { Pill } from '~/components/ui/Pill';
-import { Avatar } from '~/components/ui/Avatar';
 import { Spinner } from '~/components/ui/Spinner';
 import { PODecisionModal } from '~/components/PODecisionModal';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
@@ -14,20 +13,20 @@ import { useAuth } from '~/hooks/useAuth';
 import { useApprovalsQueue, type QueueEntry } from '~/hooks/useApprovalsQueue';
 import { useSuppliers } from '~/hooks/useSuppliers';
 import { poTotals } from '~/lib/reconcile';
-import { eur, eurFull, formatDate, relDate } from '~/lib/format';
+import { eur, formatDate, relDate } from '~/lib/format';
 import type { PurchaseOrder } from '~/types';
 import './ApprovalsQueuePage.css';
 
-type Tab = 'waiting' | 'decided';
+type Tab = 'pending' | 'decided';
 
 export function ApprovalsQueuePage() {
   const { t } = useTranslation();
-  const { project } = useCurrentProject();
+  const { project, role } = useCurrentProject();
   const { user } = useAuth();
-  const { waitingForMe, decidedByMe, loading } = useApprovalsQueue(project.id, user?.uid);
+  const { pending, decided, loading } = useApprovalsQueue(project.id, user?.uid);
   const { suppliers } = useSuppliers(project.id);
 
-  const [tab, setTab] = useState<Tab>('waiting');
+  const [tab, setTab] = useState<Tab>('pending');
   const [decisionEntry, setDecisionEntry] = useState<{
     entry: QueueEntry;
     mode: 'approve' | 'reject';
@@ -37,7 +36,7 @@ export function ApprovalsQueuePage() {
     return suppliers.find((s) => s.id === po.supplierId);
   }
 
-  const entries = tab === 'waiting' ? waitingForMe : decidedByMe;
+  const entries = tab === 'pending' ? pending : decided;
 
   return (
     <>
@@ -45,9 +44,9 @@ export function ApprovalsQueuePage() {
         title={t('approvalsQueue.pageTitle')}
         subtitle={
           <span className="muted" style={{ fontSize: 13 }}>
-            {waitingForMe.length === 1
+            {pending.length === 1
               ? t('approvalsQueue.pendingOne')
-              : t('approvalsQueue.pendingOther', { count: waitingForMe.length })}
+              : t('approvalsQueue.pendingOther', { count: pending.length })}
           </span>
         }
       />
@@ -65,36 +64,32 @@ export function ApprovalsQueuePage() {
           <button
             type="button"
             role="tab"
-            aria-selected={tab === 'waiting'}
-            className={['approvals-tab', tab === 'waiting' ? 'is-active' : null]
-              .filter(Boolean)
-              .join(' ')}
-            onClick={() => setTab('waiting')}
+            aria-selected={tab === 'pending'}
+            className={['approvals-tab', tab === 'pending' ? 'is-active' : null]
+              .filter(Boolean).join(' ')}
+            onClick={() => setTab('pending')}
           >
             {t('approvalsQueue.filter.waiting')}
-            <span className="approvals-tab-count">{waitingForMe.length}</span>
+            <span className="approvals-tab-count">{pending.length}</span>
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={tab === 'decided'}
             className={['approvals-tab', tab === 'decided' ? 'is-active' : null]
-              .filter(Boolean)
-              .join(' ')}
+              .filter(Boolean).join(' ')}
             onClick={() => setTab('decided')}
           >
             {t('approvalsQueue.filter.decided')}
-            <span className="approvals-tab-count">{decidedByMe.length}</span>
+            <span className="approvals-tab-count">{decided.length}</span>
           </button>
         </section>
 
         {loading ? (
-          <div className="approvals-loader">
-            <Spinner size={22} />
-          </div>
+          <div className="approvals-loader"><Spinner size={22} /></div>
         ) : entries.length === 0 ? (
           <Card size="lg" tone="muted" className="approvals-empty">
-            {tab === 'waiting' ? (
+            {tab === 'pending' ? (
               <>
                 <Icon name="check-circle-fill" size={24} />
                 <h3 className="display-md">{t('approvalsQueue.allCaughtUpTitle')}</h3>
@@ -112,9 +107,8 @@ export function ApprovalsQueuePage() {
             {entries.map((entry) => {
               const s = supplierFor(entry.po);
               const totals = poTotals(entry.po);
-              const pendingPeers = entry.approvals.filter(
-                (a) => a.decision === 'pending' && a.approverUid !== user?.uid,
-              );
+              const myApprovals = entry.approvals.filter((a) => a.approverUid === user?.uid);
+              const lastMyApproval = myApprovals.at(-1) ?? null;
               return (
                 <article key={entry.po.id} className="approvals-card">
                   <div className="approvals-card-head">
@@ -151,64 +145,55 @@ export function ApprovalsQueuePage() {
                     <p className="approvals-card-notes muted">{entry.po.notes}</p>
                   ) : null}
 
-                  {tab === 'waiting' ? (
-                    <>
-                      {pendingPeers.length > 0 ? (
-                        <div className="approvals-card-peers">
-                          <span className="muted" style={{ fontSize: 11.5 }}>
-                            {t('approvalsQueue.waitingFor', {
-                              list: pendingPeers.map((p) => p.approver).join(', '),
-                            })}
-                          </span>
-                        </div>
-                      ) : null}
-
-                      <div className="approvals-card-actions">
+                  {tab === 'pending' ? (
+                    <div className="approvals-card-actions">
+                      <div className="approvals-card-actions-left">
                         <span className="approvals-card-time muted">
                           {relDate(entry.po.submittedAt ?? entry.po.createdAt)}
                         </span>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDecisionEntry({ entry, mode: 'reject' })}
-                            leading={<Icon name="x-circle-fill" size={13} />}
-                          >
-                            {t('poActions.rejectCta')}
-                          </Button>
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => setDecisionEntry({ entry, mode: 'approve' })}
-                            leading={<Icon name="check-circle-fill" size={13} />}
-                          >
-                            {t('poActions.approveCta')}
-                          </Button>
-                        </div>
+                        {entry.iHaveActed ? (
+                          <span className="approvals-card-acted muted">
+                            <Icon name="check-circle-fill" size={12} />
+                            {t('approvalsQueue.youActed')}
+                          </span>
+                        ) : null}
                       </div>
-                    </>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDecisionEntry({ entry, mode: 'reject' })}
+                          leading={<Icon name="x-circle-fill" size={13} />}
+                        >
+                          {t('poActions.rejectCta')}
+                        </Button>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => setDecisionEntry({ entry, mode: 'approve' })}
+                          leading={<Icon name="check-circle-fill" size={13} />}
+                        >
+                          {t('poActions.approveCta')}
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <div className="approvals-card-decision">
-                      <Avatar
-                        name={entry.myApproval?.approver ?? user?.displayName ?? undefined}
-                        size="sm"
-                      />
                       <span style={{ fontSize: 13, color: 'var(--fg-deep)' }}>
-                        {entry.myDecision === 'approved'
+                        {lastMyApproval?.decision === 'approved'
                           ? t('poActions.approveCta')
                           : t('poActions.rejectCta')}{' '}
                         ·{' '}
                         <span className="muted">
-                          {formatDate(entry.myApproval?.decidedAt ?? null)} ·{' '}
-                          {eurFull(totals.committed)}
+                          {formatDate(lastMyApproval?.decidedAt ?? null)}
+                          {lastMyApproval?.amount
+                            ? ` · ${eur(lastMyApproval.amount)}`
+                            : ''}
                         </span>
                       </span>
-                      {entry.myApproval?.comment ? (
-                        <span
-                          className="muted"
-                          style={{ fontSize: 12.5, marginLeft: 'auto', maxWidth: '55%', textAlign: 'right' }}
-                        >
-                          “{entry.myApproval.comment}”
+                      {lastMyApproval?.comment ? (
+                        <span className="muted" style={{ fontSize: 12.5, marginLeft: 'auto', maxWidth: '55%', textAlign: 'right' }}>
+                          "{lastMyApproval.comment}"
                         </span>
                       ) : null}
                     </div>
@@ -227,7 +212,10 @@ export function ApprovalsQueuePage() {
           po={decisionEntry.entry.po}
           projectId={project.id}
           approverUid={user.uid}
+          approverDisplayName={user.displayName ?? user.email ?? 'You'}
+          approverRole={role}
           onClose={() => setDecisionEntry(null)}
+          onDecided={() => setDecisionEntry(null)}
         />
       ) : null}
     </>

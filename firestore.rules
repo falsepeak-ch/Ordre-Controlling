@@ -25,18 +25,33 @@ service cloud.firestore {
         (projectRole(projectId) == 'owner' || projectRole(projectId) == 'editor');
     }
 
+    function canApproveProject(projectId) {
+      return isSignedIn() &&
+        (projectRole(projectId) == 'owner' || projectRole(projectId) == 'approver');
+    }
+
     function isProjectOwner(projectId) {
       return isSignedIn() && projectRole(projectId) == 'owner';
     }
 
     // ---------- Users ----------
-    // A signed-in user can always read/write their own doc.
-    // They can also read any other user's public-ish fields because "add
-    // member by email" needs to look up a uid. In a more locked-down world
-    // this would go through a Cloud Function.
+    // A signed-in user can always read/write their own doc, EXCEPT for
+    // Stripe subscription fields which are managed exclusively by Cloud
+    // Functions (admin SDK) to prevent client-side entitlement spoofing.
     match /users/{uid} {
       allow read: if isSignedIn();
-      allow create, update: if isSelf(uid);
+      allow create: if isSelf(uid) &&
+        !('subscriptionStatus' in request.resource.data) &&
+        !('subscriptionId' in request.resource.data) &&
+        !('stripeCustomerId' in request.resource.data) &&
+        !('subscriptionPlan' in request.resource.data) &&
+        !('subscriptionCurrentPeriodEnd' in request.resource.data);
+      allow update: if isSelf(uid) &&
+        request.resource.data.subscriptionStatus == resource.data.subscriptionStatus &&
+        request.resource.data.subscriptionId == resource.data.subscriptionId &&
+        request.resource.data.subscriptionPlan == resource.data.subscriptionPlan &&
+        request.resource.data.subscriptionCurrentPeriodEnd == resource.data.subscriptionCurrentPeriodEnd &&
+        request.resource.data.stripeCustomerId == resource.data.stripeCustomerId;
       allow delete: if false;
     }
 
@@ -68,6 +83,11 @@ service cloud.firestore {
       match /suppliers/{id} {
         allow read: if isProjectMember(projectId);
         allow create, update, delete: if canWriteProject(projectId);
+
+        match /docs/{docId} {
+          allow read: if isProjectMember(projectId);
+          allow create, update, delete: if canWriteProject(projectId);
+        }
       }
 
       match /categories/{id} {
@@ -77,14 +97,30 @@ service cloud.firestore {
 
       match /purchaseOrders/{poId} {
         allow read: if isProjectMember(projectId);
-        allow create, update, delete: if canWriteProject(projectId);
+        // Editors/owners CRUD POs fully. Approvers may update a PO's
+        // status/closedAt/approvedAt as part of recording spend; the
+        // client does this atomically with invoice + approval writes.
+        allow create, delete: if canWriteProject(projectId);
+        allow update: if canWriteProject(projectId) || canApproveProject(projectId);
 
         match /invoices/{invId} {
           allow read: if isProjectMember(projectId);
-          allow create, update, delete: if canWriteProject(projectId);
+          // Editors/owners can always write invoices. Approvers can
+          // create invoices as part of the approve-with-bill flow.
+          allow create: if canWriteProject(projectId) || canApproveProject(projectId);
+          allow update, delete: if canWriteProject(projectId);
         }
 
         match /approvals/{apId} {
+          allow read: if isProjectMember(projectId);
+          // Approvers and owners append approval-log entries.
+          allow create: if canApproveProject(projectId);
+          // Approval-log is append-only for audit purposes; only owners
+          // may clean up (e.g. re-open a rejected PO).
+          allow update, delete: if isProjectOwner(projectId);
+        }
+
+        match /attachments/{attId} {
           allow read: if isProjectMember(projectId);
           allow create, update, delete: if canWriteProject(projectId);
         }

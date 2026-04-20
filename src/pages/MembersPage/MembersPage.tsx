@@ -15,7 +15,7 @@ import { canManage } from '~/lib/roles';
 import type { Role } from '~/types';
 import './MembersPage.css';
 
-const ROLE_ORDER: Role[] = ['owner', 'editor', 'viewer'];
+const ROLE_ORDER: Role[] = ['owner', 'editor', 'approver', 'viewer'];
 
 export function MembersPage() {
   const { t } = useTranslation();
@@ -135,9 +135,9 @@ export function MembersPage() {
                   />
                 </Field>
 
-                <Field label={t('members.roleLabel')} hint={t(`members.roleCaption.${newRole}`)}>
+                <Field label={t('members.roleLabel')}>
                   <div className="role-segmented">
-                    {(['viewer', 'editor', 'owner'] as Role[]).map((r) => (
+                    {(['viewer', 'approver', 'editor', 'owner'] as Role[]).map((r) => (
                       <button
                         key={r}
                         type="button"
@@ -162,6 +162,7 @@ export function MembersPage() {
                   {busy ? t('members.adding') : t('members.addCta')}
                 </Button>
               </form>
+              <p className="members-add-caption">{t(`members.roleCaption.${newRole}`)}</p>
             </Card>
           </section>
         ) : (
@@ -224,7 +225,7 @@ function RoleSelect({ current, onChange }: { current: Role; onChange: (r: Role) 
   const { t } = useTranslation();
   return (
     <div className="role-segmented role-segmented-sm">
-      {(['viewer', 'editor', 'owner'] as Role[]).map((r) => (
+      {(['viewer', 'approver', 'editor', 'owner'] as Role[]).map((r) => (
         <button
           key={r}
           type="button"

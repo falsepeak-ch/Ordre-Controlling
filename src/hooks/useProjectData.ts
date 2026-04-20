@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { onSnapshot } from 'firebase/firestore';
-import { purchaseOrdersCol, suppliersCol } from '~/lib/firestore';
+import { purchaseOrdersCol, suppliersCol, tsToISO } from '~/lib/firestore';
 import type { PurchaseOrder, Supplier } from '~/types';
 
 export interface ProjectData {
@@ -24,11 +24,20 @@ export function useProjectData(projectId: string): ProjectData {
       setSuppliersReady(true);
     });
     const unsubPos = onSnapshot(purchaseOrdersCol(projectId), (snap) => {
-      const docs = snap.docs.map((d) => ({ ...d.data(), id: d.id }));
-      // Invoices and approvals are sub-collections — not loaded in this hook
-      // to keep the dashboard query cheap. They'll be lazily joined when a
-      // future iteration renders detail views.
-      setPurchaseOrders(docs.map((d) => ({ ...d, invoices: d.invoices ?? [], approvals: d.approvals ?? [] })));
+      const docs = snap.docs.map((d) => {
+        const raw = d.data();
+        return {
+          ...(raw as PurchaseOrder),
+          id: d.id,
+          createdAt: tsToISO(raw.createdAt) ?? '',
+          submittedAt: tsToISO(raw.submittedAt),
+          approvedAt: tsToISO(raw.approvedAt),
+          closedAt: tsToISO(raw.closedAt),
+          invoices: raw.invoices ?? [],
+          approvals: raw.approvals ?? [],
+        };
+      });
+      setPurchaseOrders(docs);
       setPosReady(true);
     });
     return () => {

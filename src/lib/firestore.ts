@@ -31,6 +31,15 @@ export const usersCol = (): CollectionReference<UserProfile> =>
 export const userDoc = (uid: string): DocumentReference<UserProfile> =>
   doc(db, 'users', uid) as DocumentReference<UserProfile>;
 
+export function tsToISO(val: unknown): string | null {
+  if (!val) return null;
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object' && 'toDate' in (val as object)) {
+    return (val as { toDate(): Date }).toDate().toISOString();
+  }
+  return null;
+}
+
 export async function findUserByEmail(email: string): Promise<UserProfile | null> {
   const q = query(usersCol(), where('email', '==', email.toLowerCase().trim()));
   const snap = await getDocs(q);

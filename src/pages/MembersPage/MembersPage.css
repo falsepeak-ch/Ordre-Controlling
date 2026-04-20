@@ -34,6 +34,13 @@
   align-items: end;
 }
 
+.members-add-caption {
+  font-size: 13px;
+  color: var(--fg-muted);
+  margin-top: var(--s-2);
+  margin-bottom: 0;
+}
+
 .members-readonly {
   display: inline-flex;
   align-items: center;

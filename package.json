@@ -14,14 +14,14 @@
     "seed": "node scripts/seed-firestore.mjs"
   },
   "dependencies": {
-    "@revenuecat/purchases-js": "^1.35.0",
     "firebase": "^10.14.1",
     "i18next": "^23.16.5",
     "i18next-browser-languagedetector": "^8.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^15.1.1",
-    "react-router-dom": "^6.28.0"
+    "react-router-dom": "^6.28.0",
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",

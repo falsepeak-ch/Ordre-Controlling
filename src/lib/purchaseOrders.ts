@@ -2,14 +2,17 @@
    Purchase-order lifecycle helpers.
 
    Status transitions:
-     draft → pending_approval → approved → closed
+     draft → pending_approval → closed
                               ↘ rejected
 
-   v1 approval model: when an editor submits a PO for approval, every
-   `owner` of the project becomes an approver (stored in the PO's
-   approvals subcollection). Any single owner approval transitions the
-   PO to `approved`; any single owner rejection transitions it to
-   `rejected`. Amount-threshold rules are a v2 concern.
+   Approval model (v2):
+     Submitting a PO sends it to `pending_approval`. Any owner or
+     approver-role member can then record spend by uploading a bill and
+     entering an amount. Each approval event appends to the approvals
+     log (append-only audit trail) and writes a matching invoice doc.
+     The PO stays in `pending_approval` while more spend can land; it
+     automatically transitions to `closed` once `invoiced >= committed`.
+     Rejection closes the PO with no further bills.
    ========================================================================== */
 
 import {
@@ -26,22 +29,19 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { purchaseOrdersCol, projectDoc } from './firestore';
+import { createInvoice } from './invoices';
 import type {
+  Approval,
+  InvoiceLine,
   POLine,
   POStatus,
-  Project,
   PurchaseOrder,
-  Role,
 } from '~/types';
 
 export interface NewPODraftInput {
   supplierId: string;
   notes?: string | null;
   lines: POLine[];
-  /** Optional project category (chart of accounts). */
-  categoryId?: string | null;
-  categoryCode?: string | null;
-  categoryConcept?: string | null;
 }
 
 export interface POAuthor {
@@ -51,9 +51,6 @@ export interface POAuthor {
 }
 
 // ---------- PO number generation ----------
-// Simple counter: PO-{year}-{####}. The count is derived from a one-time
-// query against POs in the same project — good enough for small teams,
-// and cheap to replace with a project counter field later.
 async function nextPONumber(projectId: string): Promise<string> {
   const year = new Date().getFullYear();
   const snap = await getDocs(
@@ -75,8 +72,10 @@ export function blankLine(): POLine {
       ? crypto.randomUUID()
       : `line_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     description: '',
-    category: 'shoot',
     quantity: 1,
+    categoryId: null,
+    categoryCode: null,
+    categoryConcept: null,
     unitPrice: 0,
   };
 }
@@ -85,9 +84,11 @@ export function sanitizeLine(line: POLine): POLine {
   return {
     id: line.id,
     description: line.description.trim(),
-    category: line.category,
     quantity: Math.max(0, Math.floor(Number(line.quantity) || 0)),
     unitPrice: Math.max(0, Number(line.unitPrice) || 0),
+    categoryId: line.categoryId ?? null,
+    categoryCode: line.categoryCode ?? null,
+    categoryConcept: line.categoryConcept ?? null,
   };
 }
 
@@ -111,10 +112,6 @@ export async function createDraftPO(
     closedAt: null,
     notes: (input.notes ?? '').trim(),
     lines: input.lines.map(sanitizeLine),
-    categoryId: input.categoryId ?? null,
-    categoryCode: input.categoryCode ?? null,
-    categoryConcept: input.categoryConcept ?? null,
-    // We leave approvals + invoices as subcollections, created on demand.
   } as never);
   return ref.id;
 }
@@ -128,73 +125,172 @@ export async function updateDraftPO(
   if (patch.supplierId !== undefined) payload.supplierId = patch.supplierId;
   if (patch.notes !== undefined) payload.notes = (patch.notes ?? '').trim();
   if (patch.lines !== undefined) payload.lines = patch.lines.map(sanitizeLine);
-  if ('categoryId' in patch) payload.categoryId = patch.categoryId ?? null;
-  if ('categoryCode' in patch) payload.categoryCode = patch.categoryCode ?? null;
-  if ('categoryConcept' in patch) payload.categoryConcept = patch.categoryConcept ?? null;
   if (Object.keys(payload).length === 0) return;
   await updateDoc(doc(purchaseOrdersCol(projectId), poId), payload);
 }
 
 // ---------- Submit for approval ----------
+/**
+ * Transitions a draft into `pending_approval`. The approval model no
+ * longer pre-assigns approver slots — any owner or approver-role
+ * member can pick the PO up from the queue. Previous approval-log
+ * entries (e.g. after a rejection → re-submit) are wiped.
+ */
 export async function submitPOForApproval(
   projectId: string,
   po: PurchaseOrder,
-  project: Project,
 ): Promise<void> {
   const poRef = doc(purchaseOrdersCol(projectId), po.id);
-  const approvers = collectOwnerApprovers(project);
-  if (approvers.length === 0) {
-    throw new Error('no-approvers-available');
-  }
 
-  const batch = writeBatch(db);
-  batch.update(poRef, {
-    status: 'pending_approval',
-    submittedAt: serverTimestamp(),
-  });
-
-  // Wipe any previous approvals (e.g. after a rejected → re-submit)
   const { collection } = await import('firebase/firestore');
   const existing = await getDocs(
     collection(db, 'projects', projectId, 'purchaseOrders', po.id, 'approvals'),
   );
+
+  const batch = writeBatch(db);
   existing.forEach((d) => batch.delete(d.ref));
-
-  for (const [i, a] of approvers.entries()) {
-    const apId = `${po.id}_ap_${i}`;
-    const apRef = doc(db, 'projects', projectId, 'purchaseOrders', po.id, 'approvals', apId);
-    batch.set(apRef, {
-      id: apId,
-      approverUid: a.uid,
-      approver: a.displayName,
-      initials: a.initials,
-      role: a.roleLabel,
-      decision: 'pending',
-      comment: null,
-      decidedAt: null,
-    });
-  }
-
+  batch.update(poRef, {
+    status: 'pending_approval',
+    submittedAt: serverTimestamp(),
+    approvedAt: null,
+    closedAt: null,
+  });
   await batch.commit();
 }
 
-function collectOwnerApprovers(project: Project): Array<{
-  uid: string;
-  displayName: string;
-  initials: string;
-  roleLabel: string;
-}> {
-  const out = [];
-  const entries = Object.entries(project.members ?? {}) as Array<[string, Role]>;
-  for (const [uid, role] of entries) {
-    if (role !== 'owner') continue;
-    const profile = project.memberProfiles?.[uid];
-    const displayName =
-      profile?.displayName ?? project.memberEmails?.[uid] ?? uid;
-    const initials = initialsFrom(displayName);
-    out.push({ uid, displayName, initials, roleLabel: 'Owner' });
+// ---------- Approve with bill (records spend) ----------
+export interface ApproveWithBillInput {
+  approverUid: string;
+  approverDisplayName: string;
+  approverRoleLabel: string;
+  invoice: {
+    number: string;
+    issueDate: string;
+    dueDate: string;
+    total: number;
+    lines: InvoiceLine[];
+    file?: File | null;
+  };
+  comment?: string;
+}
+
+/**
+ * Records a spend event against a PO:
+ *   1. Uploads the bill to Storage + creates the invoice doc.
+ *   2. Appends an approval-log entry (uid, amount, invoiceId, comment).
+ *   3. If invoiced total now meets/exceeds committed, closes the PO.
+ *
+ * Kept as a client-side sequence because Storage uploads can't be part
+ * of a Firestore batch — the worst failure mode is an orphan invoice,
+ * which editors can delete manually.
+ */
+export async function approveWithBill(
+  projectId: string,
+  po: PurchaseOrder,
+  input: ApproveWithBillInput,
+): Promise<void> {
+  if (!input.invoice.number.trim()) throw new Error('invoice-number-required');
+  if (!input.invoice.total || input.invoice.total <= 0) {
+    throw new Error('invoice-total-required');
   }
-  return out;
+
+  const invoiceId = await createInvoice(projectId, po.id, {
+    number: input.invoice.number,
+    issueDate: input.invoice.issueDate,
+    dueDate: input.invoice.dueDate,
+    total: input.invoice.total,
+    lines: input.invoice.lines,
+    uploadedBy: input.approverDisplayName,
+    file: input.invoice.file ?? null,
+  });
+
+  const approvalId = newApprovalId();
+  const apRef = doc(
+    db,
+    'projects',
+    projectId,
+    'purchaseOrders',
+    po.id,
+    'approvals',
+    approvalId,
+  );
+  const approvalDoc = {
+    id: approvalId,
+    approverUid: input.approverUid,
+    approver: input.approverDisplayName,
+    initials: initialsFrom(input.approverDisplayName),
+    role: input.approverRoleLabel,
+    decision: 'approved' as const,
+    amount: Number(input.invoice.total),
+    invoiceId,
+    comment: (input.comment ?? '').trim() || null,
+    decidedAt: serverTimestamp(),
+  };
+
+  const committed = po.lines.reduce(
+    (sum, l) => sum + l.quantity * l.unitPrice,
+    0,
+  );
+  const invoicedSoFar = (po.invoices ?? []).reduce(
+    (sum, inv) => sum + (inv.total ?? 0),
+    0,
+  );
+  const newInvoicedTotal = invoicedSoFar + Number(input.invoice.total);
+  const shouldClose = committed > 0 && newInvoicedTotal >= committed;
+
+  const poRef = doc(purchaseOrdersCol(projectId), po.id);
+  const batch = writeBatch(db);
+  batch.set(apRef, approvalDoc);
+  const poPatch: Record<string, unknown> = { approvedAt: serverTimestamp() };
+  if (shouldClose) {
+    poPatch.status = 'closed';
+    poPatch.closedAt = serverTimestamp();
+  }
+  batch.update(poRef, poPatch);
+  await batch.commit();
+}
+
+// ---------- Reject ----------
+export async function rejectPO(
+  projectId: string,
+  po: PurchaseOrder,
+  approverUid: string,
+  approverDisplayName: string,
+  approverRoleLabel: string,
+  comment?: string,
+): Promise<void> {
+  const approvalId = newApprovalId();
+  const apRef = doc(
+    db,
+    'projects',
+    projectId,
+    'purchaseOrders',
+    po.id,
+    'approvals',
+    approvalId,
+  );
+  const poRef = doc(purchaseOrdersCol(projectId), po.id);
+
+  const batch = writeBatch(db);
+  batch.set(apRef, {
+    id: approvalId,
+    approverUid,
+    approver: approverDisplayName,
+    initials: initialsFrom(approverDisplayName),
+    role: approverRoleLabel,
+    decision: 'rejected',
+    comment: (comment ?? '').trim() || null,
+    decidedAt: serverTimestamp(),
+  });
+  batch.update(poRef, { status: 'rejected' });
+  await batch.commit();
+}
+
+function newApprovalId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return `ap_${crypto.randomUUID().slice(0, 12)}`;
+  }
+  return `ap_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function initialsFrom(name: string): string {
@@ -206,84 +302,16 @@ function initialsFrom(name: string): string {
     .join('') || '··';
 }
 
-// ---------- Approve / reject / close ----------
-export async function approvePO(
-  projectId: string,
-  po: PurchaseOrder,
-  approverUid: string,
-  comment?: string,
-): Promise<void> {
-  const approval = findPendingApprovalFor(po, approverUid);
-  if (!approval) throw new Error('not-an-approver');
-
-  const apRef = doc(
-    db,
-    'projects',
-    projectId,
-    'purchaseOrders',
-    po.id,
-    'approvals',
-    approval.id,
-  );
-  const poRef = doc(purchaseOrdersCol(projectId), po.id);
-
-  const batch = writeBatch(db);
-  batch.update(apRef, {
-    decision: 'approved',
-    comment: (comment ?? '').trim() || null,
-    decidedAt: serverTimestamp(),
-  });
-  batch.update(poRef, {
-    status: 'approved',
-    approvedAt: serverTimestamp(),
-  });
-  await batch.commit();
-}
-
-export async function rejectPO(
-  projectId: string,
-  po: PurchaseOrder,
-  approverUid: string,
-  comment?: string,
-): Promise<void> {
-  const approval = findPendingApprovalFor(po, approverUid);
-  if (!approval) throw new Error('not-an-approver');
-
-  const apRef = doc(
-    db,
-    'projects',
-    projectId,
-    'purchaseOrders',
-    po.id,
-    'approvals',
-    approval.id,
-  );
-  const poRef = doc(purchaseOrdersCol(projectId), po.id);
-
-  const batch = writeBatch(db);
-  batch.update(apRef, {
-    decision: 'rejected',
-    comment: (comment ?? '').trim() || null,
-    decidedAt: serverTimestamp(),
-  });
-  batch.update(poRef, {
-    status: 'rejected',
-  });
-  await batch.commit();
-}
-
-function findPendingApprovalFor(
-  po: PurchaseOrder,
-  approverUid: string,
-) {
-  return po.approvals.find(
-    (a) => a.approverUid === approverUid && a.decision === 'pending',
-  );
-}
-
-export function isApproverFor(po: PurchaseOrder, uid: string | undefined): boolean {
+/**
+ * True if the user has already recorded an approval event for this PO
+ * (used to surface "you've already approved" affordances). Because the
+ * log is now append-only, a user CAN approve multiple times as more
+ * bills arrive — this helper just tells you whether at least one event
+ * exists.
+ */
+export function hasApprovalFrom(po: PurchaseOrder, uid: string | undefined): boolean {
   if (!uid) return false;
-  return !!findPendingApprovalFor(po, uid);
+  return (po.approvals ?? []).some((a: Approval) => a.approverUid === uid);
 }
 
 // ---------- Close / delete ----------
@@ -295,23 +323,28 @@ export async function closePO(projectId: string, poId: string): Promise<void> {
 }
 
 export async function deletePO(projectId: string, poId: string): Promise<void> {
-  // Delete subcollections first to keep the tree clean.
   const { collection } = await import('firebase/firestore');
+  const { deleteStorageObject } = await import('./attachments');
   const batch = writeBatch(db);
-  const [invSnap, apSnap] = await Promise.all([
+  const [invSnap, apSnap, attSnap] = await Promise.all([
     getDocs(collection(db, 'projects', projectId, 'purchaseOrders', poId, 'invoices')),
     getDocs(collection(db, 'projects', projectId, 'purchaseOrders', poId, 'approvals')),
+    getDocs(collection(db, 'projects', projectId, 'purchaseOrders', poId, 'attachments')),
   ]);
+  // Clean up attachment files from Storage (non-fatal)
+  await Promise.all(
+    attSnap.docs.map((d) => {
+      const storagePath = (d.data() as { storagePath?: string }).storagePath;
+      return storagePath ? deleteStorageObject(storagePath) : Promise.resolve();
+    }),
+  );
   invSnap.forEach((d) => batch.delete(d.ref));
   apSnap.forEach((d) => batch.delete(d.ref));
+  attSnap.forEach((d) => batch.delete(d.ref));
   batch.delete(doc(purchaseOrdersCol(projectId), poId));
   await batch.commit();
-  // Touch the project doc so live listeners pick up the change immediately
-  // (no-op if the project hasn't changed).
   try { await setDoc(projectDoc(projectId), {}, { merge: true }); }
   catch { /* ignore */ }
 }
 
-// Fallback for environments without deleteDoc aliasing (unused, keeps
-// the import surface tidy).
 export { deleteDoc };

@@ -118,6 +118,7 @@
     "roles": {
       "owner": "Propietario",
       "editor": "Editor",
+      "approver": "Aprobador",
       "viewer": "Lector"
     }
   },
@@ -166,7 +167,14 @@
     "roleCaption": {
       "owner": "Puede editarlo todo y gestionar miembros.",
       "editor": "Puede crear y modificar órdenes, proveedores y facturas.",
+      "approver": "Puede aprobar órdenes y registrar pagos de facturas. No puede editar órdenes.",
       "viewer": "Solo puede leer."
+    },
+    "roleName": {
+      "owner": "Propietario",
+      "editor": "Editor",
+      "approver": "Aprobador",
+      "viewer": "Lector"
     },
     "you": "tú",
     "changeRole": "Cambia el rol",
@@ -182,12 +190,21 @@
     "stubTitle": "Próximamente",
     "stubBody": "El panel, el listado de órdenes, el detalle de conciliación, el creador de órdenes, el directorio de proveedores y la cola de aprobaciones están en preparación."
   },
+  "errorPage": {
+    "title": "Algo ha fallado.",
+    "body": "Un error inesperado ha interrumpido esta página. Tus datos están a salvo — vuelve atrás o recarga.",
+    "back": "Atrás",
+    "home": "Volver al inicio",
+    "projects": "Ir a proyectos",
+    "contact": "¿Necesitas ayuda? Escríbenos a"
+  },
   "notFound": {
     "title": "Esta página no existe.",
     "body": "El enlace puede estar obsoleto o la orden se ha movido.",
     "cta": "Volver al inicio",
     "projectTitle": "Proyecto no disponible.",
-    "projectBody": "O no existe, o no tienes acceso. Vuelve al listado de proyectos."
+    "projectBody": "O no existe, o no tienes acceso. Vuelve al listado de proyectos.",
+    "contact": "¿Necesitas ayuda? Escríbenos a"
   },
   "suppliers": {
     "pageTitle": "Proveedores",
@@ -242,6 +259,50 @@
       "viewDetails": "Ver detalle"
     },
     "viewerNotice": "Solo lectura. Los editores y propietarios pueden crear y modificar proveedores."
+  },
+  "attachments": {
+    "uploadCta": "Subir archivo",
+    "uploading": "Subiendo…",
+    "replaceCta": "Reemplazar",
+    "removeCta": "Quitar",
+    "empty": "Aún no hay archivos.",
+    "emptyReadOnly": "Este proyecto es solo lectura para ti.",
+    "kindLabel": "Tipo",
+    "kindPlaceholder": "Etiqueta opcional: contrato, factura pro-forma…",
+    "uploadedBy": "por {{name}}",
+    "uploadedAt": "Subido {{date}}",
+    "deleteConfirm": "¿Eliminar este archivo? También se borra del Storage.",
+    "deletedToast": "Archivo eliminado",
+    "addedToast": "Archivo subido",
+    "uploadError": "No hemos podido subir el archivo. Inténtalo de nuevo.",
+    "fileTooLarge": "El archivo es demasiado grande. Máximo 25 MB."
+  },
+  "supplierDocs": {
+    "sectionTitle": "Documentos",
+    "headerCta": "Añadir documento",
+    "countOne": "1 documento",
+    "countOther": "{{count}} documentos",
+    "modalTitle": "Documentos de {{supplier}}",
+    "modalSubtitle": "Contratos, certificados y cualquier archivo que quieras tener a mano. Hasta 25 MB por archivo.",
+    "kinds": {
+      "contract": "Contrato",
+      "tax": "Fiscal",
+      "insurance": "Seguro",
+      "pricing": "Tarifas",
+      "other": "Otros"
+    },
+    "pickKind": "Tipo",
+    "uploadCta": "Subir documento",
+    "docsLink": "Documentos ({{count}})"
+  },
+  "poAttachments": {
+    "sectionTitle": "Documentación de apoyo",
+    "subtitle": "Presupuesto, hilo de email, albarán de entrega o cualquier archivo que dé contexto a la orden.",
+    "empty": "Ningún documento adjunto. Sube el presupuesto o el hilo de email para tenerlo todo en un mismo lugar.",
+    "emptyReadOnly": "Ningún documento adjunto.",
+    "countOne": "1 archivo",
+    "countOther": "{{count}} archivos",
+    "uploadCta": "Subir archivo"
   },
   "pos": {
     "pageTitle": "Órdenes de compra",
@@ -397,10 +458,6 @@
     "lineUnitPrice": "Precio unitario",
     "lineSubtotal": "Subtotal",
     "lineRemove": "Quitar línea",
-    "categoryShoot": "Rodaje",
-    "categoryOffice": "Oficina",
-    "categoryTravel": "Viajes",
-    "categoryServices": "Servicios",
     "totalCommitted": "Total comprometido",
     "saveDraft": "Guardar borrador",
     "saveDraftShort": "Guardar",
@@ -429,10 +486,28 @@
     "rejectTitle": "Rechazar {{number}}",
     "approveSubtitle": "Queda constancia de quién, cuándo y con qué comentario.",
     "rejectSubtitle": "Indica brevemente por qué. Se podrá re-escopar y enviar de nuevo.",
-    "approvedToast": "Orden aprobada",
+    "approvedToast": "Factura registrada y orden actualizada",
     "rejectedToast": "Orden rechazada",
     "closedToast": "Orden cerrada",
-    "closeConfirm": "¿Cerrar la orden? Dejará de poder recibir facturas."
+    "closeConfirm": "¿Cerrar la orden? Dejará de poder recibir facturas.",
+    "deleteCta": "Eliminar",
+    "deleteConfirm": "¿Eliminar permanentemente esta orden y todos sus datos? No se puede deshacer.",
+    "deletedToast": "Orden de compra eliminada"
+  },
+  "poDecision": {
+    "approveTitle": "Registrar factura — {{number}}",
+    "approveSubtitle": "Sube la factura e introduce el importe. El presupuesto restante se actualiza de inmediato.",
+    "billTitle": "Datos de la factura",
+    "committed": "Comprometido",
+    "alreadyInvoiced": "Ya facturado",
+    "remainingAfter": "Restante tras esta factura",
+    "willClose": "La orden se cerrará",
+    "approveAndRecordCta": "Registrar factura",
+    "approveAndCloseCta": "Registrar y cerrar orden",
+    "approvedClosedToast": "Factura registrada — la orden queda completamente facturada y cerrada",
+    "amountRequired": "Introduce el importe de la factura.",
+    "fileRequired": "Sube el archivo de la factura.",
+    "mappingMismatch": "La asignación por líneas ({{mapped}}) no coincide con el total ({{total}})."
   },
   "projectSettings": {
     "pageTitle": "Configuración del proyecto",
@@ -591,6 +666,68 @@
       "decided": "Decididas"
     },
     "requestedBy": "Pedido por {{name}}",
-    "waitingFor": "También espera {{list}}"
+    "waitingFor": "También espera {{list}}",
+    "youActed": "Ya has registrado una factura"
+  },
+  "invoices": {
+    "pageTitle": "Facturas",
+    "heroSubtitle": "Todas las facturas de cada orden de compra en {{project}}.",
+    "countOne": "1 factura",
+    "countOther": "{{count}} facturas",
+    "searchPlaceholder": "Buscar por número de factura…",
+    "allSuppliers": "Todos los proveedores",
+    "allPOs": "Todas las OC",
+    "dateFrom": "Desde",
+    "dateTo": "Hasta",
+    "table": {
+      "number": "Número",
+      "poRef": "OC",
+      "supplier": "Proveedor",
+      "issueDate": "Emitida",
+      "dueDate": "Vencimiento",
+      "total": "Total",
+      "uploadedBy": "Subida por"
+    },
+    "totals": {
+      "totalInvoiced": "Total facturado",
+      "invoiceCount": "Facturas",
+      "avgInvoice": "Media por factura"
+    },
+    "empty": {
+      "title": "Todavía no hay facturas.",
+      "body": "Las facturas aparecen aquí cuando se suben a una orden de compra."
+    },
+    "emptyFilter": {
+      "title": "Sin resultados",
+      "body": "Prueba con otros filtros o términos de búsqueda."
+    }
+  },
+  "reports": {
+    "pageTitle": "Informes",
+    "heroSubtitle": "Analítica financiera de {{project}}.",
+    "dateFrom": "Desde",
+    "dateTo": "Hasta",
+    "clearDates": "Limpiar",
+    "kpi": {
+      "committed": "Comprometido",
+      "invoiced": "Facturado",
+      "remaining": "Restante",
+      "activePOs": "OC activas"
+    },
+    "charts": {
+      "budgetOverview": "Resumen presupuestario",
+      "spendByCategory": "Gasto por categoría",
+      "spendBySupplier": "Gasto por proveedor (top 10)",
+      "spendOverTime": "Evolución del gasto",
+      "poStatusDistribution": "Distribución de estados",
+      "committed": "Comprometido",
+      "invoiced": "Facturado",
+      "remaining": "Restante",
+      "noData": "No hay suficientes datos para mostrar este gráfico."
+    },
+    "empty": {
+      "title": "Sin datos todavía.",
+      "body": "Los informes se rellenarán cuando se añadan órdenes de compra y facturas al proyecto."
+    }
   }
 }

@@ -29,7 +29,7 @@ export function Sidebar() {
   const { user, signOut } = useAuth();
   const { project, role } = useCurrentProject();
   const { push } = useToast();
-  const { isPro, managementUrl } = useSubscription();
+  const { isPro } = useSubscription();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const base = `/app/p/${project.id}`;
@@ -43,8 +43,8 @@ export function Sidebar() {
 
   const secondary: Item[] = [
     { key: 'members', labelKey: 'nav.members', to: `${base}/members`, icon: 'person-circle-fill' },
-    { key: 'invoices', labelKey: 'nav.invoices', to: `${base}/invoices`, icon: 'file-earmark-text-fill', disabled: true },
-    { key: 'reports', labelKey: 'nav.reports', to: `${base}/reports`, icon: 'bar-chart-fill', disabled: true },
+    { key: 'invoices', labelKey: 'nav.invoices', to: `${base}/invoices`, icon: 'file-earmark-text-fill' },
+    { key: 'reports', labelKey: 'nav.reports', to: `${base}/reports`, icon: 'bar-chart-fill' },
     { key: 'settings', labelKey: 'nav.settings', to: `${base}/settings`, icon: 'gear-fill', ownerOnly: true },
   ];
 
@@ -107,17 +107,7 @@ export function Sidebar() {
           </div>
         </div>
 
-        {isPro && managementUrl ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            fullWidth
-            onClick={() => window.open(managementUrl, '_blank', 'noopener')}
-            leading={<Icon name="gear-fill" size={13} />}
-          >
-            {t('subscription.manage')}
-          </Button>
-        ) : !isPro ? (
+        {!isPro && (
           <Button
             variant="ghost"
             size="sm"
@@ -127,7 +117,7 @@ export function Sidebar() {
           >
             {t('subscription.upgrade')}
           </Button>
-        ) : null}
+        )}
 
         <Button
           variant="ghost"

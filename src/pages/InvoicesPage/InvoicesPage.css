@@ -1,0 +1,218 @@
+.inv-page {
+  padding: var(--s-8);
+  max-width: 1280px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-7);
+}
+.inv-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  max-width: 720px;
+}
+.inv-hero-sub { color: var(--fg-muted); font-size: 15.5px; line-height: 1.55; }
+
+/* ===== Totals strip ===== */
+.inv-totals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--surface);
+  border-radius: var(--r-12);
+  box-shadow: var(--elevation-1);
+  overflow: hidden;
+}
+.inv-total-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--s-5) var(--s-6);
+  position: relative;
+}
+.inv-total-cell + .inv-total-cell { box-shadow: inset 1px 0 0 var(--ring-border); }
+.inv-total-label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+.inv-total-value {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  line-height: 1.05;
+}
+.inv-total-hint { font-size: 12px; color: var(--fg-muted); }
+
+/* ===== Filter bar ===== */
+.inv-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+.inv-filter select {
+  height: 36px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-8);
+  border: 1px solid var(--ring-border);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.inv-filter select:focus {
+  outline: none;
+  border-color: var(--fg);
+}
+.inv-filter-dates {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.inv-filter-dates label {
+  font-size: 12px;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+.inv-search { flex: 1; max-width: 320px; min-width: 160px; }
+
+.inv-loader {
+  display: grid;
+  place-items: center;
+  padding: var(--s-section) 0;
+}
+
+/* ===== List / table ===== */
+.inv-list {
+  background: var(--surface);
+  border-radius: var(--r-12);
+  box-shadow: var(--elevation-1);
+  overflow: hidden;
+}
+.inv-row {
+  display: grid;
+  grid-template-columns: 130px 120px minmax(0, 1.2fr) 96px 96px 120px minmax(0, 0.9fr) 28px;
+  gap: var(--s-3);
+  align-items: center;
+  padding: var(--s-4) var(--s-5);
+  position: relative;
+  color: var(--fg);
+  text-decoration: none;
+}
+.inv-row + .inv-row::before {
+  content: '';
+  position: absolute;
+  left: var(--s-5); right: var(--s-5); top: 0;
+  height: 1px;
+  background: var(--ring-border);
+}
+.inv-row-head {
+  background: var(--surface);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  font-weight: 500;
+  padding: var(--s-3) var(--s-5);
+  box-shadow: inset 0 -1px 0 var(--ring-border);
+}
+.inv-row-head::before { display: none; }
+.inv-row-interactive {
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.inv-row-interactive:hover { background: var(--surface-muted); }
+.inv-row-interactive:hover .inv-row-caret { color: var(--fg); transform: translateX(2px); }
+
+.inv-row-number { font-family: var(--font-mono); font-size: 12.5px; color: var(--fg-deep); }
+.inv-row-po { font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); }
+.inv-row-supplier {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.inv-row-supplier-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.inv-row-date { font-size: 12.5px; color: var(--fg-muted); }
+.inv-row-total {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: right;
+}
+.inv-row-uploader {
+  font-size: 12px;
+  color: var(--fg-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.inv-row-caret {
+  display: grid;
+  place-items: center;
+  color: var(--fg-subtle);
+  transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+/* ===== Empty states ===== */
+.inv-empty {
+  display: grid;
+  place-items: center;
+  padding: var(--s-section) var(--s-5);
+  background: var(--surface-muted);
+  border-radius: var(--r-16);
+  box-shadow: inset 0 0 0 1px var(--ring-border);
+}
+.inv-empty-inner {
+  text-align: center;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+}
+.inv-empty-inner p {
+  color: var(--fg-muted);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+.inv-empty-mark {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--r-12);
+  background: var(--surface);
+  color: var(--fg);
+  display: grid;
+  place-items: center;
+  box-shadow: var(--elevation-1);
+  margin-bottom: var(--s-3);
+}
+.inv-empty-filter { text-align: center; padding: var(--s-8); }
+
+@media (max-width: 980px) {
+  .inv-totals { grid-template-columns: 1fr; }
+  .inv-total-cell + .inv-total-cell { box-shadow: inset 0 1px 0 var(--ring-border); }
+  .inv-row {
+    grid-template-columns: 110px minmax(0, 1fr) 90px 110px 28px;
+    padding: var(--s-3) var(--s-4);
+  }
+  /* hide: po ref, supplier col, due date, uploader */
+  .inv-row > :nth-child(2),
+  .inv-row > :nth-child(3),
+  .inv-row > :nth-child(5),
+  .inv-row > :nth-child(7) { display: none; }
+  .inv-page { padding: var(--s-5); }
+}

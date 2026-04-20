@@ -31,11 +31,32 @@ service firebase.storage {
       );
     }
 
+    function canApproveProject(projectId) {
+      return isSignedIn() && (
+        firestore.get(/databases/(default)/documents/projects/$(projectId))
+          .data.members[request.auth.uid] == 'owner' ||
+        firestore.get(/databases/(default)/documents/projects/$(projectId))
+          .data.members[request.auth.uid] == 'approver'
+      );
+    }
+
     function isUnder25MB() {
       return request.resource.size < 25 * 1024 * 1024;
     }
 
     match /projects/{projectId}/purchaseOrders/{poId}/invoices/{invoiceId}/{fileName} {
+      allow read: if isProjectMember(projectId);
+      allow create, update: if (canWriteProject(projectId) || canApproveProject(projectId)) && isUnder25MB();
+      allow delete: if canWriteProject(projectId);
+    }
+
+    match /projects/{projectId}/purchaseOrders/{poId}/attachments/{attId}/{fileName} {
+      allow read: if isProjectMember(projectId);
+      allow create, update: if canWriteProject(projectId) && isUnder25MB();
+      allow delete: if canWriteProject(projectId);
+    }
+
+    match /projects/{projectId}/suppliers/{supplierId}/docs/{docId}/{fileName} {
       allow read: if isProjectMember(projectId);
       allow create, update: if canWriteProject(projectId) && isUnder25MB();
       allow delete: if canWriteProject(projectId);

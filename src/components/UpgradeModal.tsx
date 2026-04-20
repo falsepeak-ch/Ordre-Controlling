@@ -5,35 +5,28 @@ import { Button } from '~/components/ui/Button';
 import { Icon } from '~/components/ui/Icon';
 import { useSubscription } from '~/hooks/useSubscription';
 import { useToast } from '~/hooks/useToast';
-import type { Offering } from '@revenuecat/purchases-js';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  offering?: Offering;
 }
 
-export function UpgradeModal({ open, onClose, offering }: Props) {
+type Plan = 'monthly' | 'annual';
+
+export function UpgradeModal({ open, onClose }: Props) {
   const { t } = useTranslation();
-  const { enabled, presentPaywall } = useSubscription();
+  const { redirectToCheckout } = useSubscription();
   const { push } = useToast();
+  const [plan, setPlan] = useState<Plan>('annual');
   const [busy, setBusy] = useState(false);
 
   async function handleUpgrade() {
-    if (!enabled) {
-      push({ message: t('paywall.disabledNotice'), icon: 'x-circle-fill', tone: 'error' });
-      return;
-    }
     setBusy(true);
     try {
-      const purchased = await presentPaywall(offering);
-      if (purchased) {
-        push({ message: t('paywall.purchasedToast'), icon: 'check-circle-fill' });
-        onClose();
-      } else {
-        push({ message: t('paywall.dismissedToast'), icon: 'clock-fill' });
-      }
-    } finally {
+      await redirectToCheckout(plan);
+      // redirectToCheckout navigates away; the lines below only run on error.
+    } catch {
+      push({ message: t('paywall.disabledNotice'), icon: 'x-circle-fill', tone: 'error' });
       setBusy(false);
     }
   }
@@ -56,6 +49,40 @@ export function UpgradeModal({ open, onClose, offering }: Props) {
         </>
       }
     >
+      {/* Plan toggle */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          marginBottom: 20,
+        }}
+      >
+        {(['annual', 'monthly'] as Plan[]).map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => setPlan(p)}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: 8,
+              border: plan === p ? '1.5px solid var(--fg-base)' : '1.5px solid var(--border-subtle)',
+              background: plan === p ? 'var(--fg-base)' : 'transparent',
+              color: plan === p ? 'var(--bg-base)' : 'var(--fg-muted)',
+              fontSize: 13,
+              fontWeight: plan === p ? 600 : 400,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >
+            {p === 'annual'
+              ? `${t('pricing.annualBadge')} · ${t('pricing.plans.proMarketingYearly')}`
+              : `${t('pricing.monthlyBadge')} · ${t('pricing.plans.proMarketingMonthly')}`}
+          </button>
+        ))}
+      </div>
+
+      {/* Feature list */}
       <ul
         style={{
           display: 'flex',

@@ -4,8 +4,8 @@ export const lineCommitted = (line: POLine): number => line.quantity * line.unit
 
 export function lineInvoiced(po: PurchaseOrder, lineId: string): number {
   let total = 0;
-  for (const inv of po.invoices) {
-    for (const l of inv.lines) {
+  for (const inv of po.invoices ?? []) {
+    for (const l of inv.lines ?? []) {
       if (l.lineId === lineId) total += l.amount;
     }
   }
@@ -24,9 +24,9 @@ export interface POTotals {
 export function poTotals(po: PurchaseOrder): POTotals {
   let committed = 0;
   let invoiced = 0;
-  for (const l of po.lines) committed += lineCommitted(l);
-  for (const inv of po.invoices) {
-    for (const l of inv.lines) invoiced += l.amount;
+  for (const l of po.lines ?? []) committed += lineCommitted(l);
+  for (const inv of po.invoices ?? []) {
+    for (const l of inv.lines ?? []) invoiced += l.amount;
   }
   return { committed, invoiced, remaining: committed - invoiced };
 }

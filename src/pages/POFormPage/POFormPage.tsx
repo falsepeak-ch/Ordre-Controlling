@@ -22,10 +22,8 @@ import {
 } from '~/lib/purchaseOrders';
 import { canEdit } from '~/lib/roles';
 import { eur, eurFull, initialsFromName } from '~/lib/format';
-import type { LineCategory, POLine } from '~/types';
+import type { POLine } from '~/types';
 import './POFormPage.css';
-
-const CATEGORIES: LineCategory[] = ['shoot', 'office', 'travel', 'services'];
 
 export function POFormPage() {
   const { t } = useTranslation();
@@ -44,7 +42,6 @@ export function POFormPage() {
   );
 
   const [supplierId, setSupplierId] = useState('');
-  const [categoryId, setCategoryId] = useState<string>('');
   const [notes, setNotes] = useState('');
   const [lines, setLines] = useState<POLine[]>([blankLine()]);
   const [savingDraft, setSavingDraft] = useState(false);
@@ -58,16 +55,10 @@ export function POFormPage() {
     if (po.status !== 'draft') return;
     if (initialized) return;
     setSupplierId(po.supplierId);
-    setCategoryId(po.categoryId ?? '');
     setNotes(po.notes ?? '');
     setLines(po.lines.length ? po.lines : [blankLine()]);
     setInitialized(true);
   }, [editing, po, initialized]);
-
-  const selectedCategory = useMemo(
-    () => categories.find((c) => c.id === categoryId) ?? null,
-    [categories, categoryId],
-  );
 
   // Guard clauses
   if (!canEdit(role)) {
@@ -129,17 +120,11 @@ export function POFormPage() {
     }
     setSavingDraft(true);
     try {
-      const categoryFields = {
-        categoryId: selectedCategory?.id ?? null,
-        categoryCode: selectedCategory?.code ?? null,
-        categoryConcept: selectedCategory?.concept ?? null,
-      };
       if (editing && po) {
         await updateDraftPO(project.id, po.id, {
           supplierId,
           notes,
           lines: lines.filter((l) => l.description.trim()),
-          ...categoryFields,
         });
         push({ message: t('poForm.savedDraftToast'), icon: 'check-circle-fill' });
         return po.id;
@@ -148,7 +133,6 @@ export function POFormPage() {
         supplierId,
         notes,
         lines: lines.filter((l) => l.description.trim()),
-        ...categoryFields,
       });
       push({ message: t('poForm.savedDraftToast'), icon: 'check-circle-fill' });
       return id;
@@ -185,7 +169,7 @@ export function POFormPage() {
         approvals: [],
         invoices: [],
       };
-      await submitPOForApproval(project.id, { ...reloaded, id }, project);
+      await submitPOForApproval(project.id, { ...reloaded, id });
       push({ message: t('poForm.submittedToast'), icon: 'check-circle-fill' });
       navigate(`/app/p/${project.id}/purchase-orders/${id}`);
     } catch (err) {
@@ -278,81 +262,35 @@ export function POFormPage() {
 
             <section className="po-form-body reveal reveal-d1">
               <Card size="md" className="po-form-meta">
-                <div className="po-form-grid">
-                  <Field label={t('poForm.supplierLabel')}>
-                    {suppliers.length === 0 ? (
-                      <div className="po-form-missing">
-                        <span className="muted" style={{ fontSize: 13 }}>
-                          {t('poForm.supplierMissing')}
-                        </span>
-                        <Link
-                          to={`/app/p/${project.id}/suppliers`}
-                          className="btn btn-link btn-size-sm"
-                        >
-                          {t('poForm.goCreateSupplier')} →
-                        </Link>
-                      </div>
-                    ) : (
-                      <select
-                        className="input po-form-select"
-                        value={supplierId}
-                        onChange={(e) => setSupplierId(e.target.value)}
-                      >
-                        <option value="">{t('poForm.supplierPlaceholder')}</option>
-                        {suppliers.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.tradeName || s.legalName}
-                            {s.taxId ? ` — ${s.taxId}` : ''}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </Field>
-
-                  <Field
-                    label={
-                      <span>
-                        {t('poCategory.label')}
-                        <span
-                          style={{
-                            color: 'var(--fg-muted)',
-                            fontWeight: 400,
-                            marginLeft: 6,
-                          }}
-                        >
-                          {t('poCategory.hint')}
-                        </span>
+                <Field label={t('poForm.supplierLabel')}>
+                  {suppliers.length === 0 ? (
+                    <div className="po-form-missing">
+                      <span className="muted" style={{ fontSize: 13 }}>
+                        {t('poForm.supplierMissing')}
                       </span>
-                    }
-                  >
-                    {categories.length === 0 ? (
-                      <div className="po-form-missing">
-                        <span className="muted" style={{ fontSize: 13 }}>
-                          {t('poCategory.noneAvailable')}
-                        </span>
-                        <Link
-                          to={`/app/p/${project.id}/categories`}
-                          className="btn btn-link btn-size-sm"
-                        >
-                          {t('poCategory.manageLink')} →
-                        </Link>
-                      </div>
-                    ) : (
-                      <select
-                        className="input po-form-select"
-                        value={categoryId}
-                        onChange={(e) => setCategoryId(e.target.value)}
+                      <Link
+                        to={`/app/p/${project.id}/suppliers`}
+                        className="btn btn-link btn-size-sm"
                       >
-                        <option value="">{t('poCategory.pickerPlaceholder')}</option>
-                        {categories.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.code} · {c.concept}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </Field>
-                </div>
+                        {t('poForm.goCreateSupplier')} →
+                      </Link>
+                    </div>
+                  ) : (
+                    <select
+                      className="input po-form-select"
+                      value={supplierId}
+                      onChange={(e) => setSupplierId(e.target.value)}
+                    >
+                      <option value="">{t('poForm.supplierPlaceholder')}</option>
+                      {suppliers.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.tradeName || s.legalName}
+                          {s.taxId ? ` — ${s.taxId}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </Field>
 
                 <Field
                   label={
@@ -406,14 +344,20 @@ export function POFormPage() {
                       />
                       <select
                         className="input"
-                        value={l.category}
-                        onChange={(e) =>
-                          setLine(idx, { category: e.target.value as LineCategory })
-                        }
+                        value={l.categoryId ?? ''}
+                        onChange={(e) => {
+                          const cat = categories.find((c) => c.id === e.target.value) ?? null;
+                          setLine(idx, {
+                            categoryId: cat?.id ?? null,
+                            categoryCode: cat?.code ?? null,
+                            categoryConcept: cat?.concept ?? null,
+                          });
+                        }}
                       >
-                        {CATEGORIES.map((c) => (
-                          <option key={c} value={c}>
-                            {t(`poForm.category${c.charAt(0).toUpperCase() + c.slice(1)}`)}
+                        <option value="">{t('poCategory.pickerPlaceholder')}</option>
+                        {categories.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.code} · {c.concept}
                           </option>
                         ))}
                       </select>

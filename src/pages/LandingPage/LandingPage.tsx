@@ -4,7 +4,6 @@ import { Button, ButtonAnchor } from '~/components/ui/Button';
 import { Icon } from '~/components/ui/Icon';
 import { Progress } from '~/components/ui/Progress';
 import { Pill } from '~/components/ui/Pill';
-import { useSubscription } from '~/hooks/useSubscription';
 import type { IconName } from '~/icons/manifest';
 import { eur } from '~/lib/format';
 import './LandingPage.css';
@@ -33,6 +32,7 @@ export function LandingPage() {
     <>
       {/* ===== Hero ===== */}
       <section className="landing-hero">
+        <img src="/hero-gradient.png" alt="" aria-hidden="true" className="landing-hero-gradient" />
         <div className="landing-hero-inner">
           <span className="landing-eyebrow">{t('landing.heroEyebrow')}</span>
           <h1 className="landing-hero-title display-hero">{t('landing.heroTitle')}</h1>
@@ -79,16 +79,9 @@ export function LandingPage() {
 
 function LandingPricing() {
   const { t } = useTranslation();
-  const { offerings, loading } = useSubscription();
 
-  const monthly = offerings?.current?.monthly ?? null;
-  const annual = offerings?.current?.annual ?? null;
-
-  const monthlyPriceLive = monthly?.webBillingProduct?.currentPrice?.formattedPrice ?? null;
-  const annualPriceLive = annual?.webBillingProduct?.currentPrice?.formattedPrice ?? null;
-
-  const monthlyPrice = monthlyPriceLive ?? t('pricing.plans.proMarketingMonthly');
-  const annualPrice = annualPriceLive ?? t('pricing.plans.proMarketingYearly');
+  const monthlyPrice = t('pricing.plans.proMarketingMonthly');
+  const annualPrice = t('pricing.plans.proMarketingYearly');
 
   return (
     <section className="landing-pricing" id="pricing">
@@ -176,9 +169,7 @@ function LandingPricing() {
               {t('pricing.ctaPro')}
             </ButtonAnchor>
 
-            <p className="pricing-card-footnote">
-              {loading ? t('pricing.loadingLive') : t('pricing.fallbackNote')}
-            </p>
+            <p className="pricing-card-footnote">{t('pricing.fallbackNote')}</p>
           </article>
         </div>
       </div>

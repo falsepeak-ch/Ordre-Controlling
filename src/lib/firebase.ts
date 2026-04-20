@@ -1,6 +1,7 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getFunctions, type Functions } from 'firebase/functions';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { getAnalytics, type Analytics, isSupported } from 'firebase/analytics';
 
@@ -23,6 +24,7 @@ if (!firebaseConfig.apiKey) {
 export const app: FirebaseApp = initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);
+export const functions: Functions = getFunctions(app, 'europe-west1');
 
 /**
  * Firebase Storage is initialised lazily — the service component isn't

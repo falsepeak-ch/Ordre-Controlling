@@ -11,15 +11,18 @@ import { Avatar } from '~/components/ui/Avatar';
 import { Spinner } from '~/components/ui/Spinner';
 import { PODecisionModal } from '~/components/PODecisionModal';
 import { InvoiceFormModal } from '~/components/InvoiceFormModal';
+import { AttachmentsList, type AttachmentItem } from '~/components/AttachmentsList';
 import { useAuth } from '~/hooks/useAuth';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { usePurchaseOrder } from '~/hooks/usePurchaseOrder';
+import { usePOAttachments } from '~/hooks/usePOAttachments';
 import { useSuppliers } from '~/hooks/useSuppliers';
 import { useToast } from '~/hooks/useToast';
 import { poTotals, lineCommitted, lineInvoiced } from '~/lib/reconcile';
-import { canEdit } from '~/lib/roles';
-import { closePO, isApproverFor, submitPOForApproval } from '~/lib/purchaseOrders';
+import { canApprove, canEdit, canManage } from '~/lib/roles';
+import { closePO, deletePO, submitPOForApproval } from '~/lib/purchaseOrders';
 import { deleteInvoice } from '~/lib/invoices';
+import { addPOAttachment, deletePOAttachment } from '~/lib/poAttachments';
 import { eur, eurFull, formatDate } from '~/lib/format';
 import type { Invoice, POLine, PurchaseOrder } from '~/types';
 import './PODetailPage.css';
@@ -31,12 +34,14 @@ export function PODetailPage() {
   const { poId } = useParams<{ poId: string }>();
   const { po, loading, notFound } = usePurchaseOrder(project.id, poId);
   const { suppliers } = useSuppliers(project.id);
+  const { attachments } = usePOAttachments(project.id, poId);
   const { push } = useToast();
   const navigate = useNavigate();
   const [decisionMode, setDecisionMode] = useState<null | 'approve' | 'reject'>(null);
-  const [busyAction, setBusyAction] = useState<null | 'submit' | 'close'>(null);
+  const [busyAction, setBusyAction] = useState<null | 'submit' | 'close' | 'delete'>(null);
   const [invoiceFormOpen, setInvoiceFormOpen] = useState(false);
   const [invoiceBeingEdited, setInvoiceBeingEdited] = useState<Invoice | null>(null);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
 
   const supplier = useMemo(
     () => suppliers.find((s) => s.id === po?.supplierId),
@@ -61,6 +66,52 @@ export function PODetailPage() {
     } catch (err) {
       console.warn('[poDetail] invoice delete failed', err);
       push({ message: t('invoiceForm.error'), icon: 'x-circle-fill', tone: 'error' });
+    }
+  }
+
+  async function handleUploadAttachment(file: File) {
+    if (!po) return;
+    setUploadingAttachment(true);
+    try {
+      await addPOAttachment(project.id, po.id, {
+        file,
+        kind: null,
+        uploadedBy: user?.displayName ?? user?.email ?? 'You',
+      });
+      push({ message: t('attachments.addedToast'), icon: 'check-circle-fill' });
+    } catch (err) {
+      console.warn('[poDetail] attachment upload failed', err);
+      push({ message: t('attachments.uploadError'), icon: 'x-circle-fill', tone: 'error' });
+    } finally {
+      setUploadingAttachment(false);
+    }
+  }
+
+  async function handleDeleteAttachment(item: AttachmentItem) {
+    if (!po || !item.id) return;
+    if (!window.confirm(t('attachments.deleteConfirm'))) return;
+    try {
+      await deletePOAttachment(project.id, po.id, {
+        id: item.id,
+        storagePath: item.storagePath ?? '',
+      });
+      push({ message: t('attachments.deletedToast'), icon: 'check-circle-fill' });
+    } catch {
+      push({ message: t('attachments.uploadError'), icon: 'x-circle-fill', tone: 'error' });
+    }
+  }
+
+  async function handleDeletePO() {
+    if (!po) return;
+    if (!window.confirm(t('poActions.deleteConfirm'))) return;
+    setBusyAction('delete');
+    try {
+      await deletePO(project.id, po.id);
+      push({ message: t('poActions.deletedToast'), icon: 'check-circle-fill' });
+      navigate(`/app/p/${project.id}/purchase-orders`);
+    } catch {
+      push({ message: t('poForm.error'), icon: 'x-circle-fill', tone: 'error' });
+      setBusyAction(null);
     }
   }
 
@@ -100,13 +151,14 @@ export function PODetailPage() {
             userRole={role}
             userUid={user?.uid}
             busy={busyAction}
+            onDelete={handleDeletePO}
             onEditDraft={() =>
               navigate(`/app/p/${project.id}/purchase-orders/${po.id}/edit`)
             }
             onSubmit={async () => {
               setBusyAction('submit');
               try {
-                await submitPOForApproval(project.id, po, project);
+                await submitPOForApproval(project.id, po);
                 push({ message: t('poForm.submittedToast'), icon: 'check-circle-fill' });
               } catch (err) {
                 const code = (err as Error).message;
@@ -144,6 +196,8 @@ export function PODetailPage() {
           po={po}
           projectId={project.id}
           approverUid={user.uid}
+          approverDisplayName={user.displayName ?? user.email ?? 'You'}
+          approverRole={role}
           onClose={() => setDecisionMode(null)}
         />
       ) : null}
@@ -161,14 +215,6 @@ export function PODetailPage() {
         <section className="po-hero reveal">
           <div className="po-hero-status">
             <Pill status={po.status}>{t(`pos.statusLabel.${po.status}`)}</Pill>
-            {po.categoryCode ? (
-              <span className="po-hero-category">
-                <span className="po-hero-category-code mono">{po.categoryCode}</span>
-                {po.categoryConcept ? (
-                  <span className="po-hero-category-concept">{po.categoryConcept}</span>
-                ) : null}
-              </span>
-            ) : null}
             {supplier?.tags?.[0] ? (
               <span className="po-hero-tag">{supplier.tags[0]}</span>
             ) : null}
@@ -284,6 +330,28 @@ export function PODetailPage() {
                   <LineRow key={line.id} line={line} po={po} />
                 ))}
               </div>
+            </div>
+
+            <div className="po-block">
+              <div className="po-block-head">
+                <h3 className="display-sm mb-0">{t('poAttachments.sectionTitle')}</h3>
+                <span className="count-chip">{attachments.length}</span>
+              </div>
+              <p className="muted" style={{ fontSize: 12.5, marginTop: -4 }}>
+                {t('poAttachments.subtitle')}
+              </p>
+              <AttachmentsList
+                items={attachments}
+                canEdit={canEdit(role)}
+                uploading={uploadingAttachment}
+                onUpload={handleUploadAttachment}
+                onDelete={handleDeleteAttachment}
+                emptyLabel={
+                  canEdit(role)
+                    ? t('poAttachments.empty')
+                    : t('poAttachments.emptyReadOnly')
+                }
+              />
             </div>
 
             <div className="po-block">
@@ -509,6 +577,7 @@ function POActions({
   userRole,
   userUid,
   busy,
+  onDelete,
   onEditDraft,
   onSubmit,
   onApprove,
@@ -517,9 +586,10 @@ function POActions({
 }: {
   po: PurchaseOrder;
   projectId: string;
-  userRole: 'owner' | 'editor' | 'viewer';
+  userRole: 'owner' | 'editor' | 'approver' | 'viewer';
   userUid: string | undefined;
-  busy: null | 'submit' | 'close';
+  busy: null | 'submit' | 'close' | 'delete';
+  onDelete: () => void;
   onEditDraft: () => void;
   onSubmit: () => void;
   onApprove: () => void;
@@ -527,14 +597,29 @@ function POActions({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  void userUid;
   const writable = canEdit(userRole);
-  const approverHere = isApproverFor(po, userUid);
-  const canClose = userRole === 'owner' && po.status === 'approved';
+  const approverHere = canApprove(userRole);
+  const isOwner = canManage(userRole);
+  const canClose = isOwner && po.status === 'approved';
+
+  const deleteBtn = isOwner ? (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={onDelete}
+      isLoading={busy === 'delete'}
+      leading={<Icon name="trash-fill" size={13} />}
+    >
+      {t('poActions.deleteCta')}
+    </Button>
+  ) : null;
 
   // Draft: editor+ can edit draft or submit it.
   if (po.status === 'draft' && writable) {
     return (
       <>
+        {deleteBtn}
         <Button
           variant="ghost"
           size="sm"
@@ -560,6 +645,7 @@ function POActions({
   if (po.status === 'pending_approval' && approverHere) {
     return (
       <>
+        {deleteBtn}
         <Button
           variant="ghost"
           size="sm"
@@ -583,18 +669,22 @@ function POActions({
   // Approved: owners can close.
   if (canClose) {
     return (
-      <Button
-        variant="primary"
-        size="sm"
-        onClick={onClose}
-        isLoading={busy === 'close'}
-      >
-        {t('poActions.closeCta')}
-      </Button>
+      <>
+        {deleteBtn}
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={onClose}
+          isLoading={busy === 'close'}
+        >
+          {t('poActions.closeCta')}
+        </Button>
+      </>
     );
   }
 
-  return null;
+  // Closed / rejected / viewer: only delete for owners.
+  return deleteBtn;
 }
 
 function LineRow({ line, po }: { line: POLine; po: PurchaseOrder }) {
@@ -611,8 +701,12 @@ function LineRow({ line, po }: { line: POLine; po: PurchaseOrder }) {
       <div className="po-line-desc">
         <span className="po-line-title">{line.description}</span>
         <span className="po-line-meta">
-          <span className={`cat-tag cat-tag-${line.category}`}>{line.category}</span>
-          <span className="muted">·</span>
+          {line.categoryCode ? (
+            <>
+              <span className="po-line-category mono">{line.categoryCode}</span>
+              <span className="muted">·</span>
+            </>
+          ) : null}
           <span className="muted">
             {line.quantity} × {eurFull(line.unitPrice)}
           </span>

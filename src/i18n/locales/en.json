@@ -118,6 +118,7 @@
     "roles": {
       "owner": "Owner",
       "editor": "Editor",
+      "approver": "Approver",
       "viewer": "Viewer"
     }
   },
@@ -166,7 +167,14 @@
     "roleCaption": {
       "owner": "Can edit everything and manage members.",
       "editor": "Can create and change POs, suppliers, and invoices.",
+      "approver": "Can approve POs and record bill payments. Cannot edit POs.",
       "viewer": "Read-only."
+    },
+    "roleName": {
+      "owner": "Owner",
+      "editor": "Editor",
+      "approver": "Approver",
+      "viewer": "Viewer"
     },
     "you": "you",
     "changeRole": "Change role",
@@ -182,12 +190,21 @@
     "stubTitle": "Coming next",
     "stubBody": "Dashboard, PO list, reconciliation detail, PO creation, supplier directory, and the approvals queue are being ported from the reference prototype to Firestore-backed pages."
   },
+  "errorPage": {
+    "title": "Something went wrong.",
+    "body": "An unexpected error interrupted this page. Your data is safe — try going back or reloading.",
+    "back": "Go back",
+    "home": "Back to home",
+    "projects": "Go to projects",
+    "contact": "Need help? Write to us at"
+  },
   "notFound": {
     "title": "This page doesn't exist.",
     "body": "The link might be out of date, or the PO has moved.",
     "cta": "Back to home",
     "projectTitle": "Project unavailable.",
-    "projectBody": "Either it doesn't exist or you don't have access. Go back to your projects."
+    "projectBody": "Either it doesn't exist or you don't have access. Go back to your projects.",
+    "contact": "Need help? Write to us at"
   },
   "suppliers": {
     "pageTitle": "Suppliers",
@@ -242,6 +259,50 @@
       "viewDetails": "View details"
     },
     "viewerNotice": "Read-only. Editors and owners can create and modify suppliers."
+  },
+  "attachments": {
+    "uploadCta": "Upload file",
+    "uploading": "Uploading…",
+    "replaceCta": "Replace",
+    "removeCta": "Remove",
+    "empty": "No files yet.",
+    "emptyReadOnly": "This project is read-only for you.",
+    "kindLabel": "Kind",
+    "kindPlaceholder": "Optional label: contract, pro-forma invoice…",
+    "uploadedBy": "by {{name}}",
+    "uploadedAt": "Uploaded {{date}}",
+    "deleteConfirm": "Delete this file? It's also removed from Storage.",
+    "deletedToast": "File deleted",
+    "addedToast": "File uploaded",
+    "uploadError": "Couldn't upload the file. Please try again.",
+    "fileTooLarge": "File too large. Max 25 MB."
+  },
+  "supplierDocs": {
+    "sectionTitle": "Documents",
+    "headerCta": "Add document",
+    "countOne": "1 document",
+    "countOther": "{{count}} documents",
+    "modalTitle": "{{supplier}} documents",
+    "modalSubtitle": "Contracts, certificates, and any file you want on hand. Up to 25 MB per file.",
+    "kinds": {
+      "contract": "Contract",
+      "tax": "Tax",
+      "insurance": "Insurance",
+      "pricing": "Pricing",
+      "other": "Other"
+    },
+    "pickKind": "Kind",
+    "uploadCta": "Upload document",
+    "docsLink": "Documents ({{count}})"
+  },
+  "poAttachments": {
+    "sectionTitle": "Supporting documents",
+    "subtitle": "Quote, email thread, delivery note, or any file that gives context to this PO.",
+    "empty": "No attachments. Upload the quote or the email thread to keep the context with the PO.",
+    "emptyReadOnly": "No attachments.",
+    "countOne": "1 file",
+    "countOther": "{{count}} files",
+    "uploadCta": "Upload file"
   },
   "pos": {
     "pageTitle": "Purchase orders",
@@ -397,10 +458,6 @@
     "lineUnitPrice": "Unit price",
     "lineSubtotal": "Subtotal",
     "lineRemove": "Remove line",
-    "categoryShoot": "Shoot",
-    "categoryOffice": "Office",
-    "categoryTravel": "Travel",
-    "categoryServices": "Services",
     "totalCommitted": "Total committed",
     "saveDraft": "Save as draft",
     "saveDraftShort": "Save draft",
@@ -429,10 +486,28 @@
     "rejectTitle": "Reject {{number}}",
     "approveSubtitle": "The decision is logged with your name, a timestamp, and the comment.",
     "rejectSubtitle": "A short reason helps the requester re-scope and resubmit.",
-    "approvedToast": "PO approved",
+    "approvedToast": "Bill recorded and PO updated",
     "rejectedToast": "PO rejected",
     "closedToast": "PO closed",
-    "closeConfirm": "Close this PO? It won't accept new invoices."
+    "closeConfirm": "Close this PO? It won't accept new invoices.",
+    "deleteCta": "Delete",
+    "deleteConfirm": "Permanently delete this PO and all its data? This cannot be undone.",
+    "deletedToast": "Purchase order deleted"
+  },
+  "poDecision": {
+    "approveTitle": "Record bill — {{number}}",
+    "approveSubtitle": "Upload the bill and enter the amount. The remaining budget is updated immediately.",
+    "billTitle": "Bill details",
+    "committed": "Committed",
+    "alreadyInvoiced": "Already invoiced",
+    "remainingAfter": "Remaining after this bill",
+    "willClose": "PO will close",
+    "approveAndRecordCta": "Record bill",
+    "approveAndCloseCta": "Record bill & close PO",
+    "approvedClosedToast": "Bill recorded — PO is now fully invoiced and closed",
+    "amountRequired": "Enter the bill amount.",
+    "fileRequired": "Upload the bill file.",
+    "mappingMismatch": "Line mapping ({{mapped}}) doesn't match the total ({{total}})."
   },
   "projectSettings": {
     "pageTitle": "Project settings",
@@ -591,6 +666,68 @@
       "decided": "Decided"
     },
     "requestedBy": "Requested by {{name}}",
-    "waitingFor": "Also waiting on {{list}}"
+    "waitingFor": "Also waiting on {{list}}",
+    "youActed": "You've already recorded a bill"
+  },
+  "invoices": {
+    "pageTitle": "Invoices",
+    "heroSubtitle": "All invoices across every purchase order in {{project}}.",
+    "countOne": "1 invoice",
+    "countOther": "{{count}} invoices",
+    "searchPlaceholder": "Search by invoice number…",
+    "allSuppliers": "All suppliers",
+    "allPOs": "All POs",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "table": {
+      "number": "Number",
+      "poRef": "PO",
+      "supplier": "Supplier",
+      "issueDate": "Issued",
+      "dueDate": "Due",
+      "total": "Total",
+      "uploadedBy": "Uploaded by"
+    },
+    "totals": {
+      "totalInvoiced": "Total invoiced",
+      "invoiceCount": "Invoices",
+      "avgInvoice": "Avg. invoice"
+    },
+    "empty": {
+      "title": "No invoices yet.",
+      "body": "Invoices appear here once they're uploaded to a purchase order."
+    },
+    "emptyFilter": {
+      "title": "No invoices match",
+      "body": "Try different filters or a different search term."
+    }
+  },
+  "reports": {
+    "pageTitle": "Reports",
+    "heroSubtitle": "Financial analytics for {{project}}.",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "clearDates": "Clear",
+    "kpi": {
+      "committed": "Committed",
+      "invoiced": "Invoiced",
+      "remaining": "Remaining",
+      "activePOs": "Active POs"
+    },
+    "charts": {
+      "budgetOverview": "Budget overview",
+      "spendByCategory": "Spend by category",
+      "spendBySupplier": "Spend by supplier (top 10)",
+      "spendOverTime": "Spend over time",
+      "poStatusDistribution": "PO status distribution",
+      "committed": "Committed",
+      "invoiced": "Invoiced",
+      "remaining": "Remaining",
+      "noData": "Not enough data to show this chart."
+    },
+    "empty": {
+      "title": "No data yet.",
+      "body": "Reports will populate once purchase orders and invoices are added to this project."
+    }
   }
 }

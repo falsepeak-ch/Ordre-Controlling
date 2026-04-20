@@ -7,6 +7,19 @@
   grid-template-columns: 1.1fr 1fr;
   gap: var(--s-section);
   align-items: center;
+  position: relative;
+}
+
+.landing-hero-gradient {
+  position: absolute;
+  top: 40%;
+  left: -120px;
+  transform: translateY(-50%);
+  width: 750px;
+  height: 750px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.55;
 }
 
 .landing-hero-inner {
@@ -14,6 +27,8 @@
   flex-direction: column;
   gap: var(--s-5);
   animation: rev 0.6s var(--ease-out) both;
+  position: relative;
+  z-index: 1;
 }
 
 .landing-eyebrow {
@@ -46,6 +61,8 @@
 
 .landing-hero-preview {
   animation: rev 0.7s var(--ease-out) 0.1s both;
+  position: relative;
+  z-index: 1;
 }
 
 /* ===== Preview card ===== */
@@ -412,6 +429,7 @@
     gap: var(--s-8);
     padding: var(--s-8) var(--s-5);
   }
+  .landing-hero-gradient { width: 320px; height: 320px; }
   .landing-hero-preview { order: 2; }
   .landing-preview-card { margin: 0 auto; }
   .landing-pillars { padding: var(--s-8) var(--s-5); }

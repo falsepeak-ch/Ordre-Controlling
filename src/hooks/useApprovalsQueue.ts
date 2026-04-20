@@ -7,26 +7,28 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '~/lib/firebase';
-import { purchaseOrdersCol } from '~/lib/firestore';
+import { purchaseOrdersCol, tsToISO } from '~/lib/firestore';
 import type { Approval, PurchaseOrder } from '~/types';
 
 export interface QueueEntry {
   po: PurchaseOrder;
   approvals: Approval[];
-  myApproval: Approval | null;
-  myDecision: Approval['decision'] | null;
+  /** True when this user has already recorded at least one approval on this PO. */
+  iHaveActed: boolean;
 }
 
 export interface UseApprovalsQueueResult {
-  waitingForMe: QueueEntry[];
-  decidedByMe: QueueEntry[];
+  pending: QueueEntry[];
+  decided: QueueEntry[];
   loading: boolean;
 }
 
 /**
- * Real-time view of POs relevant to the current user as an approver:
- *  - waitingForMe: pending_approval POs where I'm a pending approver
- *  - decidedByMe: any PO where I hold a non-pending approval
+ * Real-time approvals queue for the current user.
+ *
+ * pending  — POs in `pending_approval` (any approver/owner may act)
+ * decided  — closed/rejected POs that have at least one approval log entry
+ *            from this user
  */
 export function useApprovalsQueue(
   projectId: string,
@@ -37,97 +39,103 @@ export function useApprovalsQueue(
   const [approvalsByPO, setApprovalsByPO] = useState<Map<string, Approval[]>>(new Map());
   const [posReady, setPosReady] = useState(false);
 
-  // 1. Watch pending_approval POs
   useEffect(() => {
     if (!projectId || !uid) return;
     setPosReady(false);
+
     const unsubPending = onSnapshot(
       query(purchaseOrdersCol(projectId), where('status', '==', 'pending_approval')),
       (snap) => {
         const m = new Map<string, PurchaseOrder>();
         snap.docs.forEach((d) => {
-          m.set(d.id, { ...(d.data() as PurchaseOrder), id: d.id });
+          const raw = d.data();
+          m.set(d.id, {
+            ...(raw as PurchaseOrder),
+            id: d.id,
+            createdAt: tsToISO(raw.createdAt) ?? '',
+            submittedAt: tsToISO(raw.submittedAt),
+            approvedAt: tsToISO(raw.approvedAt),
+            closedAt: tsToISO(raw.closedAt),
+          });
         });
         setPendingPOs(m);
         setPosReady(true);
       },
-      (err) => {
-        console.warn('[approvalsQueue] pending POs error', err);
-        setPosReady(true);
-      },
+      (err) => { console.warn('[approvalsQueue] pending error', err); setPosReady(true); },
     );
 
-    // 2. Watch approved/rejected/closed POs so we can surface my decisions.
     const unsubDecided = onSnapshot(
-      query(purchaseOrdersCol(projectId), where('status', 'in', ['approved', 'rejected', 'closed'])),
+      query(purchaseOrdersCol(projectId), where('status', 'in', ['closed', 'rejected'])),
       (snap) => {
         const m = new Map<string, PurchaseOrder>();
         snap.docs.forEach((d) => {
-          m.set(d.id, { ...(d.data() as PurchaseOrder), id: d.id });
+          const raw = d.data();
+          m.set(d.id, {
+            ...(raw as PurchaseOrder),
+            id: d.id,
+            createdAt: tsToISO(raw.createdAt) ?? '',
+            submittedAt: tsToISO(raw.submittedAt),
+            approvedAt: tsToISO(raw.approvedAt),
+            closedAt: tsToISO(raw.closedAt),
+          });
         });
         setDecidedPOs(m);
       },
+      (err) => console.warn('[approvalsQueue] decided error', err),
     );
 
-    return () => {
-      unsubPending();
-      unsubDecided();
-    };
+    return () => { unsubPending(); unsubDecided(); };
   }, [projectId, uid]);
 
-  // 3. Subscribe to approvals for each PO currently in either map.
+  // Subscribe to approvals subcollection for each relevant PO
   useEffect(() => {
     if (!projectId || !uid) return;
     const relevant = new Set<string>([...pendingPOs.keys(), ...decidedPOs.keys()]);
     const unsubs: Unsubscribe[] = [];
     relevant.forEach((poId) => {
-      const apCol = collection(db, 'projects', projectId, 'purchaseOrders', poId, 'approvals');
       const unsub = onSnapshot(
-        apCol,
+        collection(db, 'projects', projectId, 'purchaseOrders', poId, 'approvals'),
         (snap) => {
-          const rows: Approval[] = snap.docs.map((d) => ({
-            ...(d.data() as Approval),
-            id: d.id,
-          }));
-          setApprovalsByPO((prev) => {
-            const next = new Map(prev);
-            next.set(poId, rows);
-            return next;
+          const rows: Approval[] = snap.docs.map((d) => {
+            const raw = d.data();
+            return { ...(raw as Approval), id: d.id, decidedAt: tsToISO(raw.decidedAt) };
           });
+          setApprovalsByPO((prev) => { const n = new Map(prev); n.set(poId, rows); return n; });
         },
-        (err) => console.warn('[approvalsQueue] approvals error for', poId, err),
+        (err) => console.warn('[approvalsQueue] approvals error', poId, err),
       );
       unsubs.push(unsub);
     });
     return () => unsubs.forEach((u) => u());
   }, [projectId, uid, pendingPOs, decidedPOs]);
 
-  const { waitingForMe, decidedByMe } = useMemo(() => {
-    const waiting: QueueEntry[] = [];
-    const decided: QueueEntry[] = [];
-    if (!uid) return { waitingForMe: waiting, decidedByMe: decided };
+  const { pending, decided } = useMemo(() => {
+    const p: QueueEntry[] = [];
+    const d: QueueEntry[] = [];
+    if (!uid) return { pending: p, decided: d };
 
     for (const po of pendingPOs.values()) {
       const approvals = approvalsByPO.get(po.id) ?? [];
-      const mine = approvals.find((a) => a.approverUid === uid) ?? null;
-      if (mine && mine.decision === 'pending') {
-        waiting.push({ po: { ...po, approvals }, approvals, myApproval: mine, myDecision: 'pending' });
-      }
+      const iHaveActed = approvals.some((a) => a.approverUid === uid);
+      p.push({ po: { ...po, approvals }, approvals, iHaveActed });
     }
 
     for (const po of decidedPOs.values()) {
       const approvals = approvalsByPO.get(po.id) ?? [];
-      const mine = approvals.find((a) => a.approverUid === uid) ?? null;
-      if (mine && mine.decision !== 'pending') {
-        decided.push({ po: { ...po, approvals }, approvals, myApproval: mine, myDecision: mine.decision });
-      }
+      const mine = approvals.some((a) => a.approverUid === uid);
+      if (mine) d.push({ po: { ...po, approvals }, approvals, iHaveActed: true });
     }
 
-    waiting.sort((a, b) => (b.po.submittedAt ?? '').localeCompare(a.po.submittedAt ?? ''));
-    decided.sort((a, b) => (b.myApproval?.decidedAt ?? '').localeCompare(a.myApproval?.decidedAt ?? ''));
+    p.sort((a, b) => (b.po.submittedAt ?? '').localeCompare(a.po.submittedAt ?? ''));
+    d.sort((a, b) =>
+      (b.approvals.filter((a) => a.approverUid === uid).at(-1)?.decidedAt ?? '')
+        .localeCompare(
+          a.approvals.filter((ap) => ap.approverUid === uid).at(-1)?.decidedAt ?? '',
+        ),
+    );
 
-    return { waitingForMe: waiting, decidedByMe: decided };
+    return { pending: p, decided: d };
   }, [pendingPOs, decidedPOs, approvalsByPO, uid]);
 
-  return { waitingForMe, decidedByMe, loading: !posReady };
+  return { pending, decided, loading: !posReady };
 }

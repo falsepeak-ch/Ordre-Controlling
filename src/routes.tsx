@@ -15,11 +15,15 @@ import { POFormPage } from '~/pages/POFormPage';
 import { ApprovalsQueuePage } from '~/pages/ApprovalsQueuePage';
 import { CategoriesPage } from '~/pages/CategoriesPage';
 import { ProjectSettingsPage } from '~/pages/ProjectSettingsPage';
+import { InvoicesPage } from '~/pages/InvoicesPage';
+import { ReportsPage } from '~/pages/ReportsPage';
 import { NotFoundPage } from '~/pages/NotFoundPage';
+import { ErrorPage } from '~/pages/ErrorPage';
 
 export const router = createBrowserRouter([
   {
     element: <PublicLayout />,
+    errorElement: <ErrorPage />,
     children: [
       { path: '/', element: <LandingPage /> },
       { path: '/login', element: <LoginPage /> },
@@ -33,6 +37,7 @@ export const router = createBrowserRouter([
         <ProjectsListPage />
       </RequireAuth>
     ),
+    errorElement: <ErrorPage />,
   },
   {
     path: '/app/p/:projectId',
@@ -41,6 +46,7 @@ export const router = createBrowserRouter([
         <ProjectShell />
       </RequireAuth>
     ),
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'members', element: <MembersPage /> },
@@ -48,6 +54,8 @@ export const router = createBrowserRouter([
       { path: 'categories', element: <CategoriesPage /> },
       { path: 'approvals', element: <ApprovalsQueuePage /> },
       { path: 'settings', element: <ProjectSettingsPage /> },
+      { path: 'invoices', element: <InvoicesPage /> },
+      { path: 'reports', element: <ReportsPage /> },
       { path: 'purchase-orders', element: <PurchaseOrdersPage /> },
       { path: 'purchase-orders/new', element: <POFormPage /> },
       { path: 'purchase-orders/:poId', element: <PODetailPage /> },
@@ -55,5 +63,5 @@ export const router = createBrowserRouter([
       { path: '*', element: <Navigate to="." replace /> },
     ],
   },
-  { path: '*', element: <NotFoundPage /> },
+  { path: '*', element: <NotFoundPage />, errorElement: <ErrorPage /> },
 ]);

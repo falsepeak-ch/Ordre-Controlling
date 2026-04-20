@@ -24,7 +24,7 @@ export function ProjectsListPage() {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const { projects, loading } = useProjects();
-  const { isPro, managementUrl } = useSubscription();
+  const { isPro } = useSubscription();
   const [createOpen, setCreateOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
@@ -50,7 +50,7 @@ export function ProjectsListPage() {
   }, [projects]);
 
   const grouped = useMemo(() => {
-    const byRole: Record<Role, Project[]> = { owner: [], editor: [], viewer: [] };
+    const byRole: Record<Role, Project[]> = { owner: [], editor: [], approver: [], viewer: [] };
     for (const p of activeProjects) {
       const role = user ? (p.members[user.uid] as Role | undefined) : undefined;
       if (!role) continue;
@@ -68,16 +68,7 @@ export function ProjectsListPage() {
         <div className="projects-topbar-actions">
           <LocaleToggle />
           <ThemeToggle />
-          {isPro && managementUrl ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => window.open(managementUrl, '_blank', 'noopener')}
-              leading={<Icon name="gear-fill" size={13} />}
-            >
-              {t('subscription.manage')}
-            </Button>
-          ) : !isPro ? (
+          {!isPro && (
             <Button
               variant="ghost"
               size="sm"
@@ -85,7 +76,7 @@ export function ProjectsListPage() {
             >
               {t('subscription.upgrade')}
             </Button>
-          ) : null}
+          )}
           <div className="projects-user">
             <Avatar name={user?.displayName ?? undefined} photoURL={user?.photoURL} size="sm" />
             <span className="projects-user-name">{user?.displayName ?? user?.email}</span>
@@ -179,7 +170,7 @@ function ProjectGroups({
   grouped: Record<Role, Project[]>;
   uid: string | undefined;
 }) {
-  const order: Role[] = ['owner', 'editor', 'viewer'];
+  const order: Role[] = ['owner', 'editor', 'approver', 'viewer'];
   return (
     <section className="projects-grid-wrap reveal reveal-d1">
       {order.map((role) => {

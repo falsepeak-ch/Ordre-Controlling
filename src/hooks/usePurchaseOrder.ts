@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
-import { purchaseOrdersCol } from '~/lib/firestore';
+import { purchaseOrdersCol, tsToISO } from '~/lib/firestore';
 import { db } from '~/lib/firebase';
 import type { Approval, Invoice, PurchaseOrder } from '~/types';
 
@@ -32,7 +32,15 @@ export function usePurchaseOrder(
         setLoading(false);
         return;
       }
-      setPo({ ...(snap.data() as PurchaseOrder), id: snap.id });
+      const raw = snap.data();
+      setPo({
+        ...(raw as PurchaseOrder),
+        id: snap.id,
+        createdAt: tsToISO(raw.createdAt) ?? '',
+        submittedAt: tsToISO(raw.submittedAt),
+        approvedAt: tsToISO(raw.approvedAt),
+        closedAt: tsToISO(raw.closedAt),
+      });
       setLoading(false);
     });
 
@@ -43,7 +51,10 @@ export function usePurchaseOrder(
 
     const apCol = collection(db, 'projects', projectId, 'purchaseOrders', poId, 'approvals');
     const unsubAp = onSnapshot(apCol, (snap) => {
-      setApprovals(snap.docs.map((d) => ({ ...(d.data() as Approval), id: d.id })));
+      setApprovals(snap.docs.map((d) => {
+        const raw = d.data();
+        return { ...(raw as Approval), id: d.id, decidedAt: tsToISO(raw.decidedAt) };
+      }));
     });
 
     return () => {

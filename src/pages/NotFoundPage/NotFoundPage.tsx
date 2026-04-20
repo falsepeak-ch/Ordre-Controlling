@@ -25,6 +25,12 @@ export function NotFoundPage() {
         <Link to="/login" className="muted" style={{ fontSize: 13, marginTop: 8 }}>
           {t('nav.login')}
         </Link>
+        <p className="muted" style={{ fontSize: 13, marginTop: 4 }}>
+          {t('notFound.contact')}{' '}
+          <a href="mailto:help@ordrecontrolling.com" style={{ color: 'inherit' }}>
+            help@ordrecontrolling.com
+          </a>
+        </p>
       </div>
     </div>
   );

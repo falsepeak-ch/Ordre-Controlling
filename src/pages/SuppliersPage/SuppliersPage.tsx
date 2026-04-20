@@ -7,6 +7,7 @@ import { Button } from '~/components/ui/Button';
 import { Field, Input } from '~/components/ui/Input';
 import { Spinner } from '~/components/ui/Spinner';
 import { SupplierFormModal } from '~/components/SupplierFormModal';
+import { SupplierDocsModal } from '~/components/SupplierDocsModal';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { useSuppliers } from '~/hooks/useSuppliers';
 import { useProjectData } from '~/hooks/useProjectData';
@@ -28,6 +29,7 @@ export function SuppliersPage() {
   const [query, setQuery] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
+  const [docsFor, setDocsFor] = useState<Supplier | null>(null);
 
   const writable = canEdit(role);
 
@@ -144,6 +146,7 @@ export function SuppliersPage() {
                   canEdit={writable}
                   onEdit={() => openEdit(s)}
                   onDelete={() => handleDelete(s)}
+                  onOpenDocs={() => setDocsFor(s)}
                 />
               );
             })}
@@ -163,6 +166,16 @@ export function SuppliersPage() {
         projectId={project.id}
         supplier={editing}
       />
+
+      {docsFor ? (
+        <SupplierDocsModal
+          open={docsFor !== null}
+          onClose={() => setDocsFor(null)}
+          projectId={project.id}
+          supplier={docsFor}
+          canEdit={writable}
+        />
+      ) : null}
     </>
   );
 }
@@ -201,6 +214,7 @@ function SupplierCard({
   canEdit: writable,
   onEdit,
   onDelete,
+  onOpenDocs,
 }: {
   supplier: Supplier;
   openPOs: number;
@@ -208,8 +222,10 @@ function SupplierCard({
   canEdit: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  onOpenDocs: () => void;
 }) {
   const { t } = useTranslation();
+  const seedDocsCount = (supplier.docs ?? []).length;
   return (
     <article className="supplier-card">
       <header className="supplier-card-head">
@@ -229,6 +245,19 @@ function SupplierCard({
           </div>
         ) : null}
       </header>
+
+      <button
+        type="button"
+        className="supplier-docs-link"
+        onClick={onOpenDocs}
+      >
+        <Icon name="file-earmark-text-fill" size={12} />
+        <span>
+          {seedDocsCount > 0
+            ? t('supplierDocs.docsLink', { count: seedDocsCount })
+            : t('supplierDocs.sectionTitle')}
+        </span>
+      </button>
 
       {supplier.tags && supplier.tags.length > 0 ? (
         <div className="supplier-tags">
