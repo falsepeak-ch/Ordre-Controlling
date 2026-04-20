@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>New purchase order · Ordre</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23242424'/%3E%3Ctext x='50%25' y='56%25' font-family='system-ui' font-size='18' font-weight='600' text-anchor='middle' fill='white'%3EO%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="assets/styles.css" />
+<style>
+  .line-editor {
+    display: grid;
+    grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.1fr) 80px 120px 120px 32px;
+    gap: var(--s-3);
+    align-items: center;
+    padding: var(--s-3) var(--s-4);
+    position: relative;
+  }
+  .line-editor + .line-editor::before {
+    content: ''; position: absolute; left: var(--s-4); right: var(--s-4); top: 0;
+    height: 1px; background: var(--ring-border);
+  }
+  .line-editor .input { font-size: 13.5px; padding: 8px 10px; }
+  .line-editor .money-input input { font-size: 13.5px; padding: 8px 10px; }
+  .editor-header {
+    display: grid;
+    grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.1fr) 80px 120px 120px 32px;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    box-shadow: inset 0 -1px 0 var(--ring-border);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mid-gray);
+    font-weight: 500;
+  }
+  .remove-btn {
+    width: 28px; height: 28px; border-radius: var(--r-6);
+    background: transparent; border: 0; cursor: pointer;
+    color: var(--soft-gray); display: grid; place-items: center;
+    transition: all .15s var(--ease-out);
+  }
+  .remove-btn:hover { color: #c72020; background: var(--hair-gray); }
+  .subtotal { font-variant-numeric: tabular-nums; font-size: 13.5px; font-weight: 500; color: var(--charcoal); text-align: right; padding-right: 2px; }
+  .totals-preview { padding: var(--s-4) var(--s-5); display: grid; grid-template-columns: 1fr auto; gap: var(--s-3); background: var(--hair-gray); box-shadow: inset 0 1px 0 var(--ring-border); align-items: center; }
+  .totals-preview .total { font-family: var(--font-display); font-size: 24px; font-weight: 600; color: var(--charcoal); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body data-page="orders">
+
+<div class="app">
+  <div id="sidebar-mount"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <nav class="breadcrumb">
+          <a href="purchase-orders.html">Purchase orders</a>
+          <span class="sep">/</span>
+          <span class="current">New</span>
+        </nav>
+      </div>
+      <div class="topbar-right">
+        <a class="btn btn-ghost btn-sm" href="purchase-orders.html">Cancel</a>
+        <button class="btn btn-ghost" id="save-draft">Save as draft</button>
+        <button class="btn btn-primary" id="submit-po">Submit for approval</button>
+      </div>
+    </header>
+
+    <div class="page">
+      <section class="page-hero reveal">
+        <div class="eyebrow">New purchase order</div>
+        <h1 class="display-lg">A new commitment to a supplier.<br><span class="muted">Add the lines, then submit for approval.</span></h1>
+      </section>
+
+      <form id="po-form" class="grid grid-split-60 reveal reveal-d1">
+        <!-- ========== Left — line items ========== -->
+        <div class="stack stack-6">
+          <div class="card stack stack-5">
+            <div class="grid grid-2">
+              <div class="field">
+                <label class="input-label">Supplier</label>
+                <select class="select" id="supplier-select"></select>
+              </div>
+              <div class="field">
+                <label class="input-label">PO number</label>
+                <input class="input mono" value="PO-2026-0043" readonly style="background: var(--hair-gray); color: var(--mid-gray);" />
+                <div class="input-hint">Auto-generated when submitted.</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="input-label">Reference / notes</label>
+              <textarea class="textarea" id="po-notes" placeholder="What's this PO for? e.g. Set dressing for La Fàbrica – week 4 interior."></textarea>
+            </div>
+          </div>
+
+          <!-- Line item editor -->
+          <div>
+            <div class="block-title">
+              <h3>Line items</h3>
+              <span class="count" id="line-count">0</span>
+            </div>
+            <div class="list">
+              <div class="editor-header">
+                <div>Description</div>
+                <div>Category</div>
+                <div class="text-center">Qty</div>
+                <div class="text-right">Unit price</div>
+                <div class="text-right">Subtotal</div>
+                <div></div>
+              </div>
+              <div id="lines"></div>
+              <div style="padding: var(--s-3) var(--s-4); box-shadow: inset 0 1px 0 var(--ring-border);">
+                <button type="button" class="btn btn-subtle btn-sm" id="add-line">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M12 5v14M5 12h14"/></svg>
+                  Add line
+                </button>
+              </div>
+              <div class="totals-preview">
+                <span class="muted" style="font-size: 12px;">Preview total committed (EUR)</span>
+                <span class="total num" id="grand-total">€0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== Right — approvers + attachments ========== -->
+        <aside class="stack stack-6">
+          <div class="card stack stack-4">
+            <div class="block-title mb-0"><h3>Approval flow</h3></div>
+            <p class="muted" style="font-size: 13px; margin: 0;">Based on the amount rules, approvers are assigned automatically. You can add extras.</p>
+            <div class="stack stack-2" id="approvers">
+              <div class="row" style="gap: 10px;">
+                <span class="avatar avatar-sm">MR</span>
+                <div class="stack" style="gap: 1px; line-height: 1.25;">
+                  <span style="font-size: 13px; font-weight: 600;">Marc Ribera</span>
+                  <span class="muted" style="font-size: 11.5px;">Head of Production · required above €500</span>
+                </div>
+                <span class="grow"></span>
+                <span class="pill"><span class="dot"></span>Required</span>
+              </div>
+              <div class="row" style="gap: 10px;">
+                <span class="avatar avatar-sm">OB</span>
+                <div class="stack" style="gap: 1px; line-height: 1.25;">
+                  <span style="font-size: 13px; font-weight: 600;">Oriol Baixas</span>
+                  <span class="muted" style="font-size: 11.5px;">Finance Controller · above €2,000</span>
+                </div>
+                <span class="grow"></span>
+                <span class="pill pill-status-draft"><span class="dot"></span>Conditional</span>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <button type="button" class="btn btn-link" style="align-self: flex-start; padding: 0;">Add another approver +</button>
+          </div>
+
+          <div class="card stack stack-4">
+            <div class="block-title mb-0"><h3>Attachments</h3></div>
+            <div class="card-flat" style="padding: var(--s-5); text-align: center; border: 2px dashed var(--ring-border-strong); background: var(--hair-gray); box-shadow: none; border-radius: var(--r-10);">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: var(--white); box-shadow: var(--elevation-1); display: grid; place-items: center; margin: 0 auto var(--s-3); color: var(--midnight);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path d="M12 3v12"/></svg>
+              </div>
+              <div style="font-size: 13px; color: var(--charcoal); font-weight: 500;">Drop a quote or email thread</div>
+              <div class="muted" style="font-size: 11.5px; margin-top: 2px;">PDF, PNG, JPG — up to 25 MB</div>
+            </div>
+          </div>
+
+          <div class="card-flat stack stack-2" style="padding: var(--s-4) var(--s-5); background: var(--hair-gray);">
+            <span class="eyebrow">Tip</span>
+            <p style="font-size: 13px; color: var(--midnight); line-height: 1.5; margin: 0;">You can save drafts freely. Once a PO is submitted, lines lock until an approver responds.</p>
+          </div>
+        </aside>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  // ---- Supplier selector ----
+  const supplierSelect = document.getElementById('supplier-select');
+  supplierSelect.innerHTML = '<option value="">Choose a supplier…</option>' + Ordre.suppliers.map((s) =>
+    `<option value="${s.id}">${s.tradeName} — ${s.taxId}</option>`
+  ).join('');
+
+  // ---- Line editor ----
+  const lines = [
+    { description: 'Moble llit rodatge plató', category: 'shoot', quantity: 1, unitPrice: 480 },
+    { description: 'Tauleta de cafè', category: 'shoot', quantity: 1, unitPrice: 180 },
+    { description: '', category: 'shoot', quantity: 1, unitPrice: 0 },
+  ];
+
+  function lineEditorHTML(i, l) {
+    const subtotal = (l.quantity || 0) * (l.unitPrice || 0);
+    return `
+      <div class="line-editor" data-i="${i}">
+        <input class="input" data-field="description" value="${l.description || ''}" placeholder="Describe the item or service…" />
+        <select class="select" data-field="category">
+          <option value="shoot" ${l.category==='shoot'?'selected':''}>for the shoot</option>
+          <option value="office" ${l.category==='office'?'selected':''}>office</option>
+          <option value="travel" ${l.category==='travel'?'selected':''}>travel</option>
+          <option value="services" ${l.category==='services'?'selected':''}>services</option>
+        </select>
+        <input class="input text-center" data-field="quantity" value="${l.quantity || 1}" type="number" min="1" style="text-align: center; font-variant-numeric: tabular-nums;" />
+        <div class="money-input">
+          <span class="prefix">€</span>
+          <input data-field="unitPrice" value="${l.unitPrice || ''}" placeholder="0.00" />
+        </div>
+        <div class="subtotal" data-subtotal="${i}">${Ordre.eurFull(subtotal)}</div>
+        <button type="button" class="remove-btn" data-remove="${i}" aria-label="Remove line">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </div>
+    `;
+  }
+
+  function render() {
+    document.getElementById('lines').innerHTML = lines.map((l, i) => lineEditorHTML(i, l)).join('');
+    document.getElementById('line-count').textContent = lines.length;
+    const total = lines.reduce((sum, l) => sum + (l.quantity * l.unitPrice || 0), 0);
+    document.getElementById('grand-total').textContent = Ordre.eurFull(total);
+
+    document.querySelectorAll('.line-editor').forEach((el) => {
+      const i = +el.dataset.i;
+      el.querySelectorAll('[data-field]').forEach((input) => {
+        input.addEventListener('input', (e) => {
+          const field = input.dataset.field;
+          lines[i][field] = (field === 'quantity' || field === 'unitPrice') ? Number(e.target.value) : e.target.value;
+          const subtotal = (lines[i].quantity || 0) * (lines[i].unitPrice || 0);
+          el.querySelector(`[data-subtotal="${i}"]`).textContent = Ordre.eurFull(subtotal);
+          const total = lines.reduce((sum, l) => sum + (l.quantity * l.unitPrice || 0), 0);
+          document.getElementById('grand-total').textContent = Ordre.eurFull(total);
+        });
+      });
+      el.querySelector('[data-remove]').addEventListener('click', () => {
+        lines.splice(i, 1);
+        render();
+      });
+    });
+  }
+
+  document.getElementById('add-line').addEventListener('click', () => {
+    lines.push({ description: '', category: 'shoot', quantity: 1, unitPrice: 0 });
+    render();
+    const all = document.querySelectorAll('.line-editor');
+    all[all.length - 1].querySelector('input[data-field="description"]').focus();
+  });
+
+  document.getElementById('save-draft').addEventListener('click', () => Ordre.toast('Draft saved'));
+  document.getElementById('submit-po').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!supplierSelect.value) { Ordre.toast('Pick a supplier first', 'x'); return; }
+    Ordre.toast('PO submitted for approval. Marc was notified.');
+    setTimeout(() => location.href = 'purchase-orders.html', 900);
+  });
+
+  render();
+</script>
+</body>
+</html>

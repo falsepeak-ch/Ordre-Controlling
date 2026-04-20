@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Purchase orders · Ordre</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23242424'/%3E%3Ctext x='50%25' y='56%25' font-family='system-ui' font-size='18' font-weight='600' text-anchor='middle' fill='white'%3EO%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="orders">
+
+<div class="app">
+  <div id="sidebar-mount"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="topbar-title">Purchase orders</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost btn-sm" id="export-csv">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><path d="M12 15V3"/></svg>
+          Export CSV
+        </button>
+        <a class="btn btn-primary" href="po-new.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          New purchase order
+        </a>
+      </div>
+    </header>
+
+    <div class="page">
+      <section class="page-hero reveal">
+        <div class="eyebrow">Commitments ledger</div>
+        <h1 class="display-lg">Every PO, every invoice, every euro still to spend.</h1>
+      </section>
+
+      <!-- ====== Totals strip ====== -->
+      <section class="totals mb-8 reveal reveal-d1" id="totals"></section>
+
+      <!-- ====== Filter bar ====== -->
+      <section class="filter-bar reveal reveal-d2">
+        <div class="btn-group" id="status-tabs">
+          <button class="is-active" data-status="all">All</button>
+          <button data-status="draft">Draft</button>
+          <button data-status="pending_approval">Pending</button>
+          <button data-status="approved">Approved</button>
+          <button data-status="rejected">Rejected</button>
+          <button data-status="closed">Closed</button>
+        </div>
+        <div class="input-group" style="flex:1;max-width:360px;">
+          <span class="input-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          </span>
+          <input id="search" class="input" placeholder="Filter by PO number or supplier…" />
+        </div>
+        <span class="grow"></span>
+        <button class="btn btn-ghost btn-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/></svg>
+          More filters
+        </button>
+      </section>
+
+      <!-- ====== Table ====== -->
+      <section class="list reveal reveal-d3">
+        <div class="po-row-header">
+          <div>Number</div>
+          <div>Supplier</div>
+          <div class="text-right">Committed</div>
+          <div class="text-right">Remaining</div>
+          <div>Progress</div>
+          <div>Status</div>
+          <div></div>
+        </div>
+        <div id="po-list"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  // ---- Totals strip ----
+  const m = Ordre.workspaceMetrics();
+  document.getElementById('totals').innerHTML = `
+    <div class="totals-cell">
+      <div class="totals-label">Committed</div>
+      <div class="totals-value num">${Ordre.eurFull(m.committed)}</div>
+      <div class="totals-footnote">${Ordre.purchaseOrders.filter(p => p.status !== 'draft' && p.status !== 'rejected').length} active POs</div>
+    </div>
+    <div class="totals-cell">
+      <div class="totals-label">Invoiced</div>
+      <div class="totals-value num">${Ordre.eurFull(m.invoiced)}</div>
+      <div class="totals-footnote">${Math.round((m.invoiced/m.committed)*100)}% of committed — 5 invoices</div>
+    </div>
+    <div class="totals-cell">
+      <div class="totals-label">Remaining</div>
+      <div class="totals-value num">${Ordre.eurFull(m.remaining)}</div>
+      <div class="totals-footnote">Across open POs — EUR only</div>
+    </div>
+  `;
+
+  // ---- Render rows ----
+  function render(filter = 'all', query = '') {
+    const rows = Ordre.purchaseOrders
+      .filter((p) => filter === 'all' || p.status === filter)
+      .filter((p) => {
+        if (!query) return true;
+        const q = query.toLowerCase();
+        const s = Ordre.supplierById(p.supplierId);
+        return p.number.toLowerCase().includes(q) || s.tradeName.toLowerCase().includes(q);
+      })
+      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+    const list = document.getElementById('po-list');
+    if (!rows.length) {
+      list.innerHTML = `
+        <div class="empty">
+          <div class="empty-title">No purchase orders</div>
+          <div class="empty-body">Try a different filter, or create a new PO.</div>
+          <a class="btn btn-primary" href="po-new.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M12 5v14M5 12h14"/></svg>
+            New PO
+          </a>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = rows.map((po) => {
+      const s = Ordre.supplierById(po.supplierId);
+      const t = Ordre.poTotals(po);
+      const pct = t.committed ? Math.min(100, Math.round((t.invoiced / t.committed) * 100)) : 0;
+      return `
+        <a href="po-detail.html?id=${po.id}" class="po-row" style="text-decoration:none;">
+          <div class="po-number">${po.number.replace('PO-', '')}</div>
+          <div class="supplier-cell">
+            <div class="supplier-monogram">${s.monogram}</div>
+            <div class="supplier-txt">
+              <span class="n">${s.tradeName}</span>
+              <span class="m">${po.lines.length} line${po.lines.length !== 1 ? 's' : ''} · ${po.createdBy.split(' ')[0]} · ${Ordre.relDate(po.createdAt)}</span>
+            </div>
+          </div>
+          <div class="text-right num" style="font-weight:600;color:var(--charcoal);font-size:14px;">${Ordre.eur(t.committed)}</div>
+          <div class="text-right num" style="color:${t.remaining === 0 ? 'var(--mid-gray)' : 'var(--charcoal)'};font-weight:${t.remaining === 0 ? 500 : 600};font-size:14px;">${Ordre.eur(Math.max(0, t.remaining))}</div>
+          <div class="mini-progress">
+            <div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <span class="value">${pct}%</span>
+          </div>
+          <div><span class="pill ${Ordre.statusClass(po.status)}"><span class="dot"></span>${Ordre.statusLabel(po.status)}</span></div>
+          <div style="color:var(--soft-gray);"><svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </a>
+      `;
+    }).join('');
+  }
+
+  render();
+
+  let currentFilter = 'all', currentQuery = '';
+
+  document.querySelectorAll('#status-tabs button').forEach((b) => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#status-tabs button').forEach((x) => x.classList.remove('is-active'));
+      b.classList.add('is-active');
+      currentFilter = b.dataset.status;
+      render(currentFilter, currentQuery);
+    });
+  });
+
+  document.getElementById('search').addEventListener('input', (e) => {
+    currentQuery = e.target.value;
+    render(currentFilter, currentQuery);
+  });
+
+  document.getElementById('export-csv').addEventListener('click', () => Ordre.toast('Generated CSV with 8 POs', 'download'));
+</script>
+</body>
+</html>

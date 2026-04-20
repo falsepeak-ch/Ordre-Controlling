@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PO detail · Ordre</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23242424'/%3E%3Ctext x='50%25' y='56%25' font-family='system-ui' font-size='18' font-weight='600' text-anchor='middle' fill='white'%3EO%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="orders">
+
+<div class="app">
+  <div id="sidebar-mount"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <nav class="breadcrumb">
+          <a href="purchase-orders.html">Purchase orders</a>
+          <span class="sep">/</span>
+          <span class="current" id="bc-number">—</span>
+        </nav>
+      </div>
+      <div class="topbar-right" id="topbar-actions">
+        <!-- Rendered below -->
+      </div>
+    </header>
+
+    <div class="page" id="content">
+      <!-- rendered below -->
+    </div>
+  </main>
+</div>
+
+<!-- Invoice upload drawer -->
+<div class="drawer-backdrop" id="backdrop"></div>
+<aside class="drawer" id="invoice-drawer" aria-hidden="true">
+  <div class="drawer-header">
+    <div class="stack" style="gap:2px;">
+      <span class="eyebrow">Capture invoice</span>
+      <h3 class="display-sm mb-0" id="dw-po-num">—</h3>
+    </div>
+    <button class="btn btn-icon" id="close-drawer" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+  <div class="drawer-footer">
+    <button class="btn btn-ghost" id="drawer-cancel">Cancel</button>
+    <button class="btn btn-primary" id="drawer-save">Save invoice</button>
+  </div>
+</aside>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  // ---- Load PO (default to PO-2026-0042 which is the reconciliation hero) ----
+  const params = new URLSearchParams(location.search);
+  const po = Ordre.poById(params.get('id') || 'po_042') || Ordre.poById('po_042');
+  const supplier = Ordre.supplierById(po.supplierId);
+  const totals = Ordre.poTotals(po);
+
+  document.getElementById('bc-number').textContent = po.number;
+  document.getElementById('dw-po-num').textContent = po.number;
+  document.title = `${po.number} · Ordre`;
+
+  // ---- Top bar actions ----
+  const topbarActions = document.getElementById('topbar-actions');
+  topbarActions.innerHTML = `
+    <button class="btn btn-ghost btn-sm">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><rect x="2" y="9" width="20" height="9" rx="2"/><path d="M6 18h12v4H6z"/></svg>
+      Print
+    </button>
+    <button class="btn btn-ghost btn-sm" id="export-pdf">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><path d="M12 15V3"/></svg>
+      Export PDF
+    </button>
+    ${po.status === 'approved' ? `
+      <button class="btn btn-primary" id="add-invoice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path d="M12 3v12"/></svg>
+        Upload invoice
+      </button>
+    ` : ''}
+  `;
+
+  // ---- Render page ----
+  const pct = totals.committed ? Math.min(100, Math.round((totals.invoiced / totals.committed) * 100)) : 0;
+  const over = totals.invoiced > totals.committed;
+
+  document.getElementById('content').innerHTML = `
+    <!-- ===== Hero ===== -->
+    <section class="po-hero reveal">
+      <div class="row" style="gap: var(--s-3);">
+        <a href="purchase-orders.html" class="btn btn-icon" style="width:28px;height:28px;" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </a>
+        <span class="pill ${Ordre.statusClass(po.status)}">
+          <span class="dot"></span>${Ordre.statusLabel(po.status)}
+        </span>
+        <span class="tag">${supplier.tags[0] || '—'}</span>
+      </div>
+      <h1 class="po-hero-title num">${po.number}</h1>
+      <div class="row" style="gap: var(--s-4); flex-wrap: wrap;">
+        <div class="row" style="gap: 10px;">
+          <div class="supplier-monogram" style="width:32px;height:32px;font-size:12px;border-radius:8px;">${supplier.monogram}</div>
+          <div class="stack" style="gap:2px;line-height:1.25;">
+            <span style="font-size:14px;font-weight:600;color:var(--charcoal);">${supplier.tradeName}</span>
+            <span style="font-size:12px;color:var(--mid-gray);" class="mono">${supplier.taxId} · ${supplier.paymentTerms}</span>
+          </div>
+        </div>
+        <div class="row muted" style="gap: var(--s-4); font-size: 13px;">
+          <span>Created ${Ordre.formatDate(po.createdAt)}</span>
+          <span>·</span>
+          <span>By ${po.createdBy}</span>
+          ${po.approvedAt ? `<span>·</span><span>Approved ${Ordre.formatDate(po.approvedAt)}</span>` : ''}
+        </div>
+      </div>
+      ${po.notes ? `<p class="muted" style="max-width: 720px; font-size: 14.5px; line-height: 1.55; margin: var(--s-2) 0 0;">${po.notes}</p>` : ''}
+    </section>
+
+    <!-- ===== Totals strip ===== -->
+    <section class="totals mb-8 reveal reveal-d1">
+      <div class="totals-cell">
+        <div class="totals-label">Committed</div>
+        <div class="totals-value num">${Ordre.eurFull(totals.committed)}</div>
+        <div class="totals-footnote">${po.lines.length} line${po.lines.length !== 1 ? 's' : ''}</div>
+      </div>
+      <div class="totals-cell">
+        <div class="totals-label">Invoiced</div>
+        <div class="totals-value num">${Ordre.eurFull(totals.invoiced)}</div>
+        <div class="totals-footnote">${po.invoices.length} invoice${po.invoices.length !== 1 ? 's' : ''} received — ${pct}% of committed</div>
+      </div>
+      <div class="totals-cell">
+        <div class="totals-label">Remaining</div>
+        <div class="totals-value num ${over ? 'over' : ''}" style="${over ? 'color:#c72020;' : ''}">${Ordre.eurFull(Math.abs(totals.remaining))}${over ? ' over' : ''}</div>
+        <div class="totals-footnote">${over ? 'PO is over-invoiced — review lines below' : (totals.remaining === 0 ? 'Fully reconciled' : 'Still available to spend against this PO')}</div>
+      </div>
+    </section>
+
+    <!-- ===== Layout split ===== -->
+    <section class="grid grid-split reveal reveal-d2">
+      <!-- ========== Left column: lines & invoices ========== -->
+      <div class="stack stack-8">
+        <!-- Line items -->
+        <div>
+          <div class="block-title">
+            <h3>Line items</h3>
+            <span class="count">${po.lines.length}</span>
+            <span class="grow"></span>
+            <span class="muted" style="font-size:12px;">Committed → Invoiced → Remaining</span>
+          </div>
+
+          <div class="list">
+            <div class="list-header" style="grid-template-columns: minmax(0, 1.5fr) 110px 110px 110px 140px;">
+              <div>Description</div>
+              <div class="text-right">Committed</div>
+              <div class="text-right">Invoiced</div>
+              <div class="text-right">Remaining</div>
+              <div>Progress</div>
+            </div>
+
+            ${po.lines.map((l) => {
+              const committed = Ordre.lineCommitted(l);
+              const invoiced = Ordre.lineInvoiced(po, l.id);
+              const remaining = committed - invoiced;
+              const lPct = committed ? Math.min(100, Math.round((invoiced / committed) * 100)) : 0;
+              const lOver = invoiced > committed;
+              const fully = !lOver && invoiced === committed && committed > 0;
+              return `
+                <div class="line-item">
+                  <div class="line-item-desc">
+                    <div class="line-item-title">${l.description}</div>
+                    <div class="line-item-meta">
+                      <span class="cat-tag cat-tag-${l.category}">${l.category === 'shoot' ? 'for the shoot' : (l.category === 'office' ? 'office' : l.category)}</span>
+                      <span class="sep">·</span>
+                      <span>${l.quantity} × ${Ordre.eurFull(l.unitPrice)}</span>
+                    </div>
+                  </div>
+                  <div class="line-amount">
+                    <span class="line-amount-label">Committed</span>
+                    <span class="line-amount-value num">${Ordre.eur(committed)}</span>
+                  </div>
+                  <div class="line-amount">
+                    <span class="line-amount-label">Invoiced</span>
+                    <span class="line-amount-value num ${fully ? 'fully' : ''} ${lOver ? 'over' : ''}">${Ordre.eur(invoiced)}</span>
+                  </div>
+                  <div class="line-amount">
+                    <span class="line-amount-label">Remaining</span>
+                    <span class="line-amount-value num ${fully ? 'fully' : ''}">${lOver ? '+' + Ordre.eur(Math.abs(remaining)) : Ordre.eur(Math.max(0, remaining))}</span>
+                  </div>
+                  <div class="line-progress-cell">
+                    <div class="label-row">
+                      <span>${fully ? 'Fully invoiced' : (lOver ? 'Over' : 'Invoiced')}</span>
+                      <span class="value">${lPct}%</span>
+                    </div>
+                    <div class="progress progress-tall"><div class="progress-fill ${lOver ? 'progress-fill-over' : (fully ? '' : 'progress-fill-striped')}" style="width:${Math.min(100, lPct)}%"></div></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Invoices attached -->
+        <div>
+          <div class="block-title">
+            <h3>Invoices attached</h3>
+            <span class="count">${po.invoices.length}</span>
+            <span class="grow"></span>
+            ${po.status === 'approved' ? `
+              <button class="btn btn-subtle btn-sm" id="add-invoice-2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M12 5v14M5 12h14"/></svg>
+                Add invoice
+              </button>
+            ` : ''}
+          </div>
+
+          ${po.invoices.length === 0 ? `
+            <div class="card-flat" style="padding: var(--s-8) var(--s-6); text-align:center;">
+              <div class="empty-title">No invoices yet</div>
+              <div class="empty-body">When an invoice arrives, upload it and map each line back to the PO. The remaining balance will update automatically.</div>
+            </div>
+          ` : `
+            <div class="stack stack-3">
+            ${po.invoices.map((inv) => `
+              <div class="invoice-card">
+                <div class="invoice-doc">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div class="invoice-info">
+                  <span class="invoice-number mono">${inv.number}</span>
+                  <span class="invoice-meta">Issued ${Ordre.formatDate(inv.issueDate)} · Due ${Ordre.formatDate(inv.dueDate)} · ${inv.fileSize}</span>
+                  <div class="stack stack-2 mt-3">
+                    ${inv.lines.map((il) => {
+                      const line = po.lines.find((x) => x.id === il.lineId);
+                      return `<div style="display:flex;justify-content:space-between;gap:var(--s-3);font-size:12px;color:var(--mid-gray);line-height:1.4;">
+                        <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">↳ ${line ? line.description : 'Line removed'}</span>
+                        <span class="num" style="color:var(--charcoal);font-weight:500;">${Ordre.eurFull(il.amount)}</span>
+                      </div>`;
+                    }).join('')}
+                  </div>
+                </div>
+                <div class="stack" style="gap:4px;text-align:right;">
+                  <span class="invoice-total num">${Ordre.eurFull(inv.total)}</span>
+                  <span class="muted" style="font-size:11px;">${inv.uploadedBy.split(' ')[0]}</span>
+                </div>
+              </div>
+            `).join('')}
+            </div>
+          `}
+        </div>
+      </div>
+
+      <!-- ========== Right column: approvals + supplier + meta ========== -->
+      <aside class="stack stack-8">
+        ${po.status === 'pending_approval' ? `
+          <div class="approval-box">
+            <span class="prompt">Ready to approve?</span>
+            <div class="stack stack-2">
+              ${po.approvals.map((a) => `
+                <div class="row" style="gap: 10px;">
+                  <span class="avatar avatar-sm">${a.initials}</span>
+                  <div class="stack" style="gap:1px;line-height:1.25;">
+                    <span style="font-size: 13px; font-weight:600; color:var(--charcoal);">${a.approver}</span>
+                    <span style="font-size: 11.5px; color:var(--mid-gray);">${a.role}</span>
+                  </div>
+                  <span class="grow"></span>
+                  <span class="pill"><span class="dot"></span>Waiting</span>
+                </div>
+              `).join('')}
+            </div>
+            <textarea class="textarea" placeholder="Optional comment for the requester…"></textarea>
+            <div class="row" style="gap: 8px;">
+              <button class="btn btn-primary flex-1" id="approve-btn">Approve</button>
+              <button class="btn btn-ghost" id="reject-btn">Reject</button>
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Approval timeline -->
+        <div>
+          <div class="block-title"><h3>Approval trail</h3></div>
+          <div class="card">
+            <div class="timeline">
+              <div class="timeline-item is-done">
+                <div class="timeline-header">
+                  <span class="avatar avatar-sm">${po.createdBy.split(' ').map((p)=>p[0]).join('').slice(0,2)}</span>
+                  <span class="timeline-title">${po.createdBy} created the PO</span>
+                  <span class="timeline-time">${Ordre.formatDate(po.createdAt)}</span>
+                </div>
+                <div class="timeline-body">${po.lines.length} line items, totaling <strong>${Ordre.eur(totals.committed)}</strong> committed.</div>
+              </div>
+              ${po.submittedAt ? `
+                <div class="timeline-item is-done">
+                  <div class="timeline-header">
+                    <span class="avatar avatar-sm">${po.createdBy.split(' ').map((p)=>p[0]).join('').slice(0,2)}</span>
+                    <span class="timeline-title">Submitted for approval</span>
+                    <span class="timeline-time">${Ordre.formatDate(po.submittedAt)}</span>
+                  </div>
+                  <div class="timeline-body">Awaiting ${po.approvals.map((a) => a.approver).join(', ')}.</div>
+                </div>
+              ` : ''}
+              ${po.approvals.filter((a) => a.decision !== 'pending').map((a) => `
+                <div class="timeline-item ${a.decision === 'approved' ? 'is-done' : 'is-reject'}">
+                  <div class="timeline-header">
+                    <span class="avatar avatar-sm">${a.initials}</span>
+                    <span class="timeline-title">${a.approver} ${a.decision === 'approved' ? 'approved' : 'rejected'}</span>
+                    <span class="timeline-time">${Ordre.formatDate(a.decidedAt)}</span>
+                  </div>
+                  ${a.comment ? `<div class="timeline-body">${a.comment}</div>` : ''}
+                </div>
+              `).join('')}
+              ${po.approvals.filter((a) => a.decision === 'pending').map((a) => `
+                <div class="timeline-item is-active">
+                  <div class="timeline-header">
+                    <span class="avatar avatar-sm">${a.initials}</span>
+                    <span class="timeline-title">${a.approver} — decision pending</span>
+                    <span class="timeline-time muted">now</span>
+                  </div>
+                  <div class="timeline-body">${a.role} · notified via email.</div>
+                </div>
+              `).join('')}
+              ${po.status === 'closed' ? `
+                <div class="timeline-item is-done">
+                  <div class="timeline-header">
+                    <span class="avatar avatar-sm">AP</span>
+                    <span class="timeline-title">Closed</span>
+                    <span class="timeline-time">${Ordre.formatDate(po.closedAt)}</span>
+                  </div>
+                  <div class="timeline-body">All lines reconciled, no remaining budget.</div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+
+        <!-- Supplier compact -->
+        <div>
+          <div class="block-title"><h3>Supplier</h3></div>
+          <div class="card stack stack-4">
+            <div class="row" style="gap: 10px;">
+              <div class="supplier-monogram">${supplier.monogram}</div>
+              <div class="stack" style="gap:1px; line-height:1.25;">
+                <span style="font-size:15px;font-weight:600;color:var(--charcoal);font-family: var(--font-display);">${supplier.tradeName}</span>
+                <span class="mono muted" style="font-size:11.5px;">${supplier.taxId}</span>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="stack stack-3">
+              <div class="row" style="gap:8px; font-size: 13px; color: var(--midnight);">
+                <span class="icon-box" style="width:26px;height:26px;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
+                </span>
+                ${supplier.email}
+              </div>
+              <div class="row" style="gap:8px; font-size: 13px; color: var(--midnight);">
+                <span class="icon-box" style="width:26px;height:26px;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 20 20 0 0 1-8.7-3.1 19.5 19.5 0 0 1-6-6 20 20 0 0 1-3.1-8.8A2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.4 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.5 2.7.6A2 2 0 0 1 22 16.9z"/></svg>
+                </span>
+                ${supplier.phone}
+              </div>
+              <div class="row" style="gap:8px; font-size: 13px; color: var(--midnight); align-items: flex-start;">
+                <span class="icon-box" style="width:26px;height:26px;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </span>
+                <span style="line-height:1.45;">${supplier.address}</span>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <a href="suppliers.html?id=${supplier.id}" class="btn btn-link" style="align-self: flex-start; padding: 0;">View supplier →</a>
+          </div>
+        </div>
+      </aside>
+    </section>
+  `;
+
+  // ---- Approve / reject (demo) ----
+  document.getElementById('approve-btn')?.addEventListener('click', () => {
+    Ordre.toast(`${po.number} approved`);
+    setTimeout(() => location.reload(), 700);
+  });
+  document.getElementById('reject-btn')?.addEventListener('click', () => {
+    Ordre.toast(`${po.number} rejected`, 'x');
+  });
+
+  // ---- Upload invoice drawer ----
+  const drawer = document.getElementById('invoice-drawer');
+  const backdrop = document.getElementById('backdrop');
+  function openDrawer() {
+    drawer.classList.add('is-open');
+    backdrop.classList.add('is-open');
+    drawer.setAttribute('aria-hidden', 'false');
+    renderDrawer();
+  }
+  function closeDrawer() {
+    drawer.classList.remove('is-open');
+    backdrop.classList.remove('is-open');
+    drawer.setAttribute('aria-hidden', 'true');
+  }
+  document.getElementById('add-invoice')?.addEventListener('click', openDrawer);
+  document.getElementById('add-invoice-2')?.addEventListener('click', openDrawer);
+  document.getElementById('close-drawer').addEventListener('click', closeDrawer);
+  backdrop.addEventListener('click', closeDrawer);
+  document.getElementById('drawer-cancel').addEventListener('click', closeDrawer);
+  document.getElementById('drawer-save').addEventListener('click', () => {
+    Ordre.toast('Invoice saved and mapped to 2 PO lines');
+    closeDrawer();
+  });
+
+  function renderDrawer() {
+    const body = document.getElementById('drawer-body');
+    body.innerHTML = `
+      <div class="stack stack-5">
+        <!-- File upload -->
+        <div>
+          <label class="input-label">Invoice file</label>
+          <div class="card-flat" style="padding: var(--s-5); border-radius: var(--r-10); text-align:center; border: 2px dashed var(--ring-border-strong); box-shadow:none; background: var(--hair-gray);">
+            <div style="width:44px;height:44px;border-radius:10px;background:var(--white);box-shadow:var(--elevation-1);display:grid;place-items:center;margin:0 auto 12px;color:var(--midnight);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><path d="M12 3v12"/></svg>
+            </div>
+            <div style="font-size:13.5px;color:var(--charcoal);font-weight:500;">Drop a PDF or image here</div>
+            <div class="muted" style="font-size:12px;margin-top:2px;">or <a href="#" class="btn-link" style="padding:0;color:var(--charcoal);text-decoration:underline;">browse from your computer</a></div>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label class="input-label">Invoice number</label>
+            <input class="input" placeholder="e.g. A-2026-0211" />
+          </div>
+          <div class="field">
+            <label class="input-label">Total (EUR)</label>
+            <div class="money-input">
+              <span class="prefix">€</span>
+              <input placeholder="0.00" />
+            </div>
+          </div>
+          <div class="field">
+            <label class="input-label">Issue date</label>
+            <input class="input" type="text" value="2026-04-20" />
+          </div>
+          <div class="field">
+            <label class="input-label">Due date</label>
+            <input class="input" type="text" value="2026-05-20" />
+          </div>
+        </div>
+
+        <div>
+          <label class="input-label">Map lines back to the PO</label>
+          <div class="stack stack-2">
+            ${po.lines.map((l) => {
+              const committed = Ordre.lineCommitted(l);
+              const invoiced = Ordre.lineInvoiced(po, l.id);
+              const remaining = committed - invoiced;
+              return `
+                <div class="card card-sm" style="padding: var(--s-3) var(--s-4); display:grid; grid-template-columns: 1fr 120px; gap: var(--s-3); align-items:center;">
+                  <div class="stack" style="gap:2px;">
+                    <span style="font-size:13px;font-weight:500;color:var(--charcoal);line-height:1.3;">${l.description}</span>
+                    <span class="muted" style="font-size:11px;">Remaining ${Ordre.eur(Math.max(0,remaining))}</span>
+                  </div>
+                  <div class="money-input" style="height:34px;">
+                    <span class="prefix" style="font-size:12px;">€</span>
+                    <input placeholder="0.00" />
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          <div class="input-hint">The sum of mapped amounts should equal the invoice total. Over-invoicing will show a warning you can confirm.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('export-pdf').addEventListener('click', () => Ordre.toast('PO exported as PDF', 'download'));
+</script>
+</body>
+</html>

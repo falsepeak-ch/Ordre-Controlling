@@ -1,0 +1,40 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: 11.5px;
+  font-weight: 500;
+  background: var(--surface);
+  color: var(--fg-deep);
+  box-shadow: 0 0 0 1px var(--ring-border);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--fg-muted);
+  flex-shrink: 0;
+}
+
+.pill-tone-soft { background: var(--surface-muted); box-shadow: none; }
+
+.pill-status-draft .pill-dot { background: var(--status-draft); }
+.pill-status-pending_approval .pill-dot {
+  background: var(--status-pending);
+  animation: pill-pulse 1.8s var(--ease-in-out) infinite;
+}
+.pill-status-pending_approval { box-shadow: 0 0 0 1px var(--ring-border-strong); font-weight: 600; }
+.pill-status-approved .pill-dot { background: var(--status-approved); }
+.pill-status-approved { box-shadow: 0 0 0 1px var(--ring-border-strong); }
+.pill-status-rejected .pill-dot { background: var(--status-rejected); }
+.pill-status-closed .pill-dot { background: var(--status-closed); }
+
+@keyframes pill-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}

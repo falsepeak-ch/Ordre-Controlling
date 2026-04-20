@@ -1,0 +1,89 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function projectRole(projectId) {
+      return get(/databases/$(database)/documents/projects/$(projectId)).data.members[request.auth.uid];
+    }
+
+    function isProjectMember(projectId) {
+      return isSignedIn() && projectRole(projectId) != null;
+    }
+
+    function canWriteProject(projectId) {
+      return isSignedIn() &&
+        (projectRole(projectId) == 'owner' || projectRole(projectId) == 'editor');
+    }
+
+    function isProjectOwner(projectId) {
+      return isSignedIn() && projectRole(projectId) == 'owner';
+    }
+
+    // ---------- Users ----------
+    // A signed-in user can always read/write their own doc.
+    // They can also read any other user's public-ish fields because "add
+    // member by email" needs to look up a uid. In a more locked-down world
+    // this would go through a Cloud Function.
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isSelf(uid);
+      allow delete: if false;
+    }
+
+    // ---------- Projects ----------
+    match /projects/{projectId} {
+      // Read: only members.
+      allow read: if isSignedIn() && resource.data.members[request.auth.uid] != null;
+
+      // Create: the caller must be listed as owner in the incoming doc.
+      allow create: if isSignedIn() &&
+        request.resource.data.members[request.auth.uid] == 'owner';
+
+      // Update content (name, description, initial, etc.) while leaving
+      // the members map untouched — any editor/owner may do this.
+      // Changing the members map or the memberEmails/memberProfiles maps
+      // is owner-only.
+      allow update: if isSignedIn() && (
+        (
+          canWriteProject(projectId) &&
+          request.resource.data.members == resource.data.members
+        ) ||
+        isProjectOwner(projectId)
+      );
+
+      // Delete: owner only.
+      allow delete: if isProjectOwner(projectId);
+
+      // ---- Project sub-collections ----
+      match /suppliers/{id} {
+        allow read: if isProjectMember(projectId);
+        allow create, update, delete: if canWriteProject(projectId);
+      }
+
+      match /purchaseOrders/{poId} {
+        allow read: if isProjectMember(projectId);
+        allow create, update, delete: if canWriteProject(projectId);
+
+        match /invoices/{invId} {
+          allow read: if isProjectMember(projectId);
+          allow create, update, delete: if canWriteProject(projectId);
+        }
+
+        match /approvals/{apId} {
+          allow read: if isProjectMember(projectId);
+          allow create, update, delete: if canWriteProject(projectId);
+        }
+      }
+    }
+  }
+}

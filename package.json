@@ -1,0 +1,33 @@
+{
+  "name": "ordre",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Ordre — Procurement & purchase-order management. Cal.com-inspired monochrome design, grayscale palette, Cal Sans + Inter.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "icons:build": "node scripts/process-icons.mjs",
+    "seed": "node scripts/seed-firestore.mjs"
+  },
+  "dependencies": {
+    "firebase": "^10.14.1",
+    "i18next": "^23.16.5",
+    "i18next-browser-languagedetector": "^8.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "^15.1.1",
+    "react-router-dom": "^6.28.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "firebase-admin": "^12.6.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}

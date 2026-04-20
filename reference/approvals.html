@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Approvals · Ordre</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23242424'/%3E%3Ctext x='50%25' y='56%25' font-family='system-ui' font-size='18' font-weight='600' text-anchor='middle' fill='white'%3EO%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="assets/styles.css" />
+<style>
+  .approval-card {
+    background: var(--white);
+    border-radius: var(--r-12);
+    box-shadow: var(--elevation-1);
+    padding: var(--s-5) var(--s-6);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: var(--s-6);
+    transition: box-shadow .2s var(--ease-out);
+  }
+  .approval-card:hover { box-shadow: var(--elevation-2); }
+  .approval-head {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    margin-bottom: var(--s-3);
+  }
+  .approval-meta-row {
+    display: flex;
+    gap: var(--s-5);
+    flex-wrap: wrap;
+    font-size: 12.5px;
+    color: var(--mid-gray);
+  }
+  .approval-meta-row strong { color: var(--charcoal); font-weight: 500; }
+  .mini-lines {
+    margin-top: var(--s-4);
+    padding-top: var(--s-4);
+    border-top: 1px solid var(--ring-border);
+    display: grid;
+    gap: 6px;
+  }
+  .mini-lines .row-l {
+    display: flex;
+    gap: var(--s-3);
+    align-items: center;
+    font-size: 13px;
+  }
+  .mini-lines .row-l .desc { flex: 1; color: var(--midnight); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-lines .row-l .qty { color: var(--mid-gray); font-variant-numeric: tabular-nums; font-size: 12px; }
+  .mini-lines .row-l .amt { font-family: var(--font-body); font-variant-numeric: tabular-nums; font-weight: 500; color: var(--charcoal); min-width: 80px; text-align: right; }
+  .approval-actions { display: flex; flex-direction: column; gap: var(--s-3); align-items: stretch; justify-content: space-between; }
+  .approval-actions .sum { background: var(--hair-gray); border-radius: var(--r-10); padding: var(--s-3) var(--s-4); }
+  .approval-actions .sum .amt { font-family: var(--font-display); font-size: 24px; font-weight: 600; color: var(--charcoal); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .approval-actions .sum .lbl { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--mid-gray); font-weight: 500; margin-bottom: 4px; }
+  .history-row {
+    display: grid;
+    grid-template-columns: 32px 1fr auto auto;
+    gap: var(--s-3);
+    align-items: center;
+    padding: var(--s-3) var(--s-5);
+    position: relative;
+  }
+  .history-row + .history-row::before {
+    content: ''; position: absolute; left: var(--s-5); right: var(--s-5); top: 0; height: 1px; background: var(--ring-border);
+  }
+</style>
+</head>
+<body data-page="approvals">
+
+<div class="app">
+  <div id="sidebar-mount"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="topbar-title">Approvals</h1>
+        <span class="pill pill-status-pending">
+          <span class="dot"></span>
+          <span id="pending-count">—</span> awaiting you
+        </span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost btn-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+          Notification preferences
+        </button>
+      </div>
+    </header>
+
+    <div class="page">
+      <section class="page-hero reveal">
+        <div class="eyebrow">Queue</div>
+        <h1 class="display-lg">POs waiting on you.<br><span class="muted">Approve, reject, or request changes — every decision is logged.</span></h1>
+      </section>
+
+      <section class="filter-bar reveal reveal-d1">
+        <div class="btn-group">
+          <button class="is-active" data-filter="assigned">Assigned to me</button>
+          <button data-filter="all-pending">All pending</button>
+          <button data-filter="decided">Decided</button>
+        </div>
+        <span class="grow"></span>
+        <span class="muted" style="font-size: 12px;">Sorted by submission time</span>
+      </section>
+
+      <section class="stack stack-4 mb-8 reveal reveal-d2" id="queue"></section>
+
+      <section class="reveal reveal-d3">
+        <div class="block-title">
+          <h3>Recent decisions</h3>
+          <span class="count" id="history-count">—</span>
+        </div>
+        <div class="list" id="history"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  // ---- Queue (pending) ----
+  const pending = Ordre.purchaseOrders.filter((p) => p.status === 'pending_approval');
+  document.getElementById('pending-count').textContent = pending.length;
+
+  const queue = document.getElementById('queue');
+  queue.innerHTML = pending.map((po) => {
+    const s = Ordre.supplierById(po.supplierId);
+    const t = Ordre.poTotals(po);
+    const waitingFor = po.approvals.filter((a) => a.decision === 'pending').map((a) => a.approver.split(' ')[0]);
+    return `
+      <article class="approval-card" data-po="${po.id}">
+        <div>
+          <div class="approval-head">
+            <div class="supplier-monogram">${s.monogram}</div>
+            <div class="stack" style="gap:1px; line-height:1.25;">
+              <a href="po-detail.html?id=${po.id}" class="display-sm mb-0" style="font-size:18px;font-family:var(--font-display);">${po.number}</a>
+              <span class="muted" style="font-size: 12.5px;">${s.tradeName} · requested by ${po.createdBy}</span>
+            </div>
+            <span class="grow"></span>
+            <span class="pill pill-status-pending"><span class="dot"></span>Pending ${waitingFor.join(' + ')}</span>
+          </div>
+
+          <div class="approval-meta-row">
+            <span>Submitted <strong>${Ordre.relDate(po.submittedAt)}</strong></span>
+            <span>·</span>
+            <span>${po.lines.length} line${po.lines.length !== 1 ? 's' : ''}</span>
+            <span>·</span>
+            <span>${po.approvals.length} approver${po.approvals.length !== 1 ? 's' : ''} required</span>
+          </div>
+
+          ${po.notes ? `<p class="muted" style="font-size: 13px; margin: var(--s-3) 0 0; line-height: 1.5;">${po.notes}</p>` : ''}
+
+          <div class="mini-lines">
+            ${po.lines.slice(0, 4).map((l) => `
+              <div class="row-l">
+                <span class="cat-tag cat-tag-${l.category}">${l.category === 'shoot' ? 'shoot' : l.category}</span>
+                <span class="desc">${l.description}</span>
+                <span class="qty">${l.quantity} × ${Ordre.eurFull(l.unitPrice)}</span>
+                <span class="amt">${Ordre.eurFull(l.quantity * l.unitPrice)}</span>
+              </div>
+            `).join('')}
+            ${po.lines.length > 4 ? `<div class="muted" style="font-size: 12px; margin-top: 4px;">+ ${po.lines.length - 4} more lines</div>` : ''}
+          </div>
+        </div>
+
+        <div class="approval-actions">
+          <div class="sum">
+            <div class="lbl">Total committed</div>
+            <div class="amt">${Ordre.eurFull(t.committed)}</div>
+            <div class="muted" style="font-size: 11.5px; margin-top: 4px;">EUR · net</div>
+          </div>
+
+          <div class="stack stack-2">
+            <a href="po-detail.html?id=${po.id}" class="btn btn-ghost">Review PO in detail</a>
+            <div class="row" style="gap: 6px;">
+              <button class="btn btn-primary flex-1 approve-btn" data-po-id="${po.id}" data-num="${po.number}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>
+                Approve
+              </button>
+              <button class="btn btn-ghost reject-btn" data-po-id="${po.id}" data-num="${po.number}" title="Reject">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('') || `
+    <div class="card" style="padding: var(--s-section) var(--s-6); text-align: center;">
+      <div class="display-md" style="font-size: 20px; margin-bottom: 8px;">You're all caught up.</div>
+      <div class="muted" style="font-size: 14px;">No purchase orders are awaiting your decision.</div>
+    </div>
+  `;
+
+  // ---- History (decided) ----
+  const decided = [];
+  Ordre.purchaseOrders.forEach((po) => {
+    po.approvals.filter((a) => a.decision !== 'pending').forEach((a) => {
+      decided.push({ po, approval: a });
+    });
+  });
+  decided.sort((a, b) => (b.approval.decidedAt || '').localeCompare(a.approval.decidedAt || ''));
+  document.getElementById('history-count').textContent = decided.length;
+  document.getElementById('history').innerHTML = decided.slice(0, 6).map(({ po, approval }) => {
+    const s = Ordre.supplierById(po.supplierId);
+    const t = Ordre.poTotals(po);
+    const isApproved = approval.decision === 'approved';
+    return `
+      <a href="po-detail.html?id=${po.id}" class="history-row list-row-interactive" style="text-decoration:none;">
+        <div style="width:26px;height:26px;border-radius:var(--r-pill);background: ${isApproved ? 'var(--charcoal)' : 'var(--midnight)'};color:var(--white);display:grid;place-items:center;box-shadow: 0 0 0 3px var(--white), 0 0 0 4px ${isApproved ? 'var(--charcoal)' : 'var(--midnight)'};">
+          ${isApproved ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>'}
+        </div>
+        <div>
+          <div style="font-size: 13.5px; font-weight: 500; color: var(--charcoal);">${approval.approver} <span style="color:var(--mid-gray);font-weight:400;">${isApproved ? 'approved' : 'rejected'}</span> <span class="mono" style="color:var(--midnight);">${po.number}</span></div>
+          <div class="muted" style="font-size: 12px; margin-top: 2px;">${s.tradeName} · ${approval.comment || 'No comment'}</div>
+        </div>
+        <div class="num" style="font-size: 13px; font-weight: 500; color: var(--charcoal);">${Ordre.eur(t.committed)}</div>
+        <div class="muted" style="font-size: 12px;">${Ordre.relDate(approval.decidedAt)}</div>
+      </a>
+    `;
+  }).join('');
+
+  // ---- Actions ----
+  document.querySelectorAll('.approve-btn').forEach((b) => b.addEventListener('click', (e) => {
+    e.preventDefault();
+    const card = b.closest('.approval-card');
+    card.style.transition = 'opacity .3s, transform .3s';
+    card.style.opacity = '0.3';
+    card.style.transform = 'scale(0.98)';
+    card.style.pointerEvents = 'none';
+    Ordre.toast(`${b.dataset.num} approved`);
+  }));
+
+  document.querySelectorAll('.reject-btn').forEach((b) => b.addEventListener('click', (e) => {
+    e.preventDefault();
+    const card = b.closest('.approval-card');
+    card.style.transition = 'opacity .3s, transform .3s';
+    card.style.opacity = '0.3';
+    card.style.transform = 'scale(0.98)';
+    card.style.pointerEvents = 'none';
+    Ordre.toast(`${b.dataset.num} rejected`, 'x');
+  }));
+</script>
+</body>
+</html>

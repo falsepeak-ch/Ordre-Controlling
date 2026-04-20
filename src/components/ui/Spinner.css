@@ -1,0 +1,13 @@
+.spinner {
+  display: inline-grid;
+  place-items: center;
+}
+.spinner-ring {
+  border-radius: var(--r-pill);
+  border: 2px solid var(--ring-border-strong);
+  border-top-color: var(--fg);
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

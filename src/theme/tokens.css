@@ -1,0 +1,160 @@
+/* ============================================================================
+   Design tokens — semantic, theme-aware.
+   Components reference these variables, never hex values.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --surface: #ffffff;
+  --surface-muted: #f5f5f5;
+  --surface-sunken: #ededed;
+  --surface-raised: #ffffff;
+  --surface-inverted: #111111;
+
+  /* Foreground text */
+  --fg: #242424;           /* primary heading / UI text */
+  --fg-deep: #111111;      /* deepest — used on nav & links */
+  --fg-muted: #898989;     /* secondary labels */
+  --fg-subtle: #b8b8b8;    /* tertiary — placeholders, decorative */
+  --fg-on-inverted: #ffffff;
+
+  /* Borders (applied via box-shadow "ring" pattern, not CSS borders) */
+  --ring-border: rgba(34, 42, 53, 0.08);
+  --ring-border-strong: rgba(34, 42, 53, 0.12);
+
+  /* Shadow primitives */
+  --shadow-contact: rgba(19, 19, 22, 0.7);
+  --shadow-soft: rgba(34, 42, 53, 0.05);
+  --shadow-deep: rgba(0, 0, 0, 0.16);
+
+  /* Composite elevations */
+  --elevation-1:
+    rgba(19, 19, 22, 0.7) 0px 1px 5px -4px,
+    rgba(34, 42, 53, 0.08) 0px 0px 0px 1px,
+    rgba(34, 42, 53, 0.05) 0px 4px 8px 0px;
+
+  --elevation-2:
+    rgba(19, 19, 22, 0.6) 0px 2px 6px -3px,
+    rgba(34, 42, 53, 0.1) 0px 0px 0px 1px,
+    rgba(34, 42, 53, 0.06) 0px 10px 24px -4px;
+
+  --elevation-inset:
+    rgba(0, 0, 0, 0.16) 0px 1px 1.9px 0px inset;
+
+  --button-highlight:
+    rgba(255, 255, 255, 0.18) 0px 2px 0px inset;
+
+  /* Focus */
+  --focus-ring: rgba(59, 130, 246, 0.5);
+
+  /* Accents — reserved for links and signalling only. */
+  --link: #0099ff;
+
+  /* Status (monochrome dots; hue is off-limits elsewhere) */
+  --status-draft: #b8b8b8;
+  --status-pending: #242424;
+  --status-approved: #242424;
+  --status-rejected: #111111;
+  --status-closed: #b8b8b8;
+
+  /* Typography */
+  --font-display: 'Cal Sans', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  /* Spacing scale (4 → 8 → 12 → 16 → 20 → 24 → 28 → 40 → 56 → 80 → 96) */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 28px;
+  --s-8: 40px;
+  --s-9: 56px;
+  --s-section: 80px;
+  --s-section-lg: 96px;
+
+  /* Radii */
+  --r-2: 2px;
+  --r-4: 4px;
+  --r-6: 6px;
+  --r-8: 8px;
+  --r-10: 10px;
+  --r-12: 12px;
+  --r-16: 16px;
+  --r-pill: 9999px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.25, 1);
+  --dur-fast: 0.15s;
+  --dur-normal: 0.25s;
+  --dur-slow: 0.4s;
+}
+
+/* ----------------------------------------------------------------------------
+   Dark theme — same names, flipped. The whole app inherits from CSS vars,
+   so no component needs an "if theme === dark" branch.
+   -------------------------------------------------------------------------- */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --surface: #0f0f10;
+  --surface-muted: #17171a;
+  --surface-sunken: #202023;
+  --surface-raised: #1a1a1c;
+  --surface-inverted: #fafafa;
+
+  --fg: #ededed;
+  --fg-deep: #fafafa;
+  --fg-muted: #8a8a8a;
+  --fg-subtle: #595959;
+  --fg-on-inverted: #0f0f10;
+
+  --ring-border: rgba(255, 255, 255, 0.08);
+  --ring-border-strong: rgba(255, 255, 255, 0.16);
+
+  --shadow-contact: rgba(0, 0, 0, 0.6);
+  --shadow-soft: rgba(0, 0, 0, 0.3);
+  --shadow-deep: rgba(0, 0, 0, 0.6);
+
+  --elevation-1:
+    rgba(0, 0, 0, 0.5) 0px 1px 5px -4px,
+    rgba(255, 255, 255, 0.08) 0px 0px 0px 1px,
+    rgba(0, 0, 0, 0.3) 0px 4px 8px 0px;
+
+  --elevation-2:
+    rgba(0, 0, 0, 0.55) 0px 2px 6px -3px,
+    rgba(255, 255, 255, 0.1) 0px 0px 0px 1px,
+    rgba(0, 0, 0, 0.4) 0px 10px 24px -4px;
+
+  --elevation-inset:
+    rgba(255, 255, 255, 0.04) 0px 1px 1px 0px inset;
+
+  --button-highlight:
+    rgba(255, 255, 255, 0.06) 0px 2px 0px inset;
+
+  --focus-ring: rgba(147, 197, 253, 0.5);
+
+  --link: #3aa5ff;
+
+  --status-draft: #595959;
+  --status-pending: #ededed;
+  --status-approved: #ededed;
+  --status-rejected: #ffffff;
+  --status-closed: #595959;
+}
+
+/* ----------------------------------------------------------------------------
+   System preference fallback (used briefly before ThemeContext hydrates).
+   The inline <script> in index.html handles this synchronously — this block
+   covers edge cases where JS is off.
+   -------------------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+    color-scheme: dark;
+  }
+}

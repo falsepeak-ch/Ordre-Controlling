@@ -1,0 +1,111 @@
+import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { Logo } from '~/components/ui/Logo';
+import { Avatar } from '~/components/ui/Avatar';
+import { Icon } from '~/components/ui/Icon';
+import { Button } from '~/components/ui/Button';
+import { ProjectSwitcher } from './ProjectSwitcher';
+import { useAuth } from '~/hooks/useAuth';
+import { useCurrentProject } from '~/hooks/useCurrentProject';
+import { useToast } from '~/hooks/useToast';
+import type { IconName } from '~/icons/manifest';
+import './Sidebar.css';
+
+interface Item {
+  key: string;
+  labelKey: string;
+  to: string;
+  icon: IconName;
+  disabled?: boolean;
+  ownerOnly?: boolean;
+}
+
+export function Sidebar() {
+  const { t } = useTranslation();
+  const { user, signOut } = useAuth();
+  const { project, role } = useCurrentProject();
+  const { push } = useToast();
+
+  const base = `/app/p/${project.id}`;
+  const primary: Item[] = [
+    { key: 'dashboard', labelKey: 'nav.dashboard', to: base, icon: 'grid-fill' },
+    { key: 'orders', labelKey: 'nav.purchaseOrders', to: `${base}/purchase-orders`, icon: 'receipt-fill', disabled: true },
+    { key: 'approvals', labelKey: 'nav.approvals', to: `${base}/approvals`, icon: 'shield-fill-check', disabled: true },
+    { key: 'suppliers', labelKey: 'nav.suppliers', to: `${base}/suppliers`, icon: 'building-fill', disabled: true },
+  ];
+
+  const secondary: Item[] = [
+    { key: 'members', labelKey: 'nav.members', to: `${base}/members`, icon: 'person-circle-fill' },
+    { key: 'invoices', labelKey: 'nav.invoices', to: `${base}/invoices`, icon: 'file-earmark-text-fill', disabled: true },
+    { key: 'reports', labelKey: 'nav.reports', to: `${base}/reports`, icon: 'bar-chart-fill', disabled: true },
+    { key: 'settings', labelKey: 'nav.settings', to: `${base}/settings`, icon: 'gear-fill', disabled: true, ownerOnly: true },
+  ];
+
+  async function handleSignOut() {
+    await signOut();
+    push({ message: t('nav.logout'), icon: 'box-arrow-right-fill' });
+  }
+
+  function renderItem(it: Item) {
+    const blocked = it.disabled || (it.ownerOnly && role !== 'owner');
+    return (
+      <li key={it.key}>
+        <NavLink
+          to={it.to}
+          end={it.to === base}
+          className={({ isActive }) =>
+            ['sidebar-item', isActive ? 'is-active' : null, blocked ? 'is-disabled' : null]
+              .filter(Boolean)
+              .join(' ')
+          }
+          onClick={(e) => {
+            if (blocked) {
+              e.preventDefault();
+              push({ message: t('app.stubTitle'), icon: 'clock-fill' });
+            }
+          }}
+        >
+          <span className="sidebar-item-icon">
+            <Icon name={it.icon} size={15} />
+          </span>
+          <span className="sidebar-item-label">{t(it.labelKey)}</span>
+        </NavLink>
+      </li>
+    );
+  }
+
+  return (
+    <aside className="sidebar">
+      <div className="sidebar-brand">
+        <Logo size="md" />
+      </div>
+
+      <ProjectSwitcher current={project} />
+
+      <nav className="sidebar-nav">
+        <ul>{primary.map(renderItem)}</ul>
+        <div className="sidebar-section-label">Finance</div>
+        <ul>{secondary.map(renderItem)}</ul>
+      </nav>
+
+      <div className="sidebar-footer">
+        <div className="sidebar-user">
+          <Avatar name={user?.displayName ?? undefined} photoURL={user?.photoURL} size="md" />
+          <div className="sidebar-user-meta">
+            <span className="sidebar-user-name">{user?.displayName ?? '—'}</span>
+            <span className="sidebar-user-email">{user?.email ?? ''}</span>
+          </div>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleSignOut}
+          fullWidth
+          leading={<Icon name="box-arrow-right-fill" size={13} />}
+        >
+          {t('nav.logout')}
+        </Button>
+      </div>
+    </aside>
+  );
+}

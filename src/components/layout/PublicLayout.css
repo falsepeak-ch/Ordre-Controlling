@@ -1,0 +1,74 @@
+.public-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.public-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s-5) var(--s-8);
+  box-shadow: 0 1px 0 var(--ring-border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: saturate(180%) blur(6px);
+}
+
+.public-nav-brand { display: inline-flex; }
+
+.public-nav-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.public-nav-link {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--fg-deep);
+  padding: 8px 12px;
+  border-radius: var(--r-8);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.public-nav-link:hover { background: var(--surface-muted); }
+
+.public-main {
+  flex: 1;
+  width: 100%;
+}
+
+.public-footer {
+  padding: var(--s-7) var(--s-8);
+  box-shadow: 0 -1px 0 var(--ring-border);
+  background: var(--surface);
+}
+.public-footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+}
+.public-footer-copy {
+  font-size: 13px;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+.public-footer-note {
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+.public-footer-spacer { flex: 1; min-width: 24px; }
+
+@media (max-width: 720px) {
+  .public-nav { padding: var(--s-4); }
+  .public-nav-link { display: none; }
+  .public-footer { padding: var(--s-5) var(--s-4); }
+  .public-footer-note { flex-basis: 100%; order: 3; }
+}

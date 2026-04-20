@@ -1,0 +1,36 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s-5) var(--s-8);
+  background: var(--surface);
+  box-shadow: 0 1px 0 var(--ring-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  gap: var(--s-4);
+}
+.topbar-left {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  min-width: 0;
+}
+.topbar-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--fg);
+}
+.topbar-subtitle { color: var(--fg-muted); font-size: 13px; }
+.topbar-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+@media (max-width: 720px) {
+  .topbar { padding: var(--s-4); flex-wrap: wrap; }
+  .topbar-title { font-size: 18px; }
+}
