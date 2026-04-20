@@ -187,5 +187,139 @@
     "cta": "Volver al inicio",
     "projectTitle": "Proyecto no disponible.",
     "projectBody": "O no existe, o no tienes acceso. Vuelve al listado de proyectos."
+  },
+  "suppliers": {
+    "pageTitle": "Proveedores",
+    "heroSubtitle": "Los proveedores del proyecto {{project}}. Cada orden de compra va ligada a uno de ellos.",
+    "countOne": "1 proveedor",
+    "countOther": "{{count}} proveedores",
+    "newCta": "Nuevo proveedor",
+    "searchPlaceholder": "Busca por nombre, NIF o etiqueta…",
+    "empty": {
+      "title": "Todavía no hay proveedores.",
+      "body": "Añade la primera ficha para empezar a crear órdenes de compra asociadas a un proveedor."
+    },
+    "emptyFilter": {
+      "title": "Sin coincidencias",
+      "body": "Prueba otro texto o retira los filtros."
+    },
+    "form": {
+      "createTitle": "Nuevo proveedor",
+      "editTitle": "Editar proveedor",
+      "legalNameLabel": "Nombre legal",
+      "legalNamePlaceholder": "p. ej. Mobiliari Sant Martí S.L.",
+      "tradeNameLabel": "Nombre comercial",
+      "tradeNamePlaceholder": "p. ej. Mobiliari Sant Martí",
+      "tradeNameHint": "Cómo se mostrará dentro del proyecto. Si lo dejas vacío, usaremos el nombre legal.",
+      "taxIdLabel": "NIF / VAT",
+      "taxIdPlaceholder": "p. ej. ESB66892104",
+      "emailLabel": "Email de contacto",
+      "emailPlaceholder": "pedidos@…",
+      "phoneLabel": "Teléfono",
+      "phonePlaceholder": "+34 …",
+      "addressLabel": "Dirección",
+      "addressPlaceholder": "Calle, número, ciudad, CP",
+      "paymentTermsLabel": "Condiciones de pago",
+      "paymentTermsPlaceholder": "p. ej. Net 30",
+      "notesLabel": "Notas",
+      "notesPlaceholder": "Contexto, restricciones, persona de contacto…",
+      "tagsLabel": "Etiquetas",
+      "tagsHint": "Separa por coma. Se usan para filtrar el listado.",
+      "tagsPlaceholder": "muebles, props, rodaje",
+      "saveCreate": "Crear proveedor",
+      "saveEdit": "Guardar cambios",
+      "saving": "Guardando…",
+      "deleted": "Proveedor eliminado",
+      "created": "Proveedor creado",
+      "updated": "Proveedor actualizado",
+      "confirmDelete": "¿Seguro que quieres eliminar {{name}}? Las órdenes antiguas no se verán afectadas."
+    },
+    "card": {
+      "paymentTerms": "Condiciones",
+      "openPOs": "Órdenes abiertas",
+      "totalCommitted": "Comprometido",
+      "viewDetails": "Ver detalle"
+    },
+    "viewerNotice": "Solo lectura. Los editores y propietarios pueden crear y modificar proveedores."
+  },
+  "pos": {
+    "pageTitle": "Órdenes de compra",
+    "heroSubtitle": "Todas las órdenes del proyecto {{project}}. Filtra por estado para ver lo pendiente, aprobado o cerrado.",
+    "newCta": "Nueva orden",
+    "countOne": "1 orden",
+    "countOther": "{{count}} órdenes",
+    "searchPlaceholder": "Busca por número o proveedor…",
+    "status": {
+      "all": "Todas",
+      "draft": "Borrador",
+      "pending_approval": "Pendientes",
+      "approved": "Aprobadas",
+      "rejected": "Rechazadas",
+      "closed": "Cerradas"
+    },
+    "statusLabel": {
+      "draft": "Borrador",
+      "pending_approval": "Pendiente de aprobación",
+      "approved": "Aprobada",
+      "rejected": "Rechazada",
+      "closed": "Cerrada"
+    },
+    "empty": {
+      "title": "Todavía no hay órdenes de compra.",
+      "body": "Crea la primera para empezar a registrar compromisos y conciliar facturas línea por línea."
+    },
+    "emptyFilter": {
+      "title": "Ninguna orden coincide",
+      "body": "Prueba con otro estado o texto."
+    },
+    "table": {
+      "number": "Número",
+      "supplier": "Proveedor",
+      "committed": "Comprometido",
+      "remaining": "Remanente",
+      "progress": "Progreso",
+      "status": "Estado",
+      "linesOne": "1 línea",
+      "linesOther": "{{count}} líneas"
+    },
+    "totals": {
+      "committed": "Comprometido",
+      "invoiced": "Facturado",
+      "remaining": "Remanente",
+      "committedHint": "{{count}} órdenes activas",
+      "invoicedHint": "{{pct}}% del comprometido",
+      "remainingHint": "Disponible para gastar"
+    }
+  },
+  "poDetail": {
+    "back": "Órdenes de compra",
+    "headerCreated": "Creada {{date}} por {{by}}",
+    "headerSubmitted": "Enviada a aprobación {{date}}",
+    "headerApproved": "Aprobada {{date}}",
+    "headerClosed": "Cerrada {{date}}",
+    "lineItemsTitle": "Líneas",
+    "lineItemsSubtitle": "Comprometido → Facturado → Remanente",
+    "lineCommitted": "Comprometido",
+    "lineInvoiced": "Facturado",
+    "lineRemaining": "Remanente",
+    "lineProgress": "Progreso",
+    "lineFullyInvoiced": "Totalmente facturada",
+    "lineOverInvoiced": "Por encima",
+    "invoicesTitle": "Facturas",
+    "invoicesCountOne": "1 factura",
+    "invoicesCountOther": "{{count}} facturas",
+    "invoicesEmpty": "Aún no hay facturas. Sube la primera cuando te llegue.",
+    "invoicesEmptyRole": "Este proyecto es solo lectura para ti.",
+    "invoiceIssued": "Emitida {{date}}",
+    "invoiceDue": "Vence {{date}}",
+    "invoiceUploadedBy": "por {{by}}",
+    "approvalTrailTitle": "Aprobaciones",
+    "approvalPendingNote": "Pendiente de {{name}}",
+    "supplierTitle": "Proveedor",
+    "pickLabel": "Para la línea:",
+    "addInvoiceCta": "Sube factura",
+    "printCta": "Imprimir",
+    "exportPdfCta": "Exportar PDF",
+    "overBudgetWarning": "Esta orden está sobre-facturada. Revisa las líneas marcadas en rojo."
   }
 }

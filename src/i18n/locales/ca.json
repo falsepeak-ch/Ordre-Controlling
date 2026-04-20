@@ -187,5 +187,139 @@
     "cta": "Torna a l'inici",
     "projectTitle": "Projecte no disponible.",
     "projectBody": "O bé no existeix, o bé no hi tens accés. Torna al llistat de projectes."
+  },
+  "suppliers": {
+    "pageTitle": "Proveïdors",
+    "heroSubtitle": "Els proveïdors del projecte {{project}}. Cada ordre de compra va lligada a un d'aquests.",
+    "countOne": "1 proveïdor",
+    "countOther": "{{count}} proveïdors",
+    "newCta": "Nou proveïdor",
+    "searchPlaceholder": "Cerca per nom, NIF o etiqueta…",
+    "empty": {
+      "title": "Encara no hi ha proveïdors.",
+      "body": "Afegeix la teva primera fitxa per començar a crear ordres de compra lligades a un proveïdor."
+    },
+    "emptyFilter": {
+      "title": "Cap coincidència",
+      "body": "Prova amb un altre text o retira els filtres."
+    },
+    "form": {
+      "createTitle": "Nou proveïdor",
+      "editTitle": "Edita proveïdor",
+      "legalNameLabel": "Nom legal",
+      "legalNamePlaceholder": "p. ex. Mobiliari Sant Martí S.L.",
+      "tradeNameLabel": "Nom comercial",
+      "tradeNamePlaceholder": "p. ex. Mobiliari Sant Martí",
+      "tradeNameHint": "Com us hi referireu dins del projecte. Si el deixes en blanc, farem servir el nom legal.",
+      "taxIdLabel": "NIF / VAT",
+      "taxIdPlaceholder": "p. ex. ESB66892104",
+      "emailLabel": "Email de contacte",
+      "emailPlaceholder": "comandes@…",
+      "phoneLabel": "Telèfon",
+      "phonePlaceholder": "+34 …",
+      "addressLabel": "Adreça",
+      "addressPlaceholder": "Carrer, número, ciutat, CP",
+      "paymentTermsLabel": "Termes de pagament",
+      "paymentTermsPlaceholder": "p. ex. Net 30",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Context, restriccions, persona de contacte…",
+      "tagsLabel": "Etiquetes",
+      "tagsHint": "Separa'n per coma. Serviran per filtrar el llistat.",
+      "tagsPlaceholder": "mobles, props, rodatge",
+      "saveCreate": "Crea proveïdor",
+      "saveEdit": "Desa canvis",
+      "saving": "Desant…",
+      "deleted": "Proveïdor eliminat",
+      "created": "Proveïdor creat",
+      "updated": "Proveïdor actualitzat",
+      "confirmDelete": "Segur que vols eliminar {{name}}? Les ordres passades no es veuran afectades."
+    },
+    "card": {
+      "paymentTerms": "Termes",
+      "openPOs": "Ordres obertes",
+      "totalCommitted": "Compromès",
+      "viewDetails": "Veure detall"
+    },
+    "viewerNotice": "Només lectura. Els editors i propietaris poden crear i modificar proveïdors."
+  },
+  "pos": {
+    "pageTitle": "Ordres de compra",
+    "heroSubtitle": "Totes les ordres del projecte {{project}}. Filtra per estat per veure què està pendent, aprovat o tancat.",
+    "newCta": "Nova ordre",
+    "countOne": "1 ordre",
+    "countOther": "{{count}} ordres",
+    "searchPlaceholder": "Cerca per número o proveïdor…",
+    "status": {
+      "all": "Totes",
+      "draft": "Esborrany",
+      "pending_approval": "Pendents",
+      "approved": "Aprovades",
+      "rejected": "Rebutjades",
+      "closed": "Tancades"
+    },
+    "statusLabel": {
+      "draft": "Esborrany",
+      "pending_approval": "Pendent d'aprovació",
+      "approved": "Aprovada",
+      "rejected": "Rebutjada",
+      "closed": "Tancada"
+    },
+    "empty": {
+      "title": "Cap ordre de compra encara.",
+      "body": "Crea la primera ordre per començar a registrar compromesos i conciliar factures línia per línia."
+    },
+    "emptyFilter": {
+      "title": "Cap ordre coincideix",
+      "body": "Prova amb un altre estat o text."
+    },
+    "table": {
+      "number": "Número",
+      "supplier": "Proveïdor",
+      "committed": "Compromès",
+      "remaining": "Remanent",
+      "progress": "Progrés",
+      "status": "Estat",
+      "linesOne": "1 línia",
+      "linesOther": "{{count}} línies"
+    },
+    "totals": {
+      "committed": "Compromès",
+      "invoiced": "Facturat",
+      "remaining": "Remanent",
+      "committedHint": "{{count}} ordres actives",
+      "invoicedHint": "{{pct}}% del compromès",
+      "remainingHint": "Disponible per gastar"
+    }
+  },
+  "poDetail": {
+    "back": "Ordres de compra",
+    "headerCreated": "Creada {{date}} per {{by}}",
+    "headerSubmitted": "Enviada a aprovació {{date}}",
+    "headerApproved": "Aprovada {{date}}",
+    "headerClosed": "Tancada {{date}}",
+    "lineItemsTitle": "Línies",
+    "lineItemsSubtitle": "Compromès → Facturat → Remanent",
+    "lineCommitted": "Compromès",
+    "lineInvoiced": "Facturat",
+    "lineRemaining": "Remanent",
+    "lineProgress": "Progrés",
+    "lineFullyInvoiced": "Fully invoiced",
+    "lineOverInvoiced": "Per sobre",
+    "invoicesTitle": "Factures",
+    "invoicesCountOne": "1 factura",
+    "invoicesCountOther": "{{count}} factures",
+    "invoicesEmpty": "Cap factura encara. Puja la primera quan t'arribi.",
+    "invoicesEmptyRole": "Aquest projecte és només lectura per a tu.",
+    "invoiceIssued": "Emesa {{date}}",
+    "invoiceDue": "Venciment {{date}}",
+    "invoiceUploadedBy": "per {{by}}",
+    "approvalTrailTitle": "Aprovacions",
+    "approvalPendingNote": "Pendent de {{name}}",
+    "supplierTitle": "Proveïdor",
+    "pickLabel": "Per la línia:",
+    "addInvoiceCta": "Puja factura",
+    "printCta": "Imprimeix",
+    "exportPdfCta": "Exporta PDF",
+    "overBudgetWarning": "Aquesta ordre està sobre-facturada. Revisa les línies marcades en vermell."
   }
 }

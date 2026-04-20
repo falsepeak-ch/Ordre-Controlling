@@ -29,9 +29,9 @@ export function Sidebar() {
   const base = `/app/p/${project.id}`;
   const primary: Item[] = [
     { key: 'dashboard', labelKey: 'nav.dashboard', to: base, icon: 'grid-fill' },
-    { key: 'orders', labelKey: 'nav.purchaseOrders', to: `${base}/purchase-orders`, icon: 'receipt-fill', disabled: true },
+    { key: 'orders', labelKey: 'nav.purchaseOrders', to: `${base}/purchase-orders`, icon: 'receipt-fill' },
     { key: 'approvals', labelKey: 'nav.approvals', to: `${base}/approvals`, icon: 'shield-fill-check', disabled: true },
-    { key: 'suppliers', labelKey: 'nav.suppliers', to: `${base}/suppliers`, icon: 'building-fill', disabled: true },
+    { key: 'suppliers', labelKey: 'nav.suppliers', to: `${base}/suppliers`, icon: 'building-fill' },
   ];
 
   const secondary: Item[] = [

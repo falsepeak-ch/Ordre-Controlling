@@ -8,6 +8,9 @@ import { SignupPage } from '~/pages/SignupPage';
 import { ProjectsListPage } from '~/pages/ProjectsListPage';
 import { DashboardPage } from '~/pages/DashboardPage';
 import { MembersPage } from '~/pages/MembersPage';
+import { SuppliersPage } from '~/pages/SuppliersPage';
+import { PurchaseOrdersPage } from '~/pages/PurchaseOrdersPage';
+import { PODetailPage } from '~/pages/PODetailPage';
 import { NotFoundPage } from '~/pages/NotFoundPage';
 
 export const router = createBrowserRouter([
@@ -37,6 +40,9 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'members', element: <MembersPage /> },
+      { path: 'suppliers', element: <SuppliersPage /> },
+      { path: 'purchase-orders', element: <PurchaseOrdersPage /> },
+      { path: 'purchase-orders/:poId', element: <PODetailPage /> },
       { path: '*', element: <Navigate to="." replace /> },
     ],
   },

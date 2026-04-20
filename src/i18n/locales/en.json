@@ -187,5 +187,139 @@
     "cta": "Back to home",
     "projectTitle": "Project unavailable.",
     "projectBody": "Either it doesn't exist or you don't have access. Go back to your projects."
+  },
+  "suppliers": {
+    "pageTitle": "Suppliers",
+    "heroSubtitle": "Suppliers for {{project}}. Every purchase order is tied to one of these.",
+    "countOne": "1 supplier",
+    "countOther": "{{count}} suppliers",
+    "newCta": "New supplier",
+    "searchPlaceholder": "Search by name, tax ID or tag…",
+    "empty": {
+      "title": "No suppliers yet.",
+      "body": "Add your first supplier record to start creating purchase orders against them."
+    },
+    "emptyFilter": {
+      "title": "No matches",
+      "body": "Try different text or drop the filters."
+    },
+    "form": {
+      "createTitle": "New supplier",
+      "editTitle": "Edit supplier",
+      "legalNameLabel": "Legal name",
+      "legalNamePlaceholder": "e.g. Mobiliari Sant Martí S.L.",
+      "tradeNameLabel": "Trade name",
+      "tradeNamePlaceholder": "e.g. Mobiliari Sant Martí",
+      "tradeNameHint": "How it appears inside the project. If empty, we'll use the legal name.",
+      "taxIdLabel": "Tax ID / VAT",
+      "taxIdPlaceholder": "e.g. ESB66892104",
+      "emailLabel": "Contact email",
+      "emailPlaceholder": "orders@…",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "+34 …",
+      "addressLabel": "Address",
+      "addressPlaceholder": "Street, number, city, postal code",
+      "paymentTermsLabel": "Payment terms",
+      "paymentTermsPlaceholder": "e.g. Net 30",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Context, constraints, contact person…",
+      "tagsLabel": "Tags",
+      "tagsHint": "Comma-separated. Used for list filtering.",
+      "tagsPlaceholder": "furniture, props, shoot",
+      "saveCreate": "Create supplier",
+      "saveEdit": "Save changes",
+      "saving": "Saving…",
+      "deleted": "Supplier deleted",
+      "created": "Supplier created",
+      "updated": "Supplier updated",
+      "confirmDelete": "Delete {{name}}? Past POs won't be affected."
+    },
+    "card": {
+      "paymentTerms": "Terms",
+      "openPOs": "Open POs",
+      "totalCommitted": "Committed",
+      "viewDetails": "View details"
+    },
+    "viewerNotice": "Read-only. Editors and owners can create and modify suppliers."
+  },
+  "pos": {
+    "pageTitle": "Purchase orders",
+    "heroSubtitle": "All POs in {{project}}. Filter by status to see what's pending, approved, or closed.",
+    "newCta": "New PO",
+    "countOne": "1 PO",
+    "countOther": "{{count}} POs",
+    "searchPlaceholder": "Search by number or supplier…",
+    "status": {
+      "all": "All",
+      "draft": "Draft",
+      "pending_approval": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "closed": "Closed"
+    },
+    "statusLabel": {
+      "draft": "Draft",
+      "pending_approval": "Pending approval",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "closed": "Closed"
+    },
+    "empty": {
+      "title": "No purchase orders yet.",
+      "body": "Create your first PO to start tracking commitments and reconciling invoices line by line."
+    },
+    "emptyFilter": {
+      "title": "No POs match",
+      "body": "Try a different status or search term."
+    },
+    "table": {
+      "number": "Number",
+      "supplier": "Supplier",
+      "committed": "Committed",
+      "remaining": "Remaining",
+      "progress": "Progress",
+      "status": "Status",
+      "linesOne": "1 line",
+      "linesOther": "{{count}} lines"
+    },
+    "totals": {
+      "committed": "Committed",
+      "invoiced": "Invoiced",
+      "remaining": "Remaining",
+      "committedHint": "{{count}} active POs",
+      "invoicedHint": "{{pct}}% of committed",
+      "remainingHint": "Available to spend"
+    }
+  },
+  "poDetail": {
+    "back": "Purchase orders",
+    "headerCreated": "Created {{date}} by {{by}}",
+    "headerSubmitted": "Submitted {{date}}",
+    "headerApproved": "Approved {{date}}",
+    "headerClosed": "Closed {{date}}",
+    "lineItemsTitle": "Line items",
+    "lineItemsSubtitle": "Committed → Invoiced → Remaining",
+    "lineCommitted": "Committed",
+    "lineInvoiced": "Invoiced",
+    "lineRemaining": "Remaining",
+    "lineProgress": "Progress",
+    "lineFullyInvoiced": "Fully invoiced",
+    "lineOverInvoiced": "Over",
+    "invoicesTitle": "Invoices",
+    "invoicesCountOne": "1 invoice",
+    "invoicesCountOther": "{{count}} invoices",
+    "invoicesEmpty": "No invoices yet. Upload the first when it arrives.",
+    "invoicesEmptyRole": "This project is read-only for you.",
+    "invoiceIssued": "Issued {{date}}",
+    "invoiceDue": "Due {{date}}",
+    "invoiceUploadedBy": "by {{by}}",
+    "approvalTrailTitle": "Approval trail",
+    "approvalPendingNote": "Waiting on {{name}}",
+    "supplierTitle": "Supplier",
+    "pickLabel": "For line:",
+    "addInvoiceCta": "Upload invoice",
+    "printCta": "Print",
+    "exportPdfCta": "Export PDF",
+    "overBudgetWarning": "This PO is over-invoiced. Review the lines highlighted in red."
   }
 }

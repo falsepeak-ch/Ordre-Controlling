@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Topbar } from '~/components/layout/Topbar';
 import { Card } from '~/components/ui/Card';
@@ -9,7 +10,6 @@ import { Spinner } from '~/components/ui/Spinner';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { useProjectData } from '~/hooks/useProjectData';
 import { useAuth } from '~/hooks/useAuth';
-import { useToast } from '~/hooks/useToast';
 import { projectMetrics } from '~/lib/reconcile';
 import { canEdit, canManage } from '~/lib/roles';
 import { eur } from '~/lib/format';
@@ -20,7 +20,7 @@ export function DashboardPage() {
   const { t } = useTranslation();
   const { project, role } = useCurrentProject();
   const { user } = useAuth();
-  const { push } = useToast();
+  const navigate = useNavigate();
   const { suppliers, purchaseOrders, loading } = useProjectData(project.id);
 
   const metrics = useMemo(
@@ -31,9 +31,8 @@ export function DashboardPage() {
   const isEmpty = metrics.poCount === 0 && metrics.supplierCount === 0;
   const firstName = (user?.displayName ?? '').split(' ')[0] ?? '';
 
-  function comingSoon() {
-    push({ message: t('app.stubTitle'), icon: 'clock-fill' });
-  }
+  const goSuppliers = () => navigate(`/app/p/${project.id}/suppliers`);
+  const goPOs = () => navigate(`/app/p/${project.id}/purchase-orders`);
 
   return (
     <>
@@ -51,7 +50,7 @@ export function DashboardPage() {
               variant="primary"
               size="sm"
               leading={<Icon name="plus" size={13} />}
-              onClick={comingSoon}
+              onClick={goPOs}
             >
               {t('dashboard.emptyState.newPO')}
             </Button>
@@ -127,8 +126,8 @@ export function DashboardPage() {
           <EmptyPanel
             canEdit={canEdit(role)}
             canManage={canManage(role)}
-            onAddSupplier={comingSoon}
-            onNewPO={comingSoon}
+            onAddSupplier={goSuppliers}
+            onNewPO={goPOs}
             projectId={project.id}
           />
         ) : (
