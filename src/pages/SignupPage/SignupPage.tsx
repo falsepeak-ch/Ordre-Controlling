@@ -6,7 +6,7 @@ import { Logo } from '~/components/ui/Logo';
 import { GoogleMark } from '~/components/ui/GoogleMark';
 import { Spinner } from '~/components/ui/Spinner';
 import { useAuth } from '~/hooks/useAuth';
-import './AuthLayout.css';
+import '../AuthLayout.css';
 
 export function SignupPage() {
   const { t } = useTranslation();
