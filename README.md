@@ -22,6 +22,9 @@ Open http://localhost:5173.
 The repo ships with a populated `.env.local` pointing at the `ordre-app-41c95`
 Firebase project. For a fresh Firebase project, copy `.env.example` instead.
 
+For production deploys, the launch checklist, and operational playbook see
+[LAUNCH.md](./LAUNCH.md).
+
 ## Scripts
 
 - `npm run dev` — Vite dev server with hot reload.
@@ -32,11 +35,17 @@ Firebase project. For a fresh Firebase project, copy `.env.example` instead.
   `~/Downloads/Bootsy Duotone/SVG/All icons/` into `src/icons/generated/`.
 - `npm run seed` — seed Firestore with Studio Verdera sample data (needs
   `firebase-admin-key.json` and `SEED_OWNER_UID`).
+- `npm run grant-pro -- <uid|--email=...>` — flip a user's subscription
+  to active + bump their owned projects' storage caps to 10 GB. Interim
+  replacement for Stripe self-serve billing.
+- `npm run lint` — ESLint over `src/`.
 
 ## Stack highlights
 
 - **Design system**: monochrome, light + dark mode via CSS variable flip.
 - **i18n**: Catalan (default), Spanish, English.
-- **Auth**: Google Sign-In via Firebase Auth.
-- **Data**: Firestore — workspaces → suppliers / purchaseOrders → invoices / approvals.
+- **Auth**: Google Sign-In via Firebase Auth + App Check (reCAPTCHA v3).
+- **Data**: Firestore — projects → suppliers / purchaseOrders → invoices / approvals / attachments / meta.
+- **Cloud Functions**: Node.js 22, `firebase-functions` v7, Gen 2. Callables in `europe-west1`; Storage triggers in `us-east1` (matching the bucket region).
+- **Analytics + errors**: Firebase Analytics (GA4) + PostHog (EU), both consent-gated via a cookie banner.
 - **Icons**: 37 Bootsy Duotone glyphs vendored + transformed to JSX.

@@ -16,6 +16,9 @@ Resist feature creep into "mini-accounting tool" territory — the repo has a
 `reference/` directory with the original spec and a static-HTML prototype to
 refer to, not to reintroduce.
 
+For production deploys, post-deploy verification, and the operating
+playbook see [LAUNCH.md](LAUNCH.md).
+
 ---
 
 ## Stack
@@ -24,7 +27,8 @@ refer to, not to reintroduce.
 |---|---|
 | Build | Vite 5 + React 18 + TypeScript 5 (`strict: true`) |
 | Routing | React Router DOM 6 (`createBrowserRouter`) |
-| Auth & data | Firebase v10 (Auth with Google Sign-In, Firestore native, Analytics in prod only) |
+| Auth & data | Firebase v10 (Auth with Google Sign-In, Firestore native, Analytics behind consent) |
+| Cloud Functions | `firebase-functions` v7 on Node.js 22 (Gen 2). Runtime pinned in `firebase.json`; `engines.node` in `functions/package.json` must match. |
 | i18n | `i18next` + `react-i18next` — Catalan default, Spanish, English |
 | Styling | Plain CSS modules per component + CSS custom properties. **No Tailwind, no CSS-in-JS.** |
 | Fonts | Google Fonts: Cal Sans (display), Inter (body), JetBrains Mono (code) |
@@ -184,7 +188,8 @@ The client attaches an App Check token (reCAPTCHA v3) to every request to
 Firestore, Storage, and Cloud Functions. Enforcement is on in the console
 for all three services, so requests without a valid token are rejected.
 
-Prod setup:
+Prod setup (status: reCAPTCHA v3 site key registered, enforcement still
+manual — see [LAUNCH.md](LAUNCH.md#2a-app-check-enforcement--still-manual)):
 1. In the Firebase console → App Check → Apps → Web, register the domain
    and pick **reCAPTCHA v3**. Copy the site key.
 2. Put the site key in `.env.local` as `VITE_FIREBASE_APP_CHECK_SITE_KEY`.

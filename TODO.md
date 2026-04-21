@@ -127,3 +127,12 @@ until we validate demand.
 - `formatFileSize` deduped, 4-role model documented in AGENTS.md, storage
   rules now whitelist content types (PDF / image / text), `as never` cast
   removed.
+- Deployed to Firebase: Firestore + Storage rules, four Cloud Functions
+  (`createProject`, `sendProjectInvite`, `onStorageObjectFinalized`,
+  `onStorageObjectDeleted`), and the web bundle to
+  <https://ordre-app-41c95.web.app>. Artifact cleanup policy (1-day
+  retention) set for both function regions (us-east1 + europe-west1).
+- Cloud Functions upgraded to **Node.js 22** (ahead of Node 20's
+  2026-04-30 deprecation) and **`firebase-functions@^7.2.5`**
+  (from `^6.0.1`). Pin lives in `firebase.json#functions[].runtime` +
+  `functions/package.json#engines.node`; CI bumped to match.

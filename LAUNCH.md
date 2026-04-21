@@ -1,283 +1,294 @@
 # Ordre — launch checklist
 
-One-time steps to go from "all green in `main`" to a running production
-deployment. Work through in order. Estimated time: 60–90 minutes.
+What's live and what's still manual. Rules + functions + hosting are
+deployed as of April 2026; everything below is either a verification
+step the user still owes, or a one-off console toggle.
+
+---
+
+## Status snapshot
+
+### ✓ Already done
+
+- Rules (Firestore + Storage + indexes) deployed.
+- Functions deployed on **Node.js 22 (2nd Gen)** with `firebase-functions@^7.2.5`:
+  - `createProject` (europe-west1) — server-side project-count quota.
+  - `sendProjectInvite` (europe-west1) — App Check enforced, invite rate-limit.
+  - `onStorageObjectFinalized` / `onStorageObjectDeleted` (**us-east1**, matching the default bucket region) — maintains `projects/{id}.storageBytesUsed`.
+- Hosting bundle deployed to <https://ordre-app-41c95.web.app> with the App Check site key baked in, the landing redesign, SEO/ASO infra, Terms + Privacy pages, cookie consent banner.
+- Artifact cleanup policies set for both function regions (1-day image retention) — stops GCR storage costs from creeping.
+- PostHog EU project API key captured in `.env.local`.
+- Firebase App Check reCAPTCHA v3 site key registered and baked into the prod bundle — the client attaches tokens on every request.
+
+### ⚠️ Still to do (in order)
+
+1. **Flip App Check enforcement on** (manual, console) — Section 2a below.
+2. **Add PostHog key to prod build env** if you deploy from somewhere other than this laptop (e.g. CI).
+3. **Smoke-test the live site** — Section 5.
+4. **Custom domain `ordre.app`** — Section 2d.
+5. **OG image asset** — Section 5e.
 
 ---
 
 ## 1. Third-party services
 
-### 1a. PostHog (EU cloud)
+### 1a. PostHog (EU cloud) — DONE
 
-1. Sign up / log in at **https://eu.posthog.com**.
-2. **New Project** → pick an organisation → name it `Ordre`.
-3. **Project settings → Project API Key** → copy the value that begins with
-   `phc_…`.
-4. Recommended settings (Project settings → General):
-   - **Autocapture** → on.
-   - **Record user sessions** → on (adds session replay for support cases).
-   - **Exceptions → Enable exception capture** → on. This is what
-     replaces Sentry.
-5. **Project settings → Access groups → Team members** — invite yourself with
-   Admin access.
-6. No webhook / Slack wiring needed yet.
+Key is in `.env.local` as `VITE_POSTHOG_KEY=phc_…`. Keep this file out of
+git; add the same key to any other environment that builds the prod bundle.
 
-Save the key — you'll paste it into `.env.local` (dev) and your hosting
-provider's env (prod) in step 3.
+If you ever need to re-issue the key: <https://eu.posthog.com/> → the
+Ordre project → Project settings → Project API Key → **Rotate**.
+
+Recommended settings to verify (Project settings → General):
+- Autocapture: on.
+- Record user sessions: on (session replay for support cases).
+- Exceptions → Enable exception capture: on (this is our Sentry replacement).
 
 ### 1b. Sentry
 
-Nothing to do. Sentry was removed; PostHog handles errors now.
+N/A — removed from the stack. PostHog captures exceptions.
 
-### 1c. Stripe (deferred)
+### 1c. Stripe
 
-Skip until billing launches. `VITE_BILLING_ENABLED` stays unset → the Pro
-upgrade CTA is hidden, Pro is grantable manually via `npm run grant-pro`.
+Deferred. `VITE_BILLING_ENABLED` stays unset; the Pro upgrade CTA is
+hidden; Pro access is granted with `npm run grant-pro -- <uid>`.
+
+Heads-up: a stale `createCheckoutSession` Cloud Function (nodejs20) is
+still deployed from pre-scaffolding work — it's not in this codebase.
+When Stripe wiring starts, either delete it via
+`firebase functions:delete createCheckoutSession --region europe-west1`
+or overwrite it with the real implementation.
 
 ---
 
 ## 2. Firebase console setup
 
-All steps happen at **https://console.firebase.google.com/project/ordre-app-41c95**.
+All steps at <https://console.firebase.google.com/project/ordre-app-41c95>.
 
-### 2a. App Check (reCAPTCHA v3)
+### 2a. App Check enforcement — STILL MANUAL
 
-1. **Build → App Check → Apps → Web**.
-2. Click the pencil / register icon. Provider: **reCAPTCHA v3**.
-3. It'll redirect you to Google reCAPTCHA admin to create a v3 key for
-   your domain. Add both `localhost` (dev) and `ordre.app` (prod) to the
-   allowed domains. Save, copy the **site key**.
-4. Back in Firebase → paste the site key → **Save**.
-5. **App Check → APIs** tab. Turn **Enforce** on for all three:
+The reCAPTCHA v3 site key is registered and the client sends tokens.
+What's not yet done: flip **Enforce** on for each service. Until you do,
+the rules/services will accept both tokened and untokened requests.
+
+1. **Build → App Check → APIs**.
+2. Turn **Enforce** on for:
    - Cloud Firestore
    - Cloud Storage
    - Cloud Functions
-   Wait ~5 minutes for enforcement to propagate.
-6. For local dev, flip `VITE_APP_CHECK_DEBUG=true` once, reload the app,
-   open DevTools console, copy the printed debug token, then:
-   - **App Check → Apps → Manage debug tokens** → paste the token,
-     give it a label like "local-dev-josep".
-   - Back in `.env.local`, replace `VITE_APP_CHECK_DEBUG=true` with
-     `VITE_APP_CHECK_DEBUG_TOKEN=<paste the token>` so the same token
-     survives across reloads.
+3. Wait ~5 min for propagation.
 
-### 2b. Analytics (GA4)
+**Before flipping**: watch the "Verified requests" percentage on that page
+sit at ≥95% for an hour. Our deployed clients send tokens, so it should
+be high immediately. Low percentage = a client on a stale bundle; reload.
 
-You already have `VITE_FIREBASE_MEASUREMENT_ID` in the env. Just verify:
+### 2b. Local dev with App Check
 
-1. **Analytics → Dashboard** — a GA4 property should exist (it was
-   auto-created at project setup). If not, click **Link to Google Analytics**.
-2. Nothing else to configure — `src/lib/analytics.ts` handles init after
-   consent.
+For local builds against the prod project:
 
-### 2c. Cloud Functions region + secrets
+1. `.env.local` → set `VITE_APP_CHECK_DEBUG=true` once and reload.
+2. DevTools console prints a debug token.
+3. Firebase console → App Check → Apps → Manage debug tokens → paste, label "local-dev".
+4. Swap `.env.local` to `VITE_APP_CHECK_DEBUG_TOKEN=<paste>` so the token persists across reloads.
 
-The new callable `createProject` and the storage triggers all deploy to
-`europe-west1` (same as `sendProjectInvite`). No action needed — they pick
-up the existing region config from `functions/src/index.ts`.
+### 2c. Function secrets — pre-existing
 
-Verify your function secrets are still set:
+`sendProjectInvite` uses two runtime secrets — both set from earlier work:
 
 ```bash
 firebase functions:secrets:access EMAIL_PASS
 firebase functions:secrets:access APP_BASE_URL
 ```
 
-If either is missing or you want to rotate:
+Rotate with `firebase functions:secrets:set <NAME>` when needed.
 
-```bash
-firebase functions:secrets:set EMAIL_PASS
-firebase functions:secrets:set APP_BASE_URL
-```
+### 2d. Custom domain — STILL MANUAL
 
-### 2d. Hosting domain (if not done)
-
-1. **Hosting → Add custom domain** → enter `ordre.app`.
-2. Firebase will show DNS TXT + A records — add them at your registrar.
-3. After the domain verifies (~15 min), also add `www.ordre.app` as a
-   redirect target.
+1. **Hosting → Add custom domain → `ordre.app`**.
+2. Add the TXT + A records Firebase shows at your registrar.
+3. After verification, add `www.ordre.app` as a redirect.
 
 ---
 
 ## 3. Environment variables
 
-Update `.env.local` (dev) and set the same values in your hosting / CI env
-(prod). Copy `.env.example` for the full list — new keys since the last
-deploy:
+Present in local `.env.local`:
 
-| Key | Source | Required? |
+| Key | Status | Notes |
 |---|---|---|
-| `VITE_FIREBASE_APP_CHECK_SITE_KEY` | Step 2a reCAPTCHA site key | **yes in prod** |
-| `VITE_APP_CHECK_DEBUG_TOKEN` | Step 2a debug token | local only |
-| `VITE_POSTHOG_KEY` | Step 1a PostHog project API key | **yes in prod** |
-| `VITE_POSTHOG_HOST` | Leave unset to use EU default | no |
-| `VITE_BILLING_ENABLED` | Leave unset until Stripe lands | no |
+| `VITE_FIREBASE_API_KEY` + the other `VITE_FIREBASE_*` basics | ✓ | Web SDK bootstrap. |
+| `VITE_FIREBASE_MEASUREMENT_ID` | ✓ | GA4. |
+| `VITE_FIREBASE_APP_CHECK_SITE_KEY` | ✓ | reCAPTCHA v3 site key. |
+| `VITE_POSTHOG_KEY` | ✓ | `phc_…`. |
+| `VITE_POSTHOG_HOST` | — | Optional; defaults to `https://eu.i.posthog.com`. |
+| `VITE_APP_CHECK_DEBUG_TOKEN` | — | Optional; local-only. |
+| `VITE_BILLING_ENABLED` | — | Unset → Pro upgrade CTA hidden. |
 
-The existing `VITE_FIREBASE_*` keys stay the same.
-
-CI note: [.github/workflows/ci.yml](.github/workflows/ci.yml) uses throwaway
-placeholders during the build — it doesn't need your real values to pass
-type-check / lint / build.
+Same vars need to exist in whatever env rebuilds `dist/` for prod
+(GitHub Actions secret store, hosting CI, etc.). The `.github/workflows/ci.yml`
+job uses throwaway placeholders only for its `npm run build` sanity check.
 
 ---
 
-## 4. Deploy
+## 4. Redeploying
 
-From the repo root:
+For future changes:
 
 ```bash
-# Rules first — they're free to test before the app points at them.
+# Rules only — safe, no build.
 firebase deploy --only firestore:rules,firestore:indexes,storage:rules
 
-# Functions — this compiles + uploads + swaps the revisions.
+# Functions only — runs the tsc predeploy + uploads.
 firebase deploy --only functions
 
-# Hosting — builds the Vite app, uploads dist/, cuts over the domain.
+# Hosting — build locally first so the bundle carries current env vars.
 npm run build && firebase deploy --only hosting
-```
 
-Or all in one:
-
-```bash
+# Everything at once.
 npm run build && firebase deploy
 ```
 
-First deploy of the new functions will take ~3 minutes because it has to
-cold-provision `createProject`, `onStorageObjectFinalized`, and
-`onStorageObjectDeleted`.
+Things learned during the first deploy, worth preserving:
 
-If a function deploy fails with a permission error, make sure your
-user / CI service account has the **Cloud Functions Admin** and
-**Service Account User** IAM roles on the project.
+- **Storage triggers must live in the bucket's region.** The default
+  Firebase Storage bucket is `us-east1`, so `onStorageObjectFinalized` /
+  `onStorageObjectDeleted` must specify `{ region: 'us-east1' }`. The
+  callable functions (`sendProjectInvite`, `createProject`) stay in
+  `europe-west1`. Mixing regions is fine.
+- **Runtime is pinned in `firebase.json`**, not just `engines.node`.
+  Both must match. Bump both when upgrading Node.
+- **Eventarc needs Storage permissions.** First deploy failed with
+  *"Permission 'storage.buckets.get' denied on ... Eventarc service
+  account"*. Granting the Eventarc SA `roles/storage.admin` (or at minimum
+  `roles/storage.objectViewer` + bucket-level `get`) fixes it. Done.
+- **`firebase deploy` skips unchanged sources.** If you change only
+  `firebase.json` (e.g. the runtime) and no source file, the CLI will skip.
+  Touch a source file (a comment is enough) to force a re-upload.
 
 ---
 
-## 5. Post-deploy verification
+## 5. Post-deploy verification — PENDING
 
-### 5a. App Check enforcement landed
+Run these once, after flipping App Check enforcement.
 
-Open `https://ordre.app/` in an incognito window, sign in. In the Firebase
-console → **App Check → APIs** tab — the "Requests in last hour" graph
-should show ≥ 95% **verified** within 10 minutes. Any unverified traffic is
-a mis-configured client somewhere.
+### 5a. App Check is enforcing
 
-### 5b. Analytics wiring works
+Firebase console → App Check → APIs tab. "Requests in last hour" for
+each service should show ≥95% **verified** within 10 min of enforcement.
+If not, there's a client somewhere shipping without a token.
 
-1. Accept the cookie banner on a fresh browser session.
-2. In PostHog → **Live events** → you should see a `$pageview` event within
-   10 seconds. Identify yourself by signing in; the event should now carry
-   your `uid` as distinct ID.
-3. In Firebase → **Analytics → Realtime** → you should see an active user.
+### 5b. Analytics wiring
 
-If either is empty:
-- PostHog silent: check `VITE_POSTHOG_KEY` is really baked into the
-  production bundle (search the deployed JS for the `phc_` prefix).
-- Firebase Analytics silent: confirm `VITE_FIREBASE_MEASUREMENT_ID` is set
-  and that ad-blockers aren't running in your test window.
+1. Fresh incognito window → `https://ordre-app-41c95.web.app`.
+2. Accept the cookie banner.
+3. PostHog → Live events → should see `$pageview` within 10 s. Sign in;
+   subsequent events should carry your `uid` as distinct ID.
+4. Firebase console → Analytics → Realtime → 1 active user.
 
-### 5c. Error capture works
+### 5c. Error capture
 
-In DevTools console on the deployed site:
+In DevTools console on the live site:
 
 ```js
 throw new Error('launch-smoke-test');
 ```
 
-Within ~60 seconds PostHog → **Exceptions** should log it.
+Within ~60 s: PostHog → Exceptions → the event appears.
 
-### 5d. Lighthouse score
+### 5d. Lighthouse
 
 ```bash
-# Headless run from local — or use the Chrome DevTools panel against ordre.app
-npx lighthouse https://ordre.app/ --only-categories=performance,accessibility,seo,best-practices
+npx lighthouse https://ordre-app-41c95.web.app/ \
+  --only-categories=performance,accessibility,seo,best-practices
 ```
 
-Target: ≥ 90 Performance, ≥ 95 Accessibility / SEO / Best Practices. If
-Performance misses, check that the hosting cache headers actually
-landed: `curl -I https://ordre.app/assets/index-*.js` should show
-`cache-control: public, max-age=31536000, immutable`.
+Target ≥90 Performance, ≥95 the rest. If Performance misses, check:
+
+```bash
+curl -I https://ordre-app-41c95.web.app/assets/index-*.js | grep -i cache-control
+# expect: cache-control: public, max-age=31536000, immutable
+```
 
 ### 5e. OG / Twitter card preview
 
-- https://www.opengraph.xyz/url/https%3A%2F%2Fordre.app
-- https://cards-dev.twitter.com/validator
+- <https://www.opengraph.xyz/url/https%3A%2F%2Fordre-app-41c95.web.app>
+- <https://cards-dev.twitter.com/validator>
 
-If the OG image 404s, you need to add a `public/og-image.png` (1200×630,
-monochrome — the `index.html` references it but we didn't ship the image
-binary). Create one, re-deploy, re-check.
+If the OG image 404s: create `public/og-image.png` (1200×630, monochrome,
+Ordre mark + tagline), rebuild, redeploy, re-check.
 
-### 5f. Storage quota trigger working
+### 5f. Storage-quota trigger round-trip
 
-Upload a small PDF invoice to a PO (signed in as a free-tier user). Within
-~30 seconds the project's `storageBytesUsed` should bump by the file size
-(check in the Firestore console under
-`projects/{projectId}`). Then delete the invoice — the counter should
-decrement back.
+1. Sign in, create a project, upload a small PDF to a PO.
+2. Firestore console → `projects/{id}` → `storageBytesUsed` should
+   increment by the file size within ~30 s.
+3. Delete the invoice → counter decrements back.
+
+### 5g. Callables work end-to-end
+
+- Create a 2nd project while on the free tier → should be blocked with
+  "Free tier is limited to one project" (`createProject` quota guard).
+- Invite a teammate → triggers `sendProjectInvite`; verify the email
+  lands. Eleven more invites in the same hour → the 11th should fail
+  with `resource-exhausted` (rate limit).
 
 ---
 
 ## 6. Operating playbook
 
-### Granting Pro access manually (beta)
+### Granting Pro access manually
 
 ```bash
-npm run grant-pro -- --email=user@example.com
-# or
-npm run grant-pro -- <uid> --plan=monthly
-# revoke
-npm run grant-pro -- <uid> --revoke
+npm run grant-pro -- --email=user@example.com           # grant annual
+npm run grant-pro -- <uid> --plan=monthly              # grant monthly
+npm run grant-pro -- <uid> --revoke                    # revoke
 ```
 
-Requires `firebase-admin-key.json` at repo root and `FIREBASE_ADMIN_KEY_PATH`
-in `.env.local`.
+Requires `firebase-admin-key.json` at repo root and
+`FIREBASE_ADMIN_KEY_PATH` in `.env.local`.
 
 ### Rotating the reCAPTCHA key
 
-1. Generate a new key in the reCAPTCHA admin.
-2. Paste into `VITE_FIREBASE_APP_CHECK_SITE_KEY` locally + prod env.
-3. Deploy hosting.
-4. Register the new key under Firebase → App Check → Apps → Web.
-5. After 24h of clean traffic on the new key, remove the old one.
+1. Create a new key in the reCAPTCHA admin (domain allowlist must include
+   `ordre-app-41c95.web.app` and `ordre.app`).
+2. Paste into `VITE_FIREBASE_APP_CHECK_SITE_KEY` locally + in prod env.
+3. Firebase console → App Check → Apps → Web → register the new key.
+4. `npm run build && firebase deploy --only hosting`.
+5. After 24h of clean traffic on the new key, delete the old one.
 
-### Responding to a storage-quota abuse report
+### Upgrading the Node runtime
 
-The `storageBytesUsed` counter on the project is the source of truth. If
-it drifts out of sync (e.g. a Storage object got deleted without its
-trigger firing), run:
+Three places need to agree:
 
-```bash
-# Use the Firebase emulator or a one-off admin script to recompute
-# from the actual bucket contents. Script doesn't ship — write as needed.
-```
+1. `functions/package.json` → `"engines": { "node": "<version>" }`.
+2. `firebase.json` → `"runtime": "nodejs<version>"`.
+3. `.github/workflows/ci.yml` → both `node-version: <version>` lines.
 
-### Removing a user's data on GDPR request
+Then touch any functions source file so Firebase doesn't skip the
+deploy, and `firebase deploy --only functions`.
 
-Currently manual. Via the Firebase console or an admin script:
+### GDPR deletion
 
-1. Delete every project doc under `/projects/*` where
-   `members[uid] == 'owner'`.
-2. Delete any child subcollections (invoices, approvals, attachments).
-3. Delete Storage objects under `projects/<projectId>/...` for each project.
-4. Remove the user from every project's `members` map where they're an
-   editor / approver / viewer.
-5. Delete `users/{uid}`.
-6. Delete the Firebase Auth account (Auth → Users).
+Currently manual. Delete order:
 
-A Cloud Function that does this end-to-end is on the deferred list.
+1. Projects owned by the uid (`projects/*` where `members[uid] == 'owner'`), including every sub-collection (invoices, approvals, attachments) and Storage objects under `projects/<id>/...`.
+2. The uid from every other project's `members` / `memberEmails` / `memberProfiles` map.
+3. `users/{uid}`.
+4. Auth user (Auth → Users).
+
+An end-to-end `deleteUserAccount` callable is on the deferred list.
 
 ---
 
 ## 7. What's still missing (not launch-blocking)
 
-See [TODO.md](TODO.md) for the full list. Biggest gaps, in rough priority:
+See [TODO.md](TODO.md). Biggest gaps:
 
-- Stripe self-serve billing.
+- Stripe self-serve billing (`createCheckoutSession` Cloud Function, `stripeWebhook`, portal).
 - Email notifications on PO submit / approve / reject / close.
 - Scheduled approval reminders.
 - Audit log.
 - Rules unit tests.
 - Reports CSV / PDF export.
-- Project budget + "budget remaining" KPI.
-
-None of these block a beta launch — they're what to tackle once you have
-real traffic.
+- Project budget KPIs.
