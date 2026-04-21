@@ -4,10 +4,12 @@ import { Logo } from '~/components/ui/Logo';
 import { ThemeToggle } from '~/components/ui/ThemeToggle';
 import { LocaleToggle } from '~/components/ui/LocaleToggle';
 import { ButtonAnchor } from '~/components/ui/Button';
+import { useConsent } from '~/hooks/useConsent';
 import './PublicLayout.css';
 
 export function PublicLayout() {
   const { t } = useTranslation();
+  const { reopen } = useConsent();
   const year = new Date().getFullYear();
 
   return (
@@ -36,6 +38,15 @@ export function PublicLayout() {
           <span className="public-footer-copy">{t('landing.footerCopy', { year })}</span>
           <span className="public-footer-note">{t('landing.footerNote')}</span>
           <div className="public-footer-spacer" />
+          <Link to="/terms" className="public-footer-link">{t('footer.terms')}</Link>
+          <Link to="/privacy" className="public-footer-link">{t('footer.privacy')}</Link>
+          <button
+            type="button"
+            className="public-footer-link public-footer-linklike"
+            onClick={reopen}
+          >
+            {t('footer.cookies')}
+          </button>
           <LocaleToggle />
           <ThemeToggle />
         </div>

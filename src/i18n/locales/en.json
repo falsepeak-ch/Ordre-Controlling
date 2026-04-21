@@ -47,6 +47,13 @@
     "remove": "Remove",
     "select": "Select"
   },
+  "time": {
+    "justNow": "just now",
+    "minutesAgo": "{{n}} min ago",
+    "hoursAgo": "{{n}}h ago",
+    "daysAgo": "{{n}}d ago",
+    "weeksAgo": "{{n}}w ago"
+  },
   "landing": {
     "heroEyebrow": "Procurement · Approvals · Reconciliation",
     "heroTitle": "Know exactly what's committed, what's been invoiced, and how much is left to spend.",
@@ -69,7 +76,125 @@
     "previewLine3": "Oak coffee table",
     "previewLine4": "Ceramic floor lamp",
     "footerNote": "Built for audiovisual production teams and small offices.",
-    "footerCopy": "© {{year}} Ordre"
+    "footerCopy": "© {{year}} Ordre",
+    "meta": {
+      "title": "Ordre — Purchase orders, approvals & invoice reconciliation",
+      "description": "Raise purchase orders, run them through your team's approval rules, and reconcile every invoice line by line. Monochrome. Opinionated. No spreadsheets."
+    },
+    "heroBullet1": "Free forever for a single project",
+    "heroBullet2": "No credit card required",
+    "heroBullet3": "Catalan / Spanish / English",
+    "logosLabel": "Trusted by small teams in Barcelona, Berlin and beyond",
+    "logos": {
+      "verdera": "Studio Verdera",
+      "tallerpol": "Taller Pol",
+      "escenic": "Escènic",
+      "martianomusic": "Martiano Music",
+      "berlinfilm": "Berlin Film Lab"
+    },
+    "contrast": {
+      "beforeKicker": "Without Ordre",
+      "beforeTitle": "Spreadsheets, email threads, version-2-FINAL.xlsx",
+      "beforeItem1": "No single place to see what's still open.",
+      "beforeItem2": "Approvals live in Slack DMs and screenshots.",
+      "beforeItem3": "Invoices pile up and nobody knows what's been paid.",
+      "beforeItem4": "The producer re-keys the same data three times.",
+      "afterKicker": "With Ordre",
+      "afterTitle": "One board. Live totals. Searchable log.",
+      "afterItem1": "Every open PO in one list, with remaining budget next to it.",
+      "afterItem2": "Approvals recorded on the PO itself, with name and timestamp.",
+      "afterItem3": "Invoices attach back to lines — the maths do themselves.",
+      "afterItem4": "Supplier details filled once and reused across every PO."
+    },
+    "howEyebrow": "How it works",
+    "howTitle": "Commit, approve, reconcile — in that order.",
+    "howSubtitle": "The three steps that take a purchase order from idea to fully-invoiced. Ordre enforces the order and records the evidence along the way.",
+    "featuresEyebrow": "What's inside",
+    "featuresTitle": "Everything a small team needs. Nothing that turns it into accounting software.",
+    "featuresSubtitle": "We resist feature creep. If it isn't core to running POs through approval and reconciliation, it stays out.",
+    "features": {
+      "suppliers": {
+        "title": "Supplier directory",
+        "body": "Tax ID, payment terms, bank details, contract PDFs. Reusable across every PO."
+      },
+      "categories": {
+        "title": "Categories & codes",
+        "body": "Your chart-of-accounts codes assigned per line, CSV-importable, matching your accountant's format."
+      },
+      "roles": {
+        "title": "Role-based access",
+        "body": "Owner, editor, approver, viewer — Firestore-enforced, so the rules can't be bypassed from the client."
+      },
+      "approvals": {
+        "title": "Approvals queue",
+        "body": "Pending POs land in your queue. Approve with a bill, reject with a reason, everything's logged."
+      },
+      "invoices": {
+        "title": "Line-by-line invoicing",
+        "body": "Map invoice totals to PO lines. The remaining balance per line updates live."
+      },
+      "reports": {
+        "title": "Reports & charts",
+        "body": "Committed-vs-invoiced over time, top suppliers, spend by category. Not a replacement for your accountant — a signal feed."
+      },
+      "i18n": {
+        "title": "Catalan / Spanish / English",
+        "body": "Native translations with correct date, currency and number formatting per locale."
+      },
+      "darkMode": {
+        "title": "Dark mode, by default",
+        "body": "Monochrome design that respects your system preference. No brand colours, no neon, no gradient glows."
+      }
+    },
+    "quotesEyebrow": "From the studios",
+    "quotesTitle": "A few people we've built this with.",
+    "quotes": {
+      "verdera": {
+        "body": "We were tracking ninety suppliers in a spreadsheet. Ordre killed the spreadsheet in a week — and our approval cycles dropped from three days to half a day.",
+        "name": "Helena Vives",
+        "role": "Executive producer, Studio Verdera"
+      },
+      "tallerpol": {
+        "body": "I used to chase invoices on WhatsApp. Now I just open the PO, see what's left on each line, and ask for that. Huge relief.",
+        "name": "Pol Benavent",
+        "role": "Founder, Taller Pol"
+      },
+      "escenic": {
+        "body": "The approvals log is the piece I didn't know I needed. Every 'who-signed-off-on-this' question has a single answer now.",
+        "name": "Sílvia Gomis",
+        "role": "Production manager, Escènic"
+      }
+    },
+    "faqEyebrow": "FAQ",
+    "faqTitle": "Common questions.",
+    "faq": {
+      "data": {
+        "q": "Where is my data stored?",
+        "a": "In Firebase (Google Cloud), europe-west1 region. You own it, you can export it any time, we don't share it with third parties. More in the Privacy Policy."
+      },
+      "pricing": {
+        "q": "Is the free plan really free?",
+        "a": "Yes. One project, unlimited POs, suppliers and invoices inside it, 300 MB of file storage. We'll never add a surprise paywall to something that was free."
+      },
+      "cancel": {
+        "q": "Can I cancel anytime?",
+        "a": "Yes. Ordre Pro will be month-to-month with no lock-in when self-serve billing opens. During the beta, Pro is free for invited teams."
+      },
+      "multi": {
+        "q": "Can I use Ordre for multiple companies?",
+        "a": "Each project is its own space with its own suppliers, POs, approvals and storage quota. Ordre Pro lifts the single-project limit."
+      },
+      "security": {
+        "q": "How is access secured?",
+        "a": "Google Sign-In for auth, Firebase App Check (reCAPTCHA v3) on every request, Firestore/Storage security rules scoped to project membership with owner/editor/approver/viewer roles."
+      },
+      "import": {
+        "q": "Can I import my existing suppliers or accounting codes?",
+        "a": "Accounting codes import via CSV today. Supplier import is on the roadmap. Invoices — intentionally not, every invoice needs a human to map it back to the PO lines."
+      }
+    },
+    "finalCtaTitle": "Stop losing track of what you've committed.",
+    "finalCtaBody": "Create your first project in under a minute. Free forever for small teams."
   },
   "login": {
     "title": "Welcome back.",
@@ -146,7 +271,20 @@
     "recentActivityEmpty": "No activity yet. Things your team does will show up here.",
     "approvalsTitle": "Waiting on you",
     "approvalsEmpty": "Nothing to approve. All clear.",
-    "stubNotice": "The full views (POs, suppliers, approvals) land in the next iteration."
+    "approvalsAllCaughtUp": "Nothing waiting on you. Nice.",
+    "approvalsNotApprover": "You aren't an approver on this project.",
+    "activityEmpty": "No activity yet. Activity appears here as POs move through approval.",
+    "seeAll": "See all",
+    "stubNotice": "The full views (POs, suppliers, approvals) land in the next iteration.",
+    "activity": {
+      "created": "{{name}} created {{number}}",
+      "submitted": "{{number}} submitted for approval",
+      "approved": "{{name}} approved {{number}}",
+      "rejected": "{{name}} rejected {{number}}",
+      "closed": "{{number}} closed",
+      "invoice": "Invoice {{invoice}} uploaded to {{number}}",
+      "paid": "Invoice {{invoice}} marked as paid"
+    }
   },
   "members": {
     "title": "Project members",
@@ -275,6 +413,7 @@
     "deletedToast": "File deleted",
     "addedToast": "File uploaded",
     "uploadError": "Couldn't upload the file. Please try again.",
+    "quotaExceeded": "This project has reached its storage quota. Delete some files or upgrade to Pro for more space.",
     "fileTooLarge": "File too large. Max 25 MB."
   },
   "supplierDocs": {
@@ -418,12 +557,129 @@
     "featurePro4": "Priority support",
     "featurePro5": "Everything we ship next",
     "loadingLive": "Loading live prices…",
-    "fallbackNote": "Final price confirmed at checkout, in your currency."
+    "fallbackNote": "Final price confirmed at checkout, in your currency.",
+    "betaTag": "Beta",
+    "inviteOnly": "Invite-only",
+    "inviteOnlyNote": "during beta"
+  },
+  "footer": {
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "cookies": "Cookies"
+  },
+  "consent": {
+    "bannerLabel": "Cookie preferences",
+    "title": "Cookies, the short version.",
+    "body": "We use cookies to keep you signed in. With your permission we also measure how Ordre is used (Firebase Analytics, PostHog — both hosted in the EU) so we can make it better. No ads, no third-party tracking.",
+    "acceptAll": "Accept all",
+    "reject": "Reject non-essential",
+    "customise": "Customise",
+    "customiseTitle": "Cookie preferences",
+    "customiseBody": "Choose which categories are on. You can change this later from the Privacy page.",
+    "savePrefs": "Save preferences",
+    "alwaysOn": "Always on",
+    "necessary": {
+      "name": "Necessary",
+      "body": "Sign-in session, theme, selected language. Ordre can't work without these."
+    },
+    "analytics": {
+      "name": "Analytics & diagnostics",
+      "body": "Firebase Analytics + PostHog: aggregate usage, funnels, and automatic error reports. Hosted in the EU, never shared with ad networks."
+    },
+    "reopenCta": "Change cookie preferences"
+  },
+  "terms": {
+    "metaTitle": "Terms of Service — Ordre",
+    "metaDescription": "The rules that apply when you use Ordre. Plain language. No dark patterns.",
+    "eyebrow": "Legal",
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: 21 April 2026",
+    "sections": {
+      "acceptance": {
+        "title": "Acceptance of terms",
+        "body": "By creating an account or using Ordre, you agree to these terms. If you don't agree, please don't use the service. These terms apply to everyone on your team who uses your workspace."
+      },
+      "account": {
+        "title": "Your account",
+        "body": "You need a valid email address and a Google Sign-In account to use Ordre. Keep your credentials secure — you're responsible for any activity on your account. Accurate account information (name, email) helps your teammates know who's approving what."
+      },
+      "plans": {
+        "title": "Plans and billing",
+        "body": "Ordre Free includes a single project and 300 MB of file storage. Ordre Pro lifts those limits (10 GB per project, unlimited projects) and is invite-only during our beta — self-serve billing is coming. Prices and included quotas may change with reasonable notice."
+      },
+      "content": {
+        "title": "Your content",
+        "body": "You keep ownership of everything you upload or create in Ordre — purchase orders, invoices, supplier data, attachments. You grant us a limited license to store and process this content solely to provide the service. We do not sell or share your data with third parties beyond the infrastructure providers required to run Ordre (Firebase / Google Cloud, based in the EU where possible)."
+      },
+      "acceptableUse": {
+        "title": "Acceptable use",
+        "body": "Don't use Ordre to store illegal content, attempt to disrupt the service, scrape data you don't own, or circumvent security measures (including App Check enforcement, storage quotas, or role permissions). We reserve the right to suspend accounts that clearly violate these principles."
+      },
+      "termination": {
+        "title": "Termination",
+        "body": "You can close your account at any time by contacting us. We can suspend or close accounts that breach these terms or that are inactive for an extended period. On termination you can export your data for a reasonable window before deletion."
+      },
+      "liability": {
+        "title": "Limitation of liability",
+        "body": "Ordre is provided \"as is\" during our beta. We take availability seriously but can't guarantee uninterrupted service. To the maximum extent allowed by law, we aren't liable for indirect or consequential damages (lost profits, lost data beyond our backups, etc.)."
+      },
+      "governing": {
+        "title": "Governing law",
+        "body": "These terms are governed by the laws of Spain. Any disputes will be resolved in the courts of Barcelona, without prejudice to mandatory consumer-protection laws that apply where you live."
+      },
+      "contact": {
+        "title": "Contact",
+        "body": "Questions about these terms? Reach us at"
+      }
+    }
+  },
+  "privacy": {
+    "metaTitle": "Privacy Policy — Ordre",
+    "metaDescription": "What data we collect, why, and your rights under GDPR.",
+    "eyebrow": "Legal",
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: 21 April 2026",
+    "sections": {
+      "controller": {
+        "title": "Who we are",
+        "body": "Ordre is operated from Barcelona, Spain. For the purposes of GDPR we act as the data controller for account data and as a data processor for the content you upload (purchase orders, invoices, attachments)."
+      },
+      "data": {
+        "title": "What we collect",
+        "body": "Account data: name, email, profile picture (all from Google Sign-In). Workspace content: projects, suppliers, POs, invoices, attachments you upload. Technical data: anonymized usage logs, error reports, App Check attestations. We don't use tracking cookies or third-party analytics beyond Firebase's own."
+      },
+      "purpose": {
+        "title": "Why we use it",
+        "body": "To provide the service, authenticate you, enforce storage and plan limits, send transactional emails (project invites, password resets), and investigate security incidents. We never use your content to train AI models or sell it to third parties."
+      },
+      "sharing": {
+        "title": "Who we share it with",
+        "body": "Our infrastructure provider is Google Cloud (Firebase). Data is stored in the europe-west1 region. We use a Namecheap Private Email transactional SMTP to send project-invite emails. We do not share data with ad networks, data brokers, or any other third party."
+      },
+      "storage": {
+        "title": "How long we keep it",
+        "body": "Active accounts: for as long as you have an account with us. Closed accounts: we delete your content within 30 days of account closure, except where legal retention obligations apply (invoices may need to be retained under Spanish tax law; those are your copies, held in our system on your behalf)."
+      },
+      "rights": {
+        "title": "Your rights",
+        "body": "You can access, export, correct, or delete your data at any time — log into Ordre or email us. You have the right to object, restrict processing, or lodge a complaint with the AEPD (Spanish Data Protection Agency) if you think we've mishandled your data."
+      },
+      "cookies": {
+        "title": "Cookies",
+        "body": "Necessary: Firebase Auth session cookies to keep you signed in, plus local-storage for your theme and language. Analytics (only with your consent): Firebase Analytics and PostHog first-party cookies to measure aggregate usage and diagnose errors. No advertising or third-party tracking cookies."
+      },
+      "contact": {
+        "title": "Contact",
+        "body": "Data-protection queries go to"
+      }
+    }
   },
   "paywall": {
     "unlockProjectsTitle": "Unlock unlimited projects",
     "unlockProjectsBody": "The Free plan covers 1 project. Upgrade to Ordre Pro to create as many as you need and invite your whole team.",
+    "betaBody": "Ordre Pro is invite-only during our beta. Drop us a line and we'll set you up within a day.",
     "upgradeCta": "Upgrade to Pro",
+    "requestInviteCta": "Request an invite",
     "cancel": "Not now",
     "dismissedToast": "You're still on Free. You can upgrade any time.",
     "purchasedToast": "Welcome to Ordre Pro. Thanks!",
@@ -512,6 +768,8 @@
   "projectSettings": {
     "pageTitle": "Project settings",
     "subtitle": "Advanced settings for {{project}}. Only the owner can make changes here.",
+    "storageTitle": "Storage",
+    "storageHint": "Total size of all files uploaded to this project — invoices, PO attachments, supplier documents.",
     "generalTitle": "General",
     "nameLabel": "Project name",
     "descriptionLabel": "Description",
@@ -686,8 +944,21 @@
       "issueDate": "Issued",
       "dueDate": "Due",
       "total": "Total",
-      "uploadedBy": "Uploaded by"
+      "uploadedBy": "Uploaded by",
+      "status": "Status"
     },
+    "paidStatusLabel": "Payment status",
+    "paidFilter": {
+      "all": "All payment states",
+      "paid": "Paid",
+      "unpaid": "Unpaid",
+      "overdue": "Overdue"
+    },
+    "markPaidCta": "Mark as paid",
+    "markUnpaidCta": "Mark as unpaid",
+    "paidToast": "Invoice marked as paid",
+    "unpaidToast": "Invoice marked as unpaid",
+    "paidByOn": "Paid by {{name}} on {{date}}",
     "totals": {
       "totalInvoiced": "Total invoiced",
       "invoiceCount": "Invoices",

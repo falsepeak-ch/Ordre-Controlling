@@ -47,6 +47,13 @@
     "remove": "Treu",
     "select": "Selecciona"
   },
+  "time": {
+    "justNow": "ara mateix",
+    "minutesAgo": "fa {{n}} min",
+    "hoursAgo": "fa {{n}} h",
+    "daysAgo": "fa {{n}} d",
+    "weeksAgo": "fa {{n}} set."
+  },
   "landing": {
     "heroEyebrow": "Procurement · Aprovacions · Conciliació",
     "heroTitle": "Saps exactament què t'has compromès a gastar, què ja s'ha facturat i què et queda per gastar.",
@@ -69,7 +76,125 @@
     "previewLine3": "Tauleta de cafè, roure",
     "previewLine4": "Làmpada de peu ceràmica",
     "footerNote": "Dissenyat per a equips de producció audiovisual i petites oficines.",
-    "footerCopy": "© {{year}} Ordre"
+    "footerCopy": "© {{year}} Ordre",
+    "meta": {
+      "title": "Ordre — Ordres de compra, aprovacions i conciliació de factures",
+      "description": "Crea ordres de compra, passa-les per les regles d'aprovació del teu equip i concilia cada factura línia per línia. Monocromàtic. Sense fulls de càlcul."
+    },
+    "heroBullet1": "Gratis per sempre amb un projecte",
+    "heroBullet2": "Sense targeta de crèdit",
+    "heroBullet3": "Català / Castellà / Anglès",
+    "logosLabel": "La fan servir petits equips de Barcelona, Berlín i més enllà",
+    "logos": {
+      "verdera": "Studio Verdera",
+      "tallerpol": "Taller Pol",
+      "escenic": "Escènic",
+      "martianomusic": "Martiano Music",
+      "berlinfilm": "Berlin Film Lab"
+    },
+    "contrast": {
+      "beforeKicker": "Sense Ordre",
+      "beforeTitle": "Fulls de càlcul, fils de correu, versió-2-FINAL.xlsx",
+      "beforeItem1": "Cap lloc on veure què encara està obert.",
+      "beforeItem2": "Les aprovacions viuen a DM de Slack i captures.",
+      "beforeItem3": "Les factures s'acumulen i ningú sap què s'ha pagat.",
+      "beforeItem4": "La productora repica les mateixes dades tres vegades.",
+      "afterKicker": "Amb Ordre",
+      "afterTitle": "Un sol taulell. Totals en directe. Registre cercable.",
+      "afterItem1": "Totes les PO obertes en una llista, amb el pressupost restant al costat.",
+      "afterItem2": "Aprovacions registrades a la mateixa PO, amb nom i marca temporal.",
+      "afterItem3": "Les factures s'enganxen a les línies — les sumes es fan soles.",
+      "afterItem4": "Dades de proveïdors omplertes un cop i reutilitzades a cada PO."
+    },
+    "howEyebrow": "Com funciona",
+    "howTitle": "Comprometre, aprovar, conciliar — en aquest ordre.",
+    "howSubtitle": "Els tres passos que porten una ordre de compra de la idea a la factura final. Ordre imposa l'ordre i guarda les proves pel camí.",
+    "featuresEyebrow": "Què hi ha a dins",
+    "featuresTitle": "Tot el que necessita un equip petit. Res que el converteixi en un programa de comptabilitat.",
+    "featuresSubtitle": "Evitem la inflació de funcions. Si no forma part de passar PO per aprovació i conciliació, no hi entra.",
+    "features": {
+      "suppliers": {
+        "title": "Directori de proveïdors",
+        "body": "NIF, condicions de pagament, dades bancàries, contractes en PDF. Reutilitzables a cada PO."
+      },
+      "categories": {
+        "title": "Categories i codis",
+        "body": "Els codis comptables assignats per línia, importables via CSV, amb el format del teu assessor."
+      },
+      "roles": {
+        "title": "Accés per rols",
+        "body": "Propietari, editor, aprovador, observador — aplicats a Firestore, no es pot saltar des del client."
+      },
+      "approvals": {
+        "title": "Cua d'aprovacions",
+        "body": "Les PO pendents arriben a la teva cua. Aprova amb factura, rebutja amb motiu, tot queda registrat."
+      },
+      "invoices": {
+        "title": "Factures línia per línia",
+        "body": "Assigna els imports de la factura a les línies de la PO. El saldo restant s'actualitza al moment."
+      },
+      "reports": {
+        "title": "Informes i gràfics",
+        "body": "Compromès vs. facturat en el temps, principals proveïdors, despesa per categoria. No substitueix el teu assessor — et dona senyals."
+      },
+      "i18n": {
+        "title": "Català / Castellà / Anglès",
+        "body": "Traduccions natives amb format correcte de dates, moneda i números per cada idioma."
+      },
+      "darkMode": {
+        "title": "Mode fosc per defecte",
+        "body": "Disseny monocromàtic que respecta les preferències del sistema. Sense colors de marca, sense neó."
+      }
+    },
+    "quotesEyebrow": "Dels estudis",
+    "quotesTitle": "Algunes persones amb qui l'hem construït.",
+    "quotes": {
+      "verdera": {
+        "body": "Portàvem noranta proveïdors en un full de càlcul. Ordre el va matar en una setmana — i els cicles d'aprovació van passar de tres dies a mig.",
+        "name": "Helena Vives",
+        "role": "Productora executiva, Studio Verdera"
+      },
+      "tallerpol": {
+        "body": "Perseguia factures per WhatsApp. Ara obro la PO, veig què queda a cada línia i demano allò. Un alleujament.",
+        "name": "Pol Benavent",
+        "role": "Fundador, Taller Pol"
+      },
+      "escenic": {
+        "body": "El registre d'aprovacions és la peça que no sabia que necessitava. Cada 'qui-ho-va-aprovar' té una resposta única ara.",
+        "name": "Sílvia Gomis",
+        "role": "Direcció de producció, Escènic"
+      }
+    },
+    "faqEyebrow": "Preguntes freqüents",
+    "faqTitle": "Dubtes habituals.",
+    "faq": {
+      "data": {
+        "q": "On s'emmagatzemen les meves dades?",
+        "a": "A Firebase (Google Cloud), regió europe-west1. Són teves, les pots exportar quan vulguis i no les compartim amb tercers. Més detalls a la Política de privadesa."
+      },
+      "pricing": {
+        "q": "El pla gratuït és realment gratuït?",
+        "a": "Sí. Un projecte, PO, proveïdors i factures il·limitats, 300 MB d'emmagatzematge. No posarem un mur de pagament sorpresa a cap cosa que fos gratis."
+      },
+      "cancel": {
+        "q": "Puc cancel·lar quan vulgui?",
+        "a": "Sí. Ordre Pro serà mes a mes sense permanència quan obrim l'autoservei. Durant la beta és gratis per als equips convidats."
+      },
+      "multi": {
+        "q": "Puc fer servir Ordre per a diverses empreses?",
+        "a": "Cada projecte és un espai independent amb els seus proveïdors, PO, aprovacions i quota. Ordre Pro treu el límit d'un projecte."
+      },
+      "security": {
+        "q": "Com es protegeix l'accés?",
+        "a": "Google Sign-In per autenticar, Firebase App Check (reCAPTCHA v3) a cada petició, regles de seguretat a Firestore/Storage per pertinença al projecte amb rols de propietari/editor/aprovador/observador."
+      },
+      "import": {
+        "q": "Puc importar proveïdors o codis comptables existents?",
+        "a": "Els codis es poden importar per CSV avui. La importació de proveïdors està al roadmap. Les factures — expressament no, cada factura necessita algú que l'assigni a les línies."
+      }
+    },
+    "finalCtaTitle": "Deixa de perdre el fil del que t'has compromès.",
+    "finalCtaBody": "Crea el primer projecte en menys d'un minut. Gratis per sempre per a equips petits."
   },
   "login": {
     "title": "Torna a entrar.",
@@ -146,7 +271,20 @@
     "recentActivityEmpty": "Encara no hi ha activitat. Les accions del teu equip apareixeran aquí.",
     "approvalsTitle": "Pendents d'aprovar",
     "approvalsEmpty": "Res a aprovar. Al dia.",
-    "stubNotice": "Les vistes completes (ordres, proveïdors, aprovacions) es connecten a la següent iteració."
+    "approvalsAllCaughtUp": "Res pendent per a tu. Bé.",
+    "approvalsNotApprover": "No ets aprovador d'aquest projecte.",
+    "activityEmpty": "Encara no hi ha activitat. Aquí apareix l'activitat a mesura que les ordres van passant per aprovació.",
+    "seeAll": "Veure-ho tot",
+    "stubNotice": "Les vistes completes (ordres, proveïdors, aprovacions) es connecten a la següent iteració.",
+    "activity": {
+      "created": "{{name}} ha creat {{number}}",
+      "submitted": "{{number}} enviada a aprovació",
+      "approved": "{{name}} ha aprovat {{number}}",
+      "rejected": "{{name}} ha rebutjat {{number}}",
+      "closed": "{{number}} tancada",
+      "invoice": "Factura {{invoice}} pujada a {{number}}",
+      "paid": "Factura {{invoice}} marcada com a pagada"
+    }
   },
   "members": {
     "title": "Membres del projecte",
@@ -275,6 +413,7 @@
     "deletedToast": "Fitxer eliminat",
     "addedToast": "Fitxer pujat",
     "uploadError": "No hem pogut pujar el fitxer. Torna-ho a provar.",
+    "quotaExceeded": "Aquest projecte ha arribat al límit d'emmagatzematge. Esborra fitxers o passa a Pro per obtenir més espai.",
     "fileTooLarge": "El fitxer és massa gran. Màxim 25 MB."
   },
   "supplierDocs": {
@@ -418,12 +557,129 @@
     "featurePro4": "Suport prioritari",
     "featurePro5": "Tot el que arriba a les properes versions",
     "loadingLive": "Carregant preus actuals…",
-    "fallbackNote": "El preu final el confirmem al checkout, en la teva moneda."
+    "fallbackNote": "El preu final el confirmem al checkout, en la teva moneda.",
+    "betaTag": "Beta",
+    "inviteOnly": "Per invitació",
+    "inviteOnlyNote": "durant la beta"
+  },
+  "footer": {
+    "terms": "Condicions",
+    "privacy": "Privadesa",
+    "cookies": "Galetes"
+  },
+  "consent": {
+    "bannerLabel": "Preferències de galetes",
+    "title": "Galetes, versió curta.",
+    "body": "Fem servir galetes per mantenir-te connectat. Amb el teu permís també mesurem com s'usa Ordre (Firebase Analytics, PostHog — tots dos a la UE) per millorar-lo. Sense anuncis ni rastreig de tercers.",
+    "acceptAll": "Accepta-ho tot",
+    "reject": "Rebutja les no essencials",
+    "customise": "Personalitza",
+    "customiseTitle": "Preferències de galetes",
+    "customiseBody": "Tria quines categories vols activar. Ho pots canviar més endavant des de la pàgina de Privadesa.",
+    "savePrefs": "Desa les preferències",
+    "alwaysOn": "Sempre actiu",
+    "necessary": {
+      "name": "Necessàries",
+      "body": "Sessió d'accés, tema i idioma. Sense això Ordre no funciona."
+    },
+    "analytics": {
+      "name": "Analítiques i diagnòstic",
+      "body": "Firebase Analytics + PostHog: ús agregat, embuts de conversió i informes d'errors automàtics. Allotjat a la UE, mai compartit amb xarxes publicitàries."
+    },
+    "reopenCta": "Canvia les preferències de galetes"
+  },
+  "terms": {
+    "metaTitle": "Condicions del servei — Ordre",
+    "metaDescription": "Les regles quan fas servir Ordre. Llenguatge planer. Cap truc.",
+    "eyebrow": "Legal",
+    "title": "Condicions del servei",
+    "lastUpdated": "Última actualització: 21 d'abril de 2026",
+    "sections": {
+      "acceptance": {
+        "title": "Acceptació",
+        "body": "En crear un compte o fer servir Ordre, acceptes aquestes condicions. Si no hi estàs d'acord, no facis servir el servei. Aquestes condicions s'apliquen a totes les persones del teu equip que fan servir el teu espai de treball."
+      },
+      "account": {
+        "title": "El teu compte",
+        "body": "Necessites un correu electrònic vàlid i un compte de Google per iniciar sessió. Manté les teves credencials segures: ets responsable de qualsevol activitat del compte. Una informació de compte precisa (nom, correu) ajuda els companys a saber qui aprova què."
+      },
+      "plans": {
+        "title": "Plans i facturació",
+        "body": "Ordre Free inclou un únic projecte i 300 MB d'emmagatzematge. Ordre Pro amplia aquests límits (10 GB per projecte, projectes il·limitats) i és per invitació durant la beta: la facturació autoservei arribarà més endavant. Els preus i quotes incloses poden canviar amb avís raonable."
+      },
+      "content": {
+        "title": "El teu contingut",
+        "body": "Mantens la propietat de tot el que puges o crees a Ordre: ordres de compra, factures, dades de proveïdors, adjunts. Ens dones una llicència limitada per emmagatzemar i processar aquest contingut només per proveir el servei. No venem ni compartim les teves dades amb tercers més enllà dels proveïdors d'infraestructura necessaris per fer funcionar Ordre (Firebase / Google Cloud, a la UE sempre que es pugui)."
+      },
+      "acceptableUse": {
+        "title": "Ús acceptable",
+        "body": "No facis servir Ordre per emmagatzemar contingut il·legal, interrompre el servei, fer scraping de dades que no són teves ni saltar-te mesures de seguretat (App Check, quotes d'emmagatzematge, rols). Podem suspendre comptes que incompleixin clarament aquests principis."
+      },
+      "termination": {
+        "title": "Baixa",
+        "body": "Pots tancar el compte quan vulguis contactant amb nosaltres. Podem suspendre o tancar comptes que incompleixin les condicions o que estiguin inactius durant molt de temps. En cas de baixa pots exportar les teves dades durant un període raonable abans que s'esborrin."
+      },
+      "liability": {
+        "title": "Limitació de responsabilitat",
+        "body": "Ordre s'ofereix \"tal qual\" durant la beta. Ens prenem seriosament la disponibilitat però no podem garantir un servei ininterromput. Amb el màxim permès per la llei, no som responsables de danys indirectes ni conseqüents (pèrdua de beneficis, pèrdua de dades més enllà de les nostres còpies de seguretat, etc.)."
+      },
+      "governing": {
+        "title": "Llei aplicable",
+        "body": "Aquestes condicions es regeixen per la legislació espanyola. Qualsevol disputa es resoldrà als jutjats de Barcelona, sense perjudici de les lleis de protecció al consumidor que s'apliquin on visquis."
+      },
+      "contact": {
+        "title": "Contacte",
+        "body": "Dubtes sobre aquestes condicions? Escriu-nos a"
+      }
+    }
+  },
+  "privacy": {
+    "metaTitle": "Política de privadesa — Ordre",
+    "metaDescription": "Quines dades recopilem, per què i els teus drets segons el RGPD.",
+    "eyebrow": "Legal",
+    "title": "Política de privadesa",
+    "lastUpdated": "Última actualització: 21 d'abril de 2026",
+    "sections": {
+      "controller": {
+        "title": "Qui som",
+        "body": "Ordre opera des de Barcelona. Als efectes del RGPD actuem com a responsable del tractament de les dades del compte i com a encarregat del tractament del contingut que puges (ordres de compra, factures, adjunts)."
+      },
+      "data": {
+        "title": "Què recopilem",
+        "body": "Dades del compte: nom, correu, foto de perfil (tot provinent de Google Sign-In). Contingut del teu espai: projectes, proveïdors, PO, factures, adjunts. Dades tècniques: registres d'ús anonimitzats, informes d'errors, atestacions d'App Check. No fem servir cookies de seguiment ni analítica de tercers més enllà de Firebase."
+      },
+      "purpose": {
+        "title": "Per què les fem servir",
+        "body": "Per proveir el servei, autenticar-te, aplicar els límits del pla, enviar correus transaccionals (invitacions, restabliments) i investigar incidents de seguretat. No fem servir el teu contingut per entrenar models d'IA ni el venem a tercers."
+      },
+      "sharing": {
+        "title": "Amb qui les compartim",
+        "body": "El nostre proveïdor d'infraestructura és Google Cloud (Firebase). Les dades s'emmagatzemen a la regió europe-west1. Fem servir un SMTP transaccional de Namecheap Private Email per enviar invitacions. No compartim dades amb xarxes publicitàries ni cap altre tercer."
+      },
+      "storage": {
+        "title": "Quant de temps les conservem",
+        "body": "Comptes actius: mentre el mantinguis. Comptes tancats: esborrem el teu contingut en 30 dies, excepte obligacions legals de conservació (les factures poden haver-se de conservar segons la llei fiscal espanyola; són còpies teves que conservem en el nostre sistema)."
+      },
+      "rights": {
+        "title": "Els teus drets",
+        "body": "Pots accedir, exportar, corregir o esborrar les teves dades en qualsevol moment: entra a Ordre o escriu-nos. Tens dret a oposar-te, limitar el tractament o presentar una reclamació a l'AEPD (Agència Espanyola de Protecció de Dades)."
+      },
+      "cookies": {
+        "title": "Galetes",
+        "body": "Necessàries: galetes de sessió de Firebase Auth per mantenir-te connectat, i emmagatzematge local per al tema i l'idioma. Analítiques (només amb el teu consentiment): galetes pròpies de Firebase Analytics i PostHog per mesurar l'ús agregat i diagnosticar errors. Cap galeta publicitària ni de seguiment extern."
+      },
+      "contact": {
+        "title": "Contacte",
+        "body": "Les consultes de protecció de dades van a"
+      }
+    }
   },
   "paywall": {
     "unlockProjectsTitle": "Desbloqueja projectes il·limitats",
     "unlockProjectsBody": "El pla Free inclou 1 projecte. Amb Ordre Pro en crees tants com necessitis i convides tot l'equip.",
+    "betaBody": "Ordre Pro és per invitació durant la beta. Escriu-nos i t'hi donem accés en un dia.",
     "upgradeCta": "Passa a Pro",
+    "requestInviteCta": "Demana invitació",
     "cancel": "Ara no",
     "dismissedToast": "T'hem mantingut al pla Free. Pots passar a Pro quan vulguis.",
     "purchasedToast": "Benvingut a Ordre Pro. Gràcies!",
@@ -512,6 +768,8 @@
   "projectSettings": {
     "pageTitle": "Configuració del projecte",
     "subtitle": "Ajustos avançats del projecte {{project}}. Només el propietari pot fer canvis aquí.",
+    "storageTitle": "Emmagatzematge",
+    "storageHint": "Mida total dels fitxers pujats a aquest projecte: factures, adjunts de PO, documents de proveïdors.",
     "generalTitle": "General",
     "nameLabel": "Nom del projecte",
     "descriptionLabel": "Descripció",
@@ -686,8 +944,21 @@
       "issueDate": "Emesa",
       "dueDate": "Venciment",
       "total": "Total",
-      "uploadedBy": "Pujada per"
+      "uploadedBy": "Pujada per",
+      "status": "Estat"
     },
+    "paidStatusLabel": "Estat de pagament",
+    "paidFilter": {
+      "all": "Tots els estats",
+      "paid": "Pagada",
+      "unpaid": "Pendent",
+      "overdue": "Vençuda"
+    },
+    "markPaidCta": "Marca com a pagada",
+    "markUnpaidCta": "Desmarca com a pagada",
+    "paidToast": "Factura marcada com a pagada",
+    "unpaidToast": "Factura marcada com a pendent",
+    "paidByOn": "Pagada per {{name}} el {{date}}",
     "totals": {
       "totalInvoiced": "Total facturat",
       "invoiceCount": "Factures",

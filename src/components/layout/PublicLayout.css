@@ -66,6 +66,21 @@
 }
 .public-footer-spacer { flex: 1; min-width: 24px; }
 
+.public-footer-link {
+  font-size: 13px;
+  color: var(--fg-muted);
+  padding: 4px 8px;
+  border-radius: var(--r-6, 6px);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.public-footer-link:hover { color: var(--fg-deep); background: var(--surface-muted); }
+.public-footer-linklike {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
 @media (max-width: 720px) {
   .public-nav { padding: var(--s-4); }
   .public-nav-link { display: none; }

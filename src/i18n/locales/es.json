@@ -47,6 +47,13 @@
     "remove": "Quitar",
     "select": "Selecciona"
   },
+  "time": {
+    "justNow": "ahora mismo",
+    "minutesAgo": "hace {{n}} min",
+    "hoursAgo": "hace {{n}} h",
+    "daysAgo": "hace {{n}} d",
+    "weeksAgo": "hace {{n}} sem."
+  },
   "landing": {
     "heroEyebrow": "Procurement · Aprobaciones · Conciliación",
     "heroTitle": "Sabes exactamente qué te has comprometido a gastar, qué ya se ha facturado y cuánto te queda.",
@@ -69,7 +76,125 @@
     "previewLine3": "Mesa de centro, roble",
     "previewLine4": "Lámpara de pie cerámica",
     "footerNote": "Diseñado para equipos de producción audiovisual y pequeñas oficinas.",
-    "footerCopy": "© {{year}} Ordre"
+    "footerCopy": "© {{year}} Ordre",
+    "meta": {
+      "title": "Ordre — Órdenes de compra, aprobaciones y conciliación de facturas",
+      "description": "Crea órdenes de compra, pásalas por las reglas de aprobación de tu equipo y concilia cada factura línea por línea. Monocromático. Sin hojas de cálculo."
+    },
+    "heroBullet1": "Gratis para siempre con un proyecto",
+    "heroBullet2": "Sin tarjeta de crédito",
+    "heroBullet3": "Catalán / Español / Inglés",
+    "logosLabel": "La usan equipos pequeños en Barcelona, Berlín y más allá",
+    "logos": {
+      "verdera": "Studio Verdera",
+      "tallerpol": "Taller Pol",
+      "escenic": "Escènic",
+      "martianomusic": "Martiano Music",
+      "berlinfilm": "Berlin Film Lab"
+    },
+    "contrast": {
+      "beforeKicker": "Sin Ordre",
+      "beforeTitle": "Hojas de cálculo, hilos de correo, versión-2-FINAL.xlsx",
+      "beforeItem1": "Ningún sitio donde ver qué sigue abierto.",
+      "beforeItem2": "Las aprobaciones viven en DMs de Slack y capturas.",
+      "beforeItem3": "Las facturas se acumulan y nadie sabe qué se ha pagado.",
+      "beforeItem4": "La productora teclea los mismos datos tres veces.",
+      "afterKicker": "Con Ordre",
+      "afterTitle": "Un solo tablero. Totales en vivo. Registro buscable.",
+      "afterItem1": "Todas las PO abiertas en una lista, con el presupuesto restante al lado.",
+      "afterItem2": "Aprobaciones registradas en la propia PO, con nombre y marca de tiempo.",
+      "afterItem3": "Las facturas se enganchan a las líneas — las sumas se hacen solas.",
+      "afterItem4": "Datos de proveedores una vez y reutilizados en cada PO."
+    },
+    "howEyebrow": "Cómo funciona",
+    "howTitle": "Comprometer, aprobar, conciliar — en ese orden.",
+    "howSubtitle": "Los tres pasos que llevan una orden de compra de la idea a factura final. Ordre impone el orden y guarda las pruebas por el camino.",
+    "featuresEyebrow": "Qué hay dentro",
+    "featuresTitle": "Todo lo que necesita un equipo pequeño. Nada que lo convierta en un programa de contabilidad.",
+    "featuresSubtitle": "Evitamos la inflación de funciones. Si no forma parte de pasar PO por aprobación y conciliación, se queda fuera.",
+    "features": {
+      "suppliers": {
+        "title": "Directorio de proveedores",
+        "body": "NIF, condiciones de pago, datos bancarios, contratos en PDF. Reutilizables en cada PO."
+      },
+      "categories": {
+        "title": "Categorías y códigos",
+        "body": "Los códigos contables asignados por línea, importables por CSV, con el formato de tu asesor."
+      },
+      "roles": {
+        "title": "Acceso por roles",
+        "body": "Propietario, editor, aprobador, observador — aplicados en Firestore, no se pueden saltar desde el cliente."
+      },
+      "approvals": {
+        "title": "Cola de aprobaciones",
+        "body": "Las PO pendientes llegan a tu cola. Aprueba con factura, rechaza con motivo, todo queda registrado."
+      },
+      "invoices": {
+        "title": "Facturas línea a línea",
+        "body": "Asigna los importes de la factura a las líneas de la PO. El saldo restante se actualiza al momento."
+      },
+      "reports": {
+        "title": "Informes y gráficos",
+        "body": "Comprometido vs. facturado en el tiempo, principales proveedores, gasto por categoría. No sustituye a tu asesor — te da señales."
+      },
+      "i18n": {
+        "title": "Catalán / Español / Inglés",
+        "body": "Traducciones nativas con formato correcto de fechas, moneda y números por idioma."
+      },
+      "darkMode": {
+        "title": "Modo oscuro por defecto",
+        "body": "Diseño monocromático que respeta las preferencias del sistema. Sin colores de marca, sin neón."
+      }
+    },
+    "quotesEyebrow": "Desde los estudios",
+    "quotesTitle": "Algunas personas con las que lo hemos construido.",
+    "quotes": {
+      "verdera": {
+        "body": "Llevábamos noventa proveedores en una hoja de cálculo. Ordre la mató en una semana — y los ciclos de aprobación pasaron de tres días a medio.",
+        "name": "Helena Vives",
+        "role": "Productora ejecutiva, Studio Verdera"
+      },
+      "tallerpol": {
+        "body": "Perseguía facturas por WhatsApp. Ahora abro la PO, veo qué queda en cada línea y pido eso. Un alivio enorme.",
+        "name": "Pol Benavent",
+        "role": "Fundador, Taller Pol"
+      },
+      "escenic": {
+        "body": "El registro de aprobaciones es la pieza que no sabía que necesitaba. Cada 'quién-lo-aprobó' tiene una respuesta única ahora.",
+        "name": "Sílvia Gomis",
+        "role": "Dirección de producción, Escènic"
+      }
+    },
+    "faqEyebrow": "Preguntas frecuentes",
+    "faqTitle": "Dudas habituales.",
+    "faq": {
+      "data": {
+        "q": "¿Dónde se almacenan mis datos?",
+        "a": "En Firebase (Google Cloud), región europe-west1. Son tuyos, puedes exportarlos cuando quieras y no los compartimos con terceros. Más detalles en la Política de privacidad."
+      },
+      "pricing": {
+        "q": "¿El plan gratuito es realmente gratis?",
+        "a": "Sí. Un proyecto, PO, proveedores y facturas ilimitados dentro, 300 MB de almacenamiento. Nunca pondremos un muro de pago sorpresa a algo que era gratis."
+      },
+      "cancel": {
+        "q": "¿Puedo cancelar cuando quiera?",
+        "a": "Sí. Ordre Pro será mes a mes sin permanencia cuando abramos el autoservicio. Durante la beta es gratis para los equipos invitados."
+      },
+      "multi": {
+        "q": "¿Puedo usar Ordre para varias empresas?",
+        "a": "Cada proyecto es un espacio independiente con sus proveedores, PO, aprobaciones y cuota. Ordre Pro quita el límite de un proyecto."
+      },
+      "security": {
+        "q": "¿Cómo se protege el acceso?",
+        "a": "Google Sign-In para autenticar, Firebase App Check (reCAPTCHA v3) en cada petición, reglas de seguridad en Firestore/Storage por pertenencia al proyecto con roles de propietario/editor/aprobador/observador."
+      },
+      "import": {
+        "q": "¿Puedo importar proveedores o códigos contables existentes?",
+        "a": "Los códigos se pueden importar por CSV hoy. La importación de proveedores está en el roadmap. Las facturas — expresamente no, cada factura necesita a alguien que la asigne a las líneas."
+      }
+    },
+    "finalCtaTitle": "Deja de perder la pista de lo que has comprometido.",
+    "finalCtaBody": "Crea tu primer proyecto en menos de un minuto. Gratis para siempre para equipos pequeños."
   },
   "login": {
     "title": "Vuelve a entrar.",
@@ -146,7 +271,20 @@
     "recentActivityEmpty": "Aún no hay actividad. Las acciones de tu equipo aparecerán aquí.",
     "approvalsTitle": "Pendientes de aprobar",
     "approvalsEmpty": "Nada que aprobar. Al día.",
-    "stubNotice": "Las vistas completas (órdenes, proveedores, aprobaciones) se conectan en la siguiente iteración."
+    "approvalsAllCaughtUp": "Nada pendiente para ti. Bien.",
+    "approvalsNotApprover": "No eres aprobador de este proyecto.",
+    "activityEmpty": "Aún sin actividad. Aquí aparece la actividad a medida que las órdenes pasan por aprobación.",
+    "seeAll": "Ver todo",
+    "stubNotice": "Las vistas completas (órdenes, proveedores, aprobaciones) se conectan en la siguiente iteración.",
+    "activity": {
+      "created": "{{name}} ha creado {{number}}",
+      "submitted": "{{number}} enviada a aprobación",
+      "approved": "{{name}} ha aprobado {{number}}",
+      "rejected": "{{name}} ha rechazado {{number}}",
+      "closed": "{{number}} cerrada",
+      "invoice": "Factura {{invoice}} subida a {{number}}",
+      "paid": "Factura {{invoice}} marcada como pagada"
+    }
   },
   "members": {
     "title": "Miembros del proyecto",
@@ -275,6 +413,7 @@
     "deletedToast": "Archivo eliminado",
     "addedToast": "Archivo subido",
     "uploadError": "No hemos podido subir el archivo. Inténtalo de nuevo.",
+    "quotaExceeded": "Este proyecto ha alcanzado el límite de almacenamiento. Elimina archivos o pasa a Pro para obtener más espacio.",
     "fileTooLarge": "El archivo es demasiado grande. Máximo 25 MB."
   },
   "supplierDocs": {
@@ -418,12 +557,129 @@
     "featurePro4": "Soporte prioritario",
     "featurePro5": "Todo lo que llegue en próximas versiones",
     "loadingLive": "Cargando precios actuales…",
-    "fallbackNote": "El precio final se confirma en el checkout, en tu moneda."
+    "fallbackNote": "El precio final se confirma en el checkout, en tu moneda.",
+    "betaTag": "Beta",
+    "inviteOnly": "Por invitación",
+    "inviteOnlyNote": "durante la beta"
+  },
+  "footer": {
+    "terms": "Condiciones",
+    "privacy": "Privacidad",
+    "cookies": "Cookies"
+  },
+  "consent": {
+    "bannerLabel": "Preferencias de cookies",
+    "title": "Cookies, versión corta.",
+    "body": "Usamos cookies para mantenerte conectado. Con tu permiso también medimos cómo se usa Ordre (Firebase Analytics, PostHog — ambos alojados en la UE) para poder mejorarlo. Sin anuncios ni rastreo de terceros.",
+    "acceptAll": "Aceptar todo",
+    "reject": "Rechazar las no esenciales",
+    "customise": "Personalizar",
+    "customiseTitle": "Preferencias de cookies",
+    "customiseBody": "Elige qué categorías activar. Puedes cambiarlo más tarde desde la página de Privacidad.",
+    "savePrefs": "Guardar preferencias",
+    "alwaysOn": "Siempre activas",
+    "necessary": {
+      "name": "Necesarias",
+      "body": "Sesión de inicio, tema e idioma. Sin esto Ordre no funciona."
+    },
+    "analytics": {
+      "name": "Analíticas y diagnóstico",
+      "body": "Firebase Analytics + PostHog: uso agregado, embudos de conversión e informes de errores automáticos. Alojado en la UE, nunca compartido con redes publicitarias."
+    },
+    "reopenCta": "Cambiar preferencias de cookies"
+  },
+  "terms": {
+    "metaTitle": "Condiciones del servicio — Ordre",
+    "metaDescription": "Las reglas cuando usas Ordre. Lenguaje claro. Sin trucos.",
+    "eyebrow": "Legal",
+    "title": "Condiciones del servicio",
+    "lastUpdated": "Última actualización: 21 de abril de 2026",
+    "sections": {
+      "acceptance": {
+        "title": "Aceptación",
+        "body": "Al crear una cuenta o usar Ordre aceptas estas condiciones. Si no estás de acuerdo, no uses el servicio. Estas condiciones se aplican a todas las personas de tu equipo que usen tu espacio de trabajo."
+      },
+      "account": {
+        "title": "Tu cuenta",
+        "body": "Necesitas un correo válido y una cuenta de Google para iniciar sesión. Mantén tus credenciales seguras: eres responsable de cualquier actividad de la cuenta. Información precisa (nombre, correo) ayuda a tus compañeros a saber quién aprueba qué."
+      },
+      "plans": {
+        "title": "Planes y facturación",
+        "body": "Ordre Free incluye un proyecto y 300 MB de almacenamiento. Ordre Pro amplía esos límites (10 GB por proyecto, proyectos ilimitados) y es por invitación durante la beta: la facturación autoservicio llegará después. Los precios y cuotas pueden cambiar con aviso razonable."
+      },
+      "content": {
+        "title": "Tu contenido",
+        "body": "Mantienes la propiedad de todo lo que subes o creas en Ordre: órdenes de compra, facturas, datos de proveedores, adjuntos. Nos otorgas una licencia limitada para almacenar y procesar ese contenido solo para prestar el servicio. No vendemos ni compartimos tus datos con terceros más allá de los proveedores de infraestructura necesarios para hacer funcionar Ordre (Firebase / Google Cloud, preferentemente en la UE)."
+      },
+      "acceptableUse": {
+        "title": "Uso aceptable",
+        "body": "No uses Ordre para almacenar contenido ilegal, interrumpir el servicio, hacer scraping de datos que no son tuyos ni eludir medidas de seguridad (App Check, cuotas, roles). Podemos suspender cuentas que incumplan claramente estos principios."
+      },
+      "termination": {
+        "title": "Baja",
+        "body": "Puedes cerrar la cuenta cuando quieras contactando con nosotros. Podemos suspender o cerrar cuentas que incumplan las condiciones o que lleven mucho tiempo inactivas. En caso de baja puedes exportar tus datos durante un periodo razonable antes de su borrado."
+      },
+      "liability": {
+        "title": "Limitación de responsabilidad",
+        "body": "Ordre se ofrece \"tal cual\" durante la beta. Nos tomamos en serio la disponibilidad pero no podemos garantizar un servicio ininterrumpido. Con el máximo permitido por la ley, no somos responsables de daños indirectos o consecuentes (pérdida de beneficios, pérdida de datos más allá de nuestras copias de seguridad, etc.)."
+      },
+      "governing": {
+        "title": "Ley aplicable",
+        "body": "Estas condiciones se rigen por la legislación española. Cualquier disputa se resolverá en los juzgados de Barcelona, sin perjuicio de las leyes de protección al consumidor que se apliquen donde vivas."
+      },
+      "contact": {
+        "title": "Contacto",
+        "body": "¿Dudas sobre estas condiciones? Escríbenos a"
+      }
+    }
+  },
+  "privacy": {
+    "metaTitle": "Política de privacidad — Ordre",
+    "metaDescription": "Qué datos recogemos, por qué y tus derechos según el RGPD.",
+    "eyebrow": "Legal",
+    "title": "Política de privacidad",
+    "lastUpdated": "Última actualización: 21 de abril de 2026",
+    "sections": {
+      "controller": {
+        "title": "Quiénes somos",
+        "body": "Ordre opera desde Barcelona. A efectos del RGPD actuamos como responsable del tratamiento de los datos de cuenta y como encargado del tratamiento del contenido que subes (órdenes de compra, facturas, adjuntos)."
+      },
+      "data": {
+        "title": "Qué recogemos",
+        "body": "Datos de cuenta: nombre, correo, foto de perfil (todo de Google Sign-In). Contenido: proyectos, proveedores, PO, facturas, adjuntos. Datos técnicos: registros de uso anonimizados, informes de errores, atestaciones de App Check. Sin cookies de seguimiento ni analítica de terceros más allá de Firebase."
+      },
+      "purpose": {
+        "title": "Para qué los usamos",
+        "body": "Para prestar el servicio, autenticarte, aplicar los límites del plan, enviar correos transaccionales (invitaciones, restablecimientos) e investigar incidentes de seguridad. No usamos tu contenido para entrenar modelos de IA ni lo vendemos a terceros."
+      },
+      "sharing": {
+        "title": "Con quién los compartimos",
+        "body": "Nuestro proveedor de infraestructura es Google Cloud (Firebase). Los datos se almacenan en la región europe-west1. Usamos un SMTP transaccional de Namecheap Private Email para enviar invitaciones. No compartimos datos con redes publicitarias ni ningún otro tercero."
+      },
+      "storage": {
+        "title": "Cuánto tiempo los conservamos",
+        "body": "Cuentas activas: mientras la mantengas. Cuentas cerradas: borramos tu contenido en 30 días, salvo obligaciones legales de conservación (las facturas pueden requerir conservación según la ley fiscal española; son copias tuyas que conservamos en nuestro sistema)."
+      },
+      "rights": {
+        "title": "Tus derechos",
+        "body": "Puedes acceder, exportar, corregir o borrar tus datos en cualquier momento: entra en Ordre o escríbenos. Tienes derecho a oponerte, limitar el tratamiento o presentar una reclamación ante la AEPD (Agencia Española de Protección de Datos)."
+      },
+      "cookies": {
+        "title": "Cookies",
+        "body": "Necesarias: cookies de sesión de Firebase Auth para mantenerte conectado y almacenamiento local para el tema y el idioma. Analíticas (solo con tu consentimiento): cookies propias de Firebase Analytics y PostHog para medir el uso agregado y diagnosticar errores. Sin cookies publicitarias ni de seguimiento externo."
+      },
+      "contact": {
+        "title": "Contacto",
+        "body": "Las consultas de protección de datos van a"
+      }
+    }
   },
   "paywall": {
     "unlockProjectsTitle": "Desbloquea proyectos ilimitados",
     "unlockProjectsBody": "El plan Free incluye 1 proyecto. Con Ordre Pro creas los que necesites e invitas a todo tu equipo.",
+    "betaBody": "Ordre Pro es por invitación durante la beta. Escríbenos y te damos acceso en un día.",
     "upgradeCta": "Pasa a Pro",
+    "requestInviteCta": "Pedir invitación",
     "cancel": "Ahora no",
     "dismissedToast": "Sigues en el plan Free. Puedes pasar a Pro cuando quieras.",
     "purchasedToast": "Bienvenido a Ordre Pro. ¡Gracias!",
@@ -512,6 +768,8 @@
   "projectSettings": {
     "pageTitle": "Configuración del proyecto",
     "subtitle": "Ajustes avanzados del proyecto {{project}}. Solo el propietario puede cambiar esto.",
+    "storageTitle": "Almacenamiento",
+    "storageHint": "Tamaño total de los archivos subidos a este proyecto: facturas, adjuntos de PO, documentos de proveedores.",
     "generalTitle": "General",
     "nameLabel": "Nombre del proyecto",
     "descriptionLabel": "Descripción",
@@ -686,8 +944,21 @@
       "issueDate": "Emitida",
       "dueDate": "Vencimiento",
       "total": "Total",
-      "uploadedBy": "Subida por"
+      "uploadedBy": "Subida por",
+      "status": "Estado"
     },
+    "paidStatusLabel": "Estado de pago",
+    "paidFilter": {
+      "all": "Todos los estados",
+      "paid": "Pagada",
+      "unpaid": "Pendiente",
+      "overdue": "Vencida"
+    },
+    "markPaidCta": "Marcar como pagada",
+    "markUnpaidCta": "Desmarcar como pagada",
+    "paidToast": "Factura marcada como pagada",
+    "unpaidToast": "Factura marcada como pendiente",
+    "paidByOn": "Pagada por {{name}} el {{date}}",
     "totals": {
       "totalInvoiced": "Total facturado",
       "invoiceCount": "Facturas",

@@ -178,6 +178,65 @@ output for Catalan/Spanish readers.
 - Security rules live in `firestore.rules` — keep them workspace-scoped.
   Workspace membership is the primary permission gate for v1.
 
+### App Check
+
+The client attaches an App Check token (reCAPTCHA v3) to every request to
+Firestore, Storage, and Cloud Functions. Enforcement is on in the console
+for all three services, so requests without a valid token are rejected.
+
+Prod setup:
+1. In the Firebase console → App Check → Apps → Web, register the domain
+   and pick **reCAPTCHA v3**. Copy the site key.
+2. Put the site key in `.env.local` as `VITE_FIREBASE_APP_CHECK_SITE_KEY`.
+3. Under App Check → APIs, flip **Enforce** on for each service.
+
+Local-dev debug tokens:
+- Set `VITE_APP_CHECK_DEBUG=true` in `.env.local` on a fresh run, open
+  the browser console, and copy the printed debug token.
+- Paste it into Firebase console → App Check → Apps → Manage debug tokens.
+- After the token is registered, switch to `VITE_APP_CHECK_DEBUG_TOKEN=<paste>`
+  so the same value is reused across reloads.
+
+Callable functions that need enforcement set `enforceAppCheck: true` in
+their `onCall` options — see `sendProjectInvite` for the pattern. The
+function also guards with `if (!req.app)` so a mis-configured deploy
+(enforcement off in code) still fails closed.
+
+---
+
+## Analytics, error tracking, cookie consent
+
+Single source of truth: [src/lib/analytics.ts](src/lib/analytics.ts). It runs
+two providers side-by-side:
+
+- **Firebase Analytics (GA4)** — product funnels and marketing. Measurement ID
+  comes from `VITE_FIREBASE_MEASUREMENT_ID`.
+- **PostHog (EU cloud)** — session-level product analytics + **exception
+  autocapture** (this is what replaced Sentry; Firebase Crashlytics doesn't
+  support web). Set `VITE_POSTHOG_KEY`, and optionally
+  `VITE_POSTHOG_HOST` (defaults to `https://eu.i.posthog.com`).
+
+Both are **off until the user opts in**. Consent lives in
+[src/contexts/ConsentContext.tsx](src/contexts/ConsentContext.tsx); the banner
+renders from [src/components/ConsentBanner.tsx](src/components/ConsentBanner.tsx)
+with Accept all / Reject / Customise. Decisions persist to `localStorage`
+under `ordre.consent.v1` and a `CustomEvent('ordre:consent')` fires on every
+change so `analytics.ts` can flip the SDKs via
+`opt_in_capturing()` / `opt_out_capturing()`.
+
+Usage:
+
+```ts
+import { trackEvent, captureAnalyticsError } from '~/lib/analytics';
+
+trackEvent('po_submitted', { poId: po.id, supplierId: po.supplierId });
+captureAnalyticsError(err, { where: 'approveWithBill' });
+```
+
+Error capture is safe to call even when consent is declined — it falls
+through to `console.error`. Never log PII (email, names, project content)
+as event properties; rely on the identity attached to the PostHog session.
+
 ---
 
 ## Conventions
@@ -211,19 +270,25 @@ Don't describe *what* the code does — identifiers already do that.
 
 ---
 
-## Projects & roles (iteration 3)
+## Projects & roles
 
 Top-level domain unit is a **Project** at `/projects/{projectId}` — a user
-can be a member of many projects. Each member has one of three roles:
+can be a member of many projects. Each member has one of four roles:
 
-| Role | Can read | Can write content (POs, suppliers…) | Can manage members |
-|---|---|---|---|
-| `owner` | ✓ | ✓ | ✓ |
-| `editor` | ✓ | ✓ | — |
-| `viewer` | ✓ | — | — |
+| Role | Read | Edit content (POs, suppliers…) | Approve POs | Manage members |
+|---|---|---|---|---|
+| `owner` | ✓ | ✓ | ✓ | ✓ |
+| `editor` | ✓ | ✓ | — | — |
+| `approver` | ✓ | — | ✓ | — |
+| `viewer` | ✓ | — | — | — |
 
 Role helpers live in [src/lib/roles.ts](src/lib/roles.ts):
-`canEdit(role)`, `canManage(role)`, `isMember(role)`.
+`canEdit(role)`, `canManage(role)`, `canApprove(role)`, `isMember(role)`,
+`hasRoleAtLeast(role, atLeast)`.
+
+Rules enforcement uses the same four roles — see `canWriteProject`,
+`canApproveProject`, `isProjectOwner`, `isProjectMember` in
+[firestore.rules](firestore.rules).
 
 Membership lives on the project doc itself:
 - `members`: `Record<uid, Role>` — the source of truth for the security rules.

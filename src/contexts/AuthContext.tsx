@@ -1,6 +1,7 @@
 import { createContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { User } from 'firebase/auth';
 import { onAuthChange, signInWithGoogle, signOut } from '~/lib/auth';
+import { identifyAnalyticsUser } from '~/lib/analytics';
 
 interface AuthContextValue {
   user: User | null;
@@ -19,6 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsub = onAuthChange((u) => {
       setUser(u);
       setLoading(false);
+      identifyAnalyticsUser(u ? { uid: u.uid, email: u.email } : null);
     });
     return unsub;
   }, []);
