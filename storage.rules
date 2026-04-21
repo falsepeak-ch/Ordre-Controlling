@@ -16,32 +16,30 @@ service firebase.storage {
       return request.auth != null;
     }
 
+    function projectMembers(projectId) {
+      let doc = firestore.get(/databases/(default)/documents/projects/$(projectId));
+      return (doc != null && doc.data != null) ? doc.data.members : null;
+    }
+
+    function memberRole(projectId) {
+      let m = projectMembers(projectId);
+      return m == null ? null : m.get(request.auth.uid, null);
+    }
+
     function isProjectMember(projectId) {
-      return isSignedIn() &&
-        firestore.get(/databases/(default)/documents/projects/$(projectId))
-          .data.members[request.auth.uid] != null;
+      return isSignedIn() && memberRole(projectId) != null;
     }
 
     function canWriteProject(projectId) {
-      return isSignedIn() && (
-        firestore.get(/databases/(default)/documents/projects/$(projectId))
-          .data.members[request.auth.uid] == 'owner' ||
-        firestore.get(/databases/(default)/documents/projects/$(projectId))
-          .data.members[request.auth.uid] == 'editor'
-      );
+      return isSignedIn() && memberRole(projectId) in ['owner', 'editor'];
     }
 
     function canApproveProject(projectId) {
-      return isSignedIn() && (
-        firestore.get(/databases/(default)/documents/projects/$(projectId))
-          .data.members[request.auth.uid] == 'owner' ||
-        firestore.get(/databases/(default)/documents/projects/$(projectId))
-          .data.members[request.auth.uid] == 'approver'
-      );
+      return isSignedIn() && memberRole(projectId) in ['owner', 'approver'];
     }
 
     function isUnder25MB() {
-      return request.resource.size < 25 * 1024 * 1024;
+      return request.resource != null && request.resource.size < 25 * 1024 * 1024;
     }
 
     // Restrict uploaded files to the kinds users actually attach in
@@ -49,9 +47,10 @@ service firebase.storage {
     // .html (which could XSS via download URL), and anything else
     // that could be served back to another member.
     function isAllowedContentType() {
-      return request.resource.contentType.matches(
-        'application/pdf|application/x-pdf|image/.*|text/plain|text/csv|application/csv'
-      );
+      return request.resource != null &&
+        request.resource.contentType.matches(
+          'application/pdf|application/x-pdf|image/.*|text/plain|text/csv|application/csv'
+        );
     }
 
     // Pull the project doc once per rule evaluation (Storage caches the
@@ -59,16 +58,16 @@ service firebase.storage {
     // pro storage cap. The counter is maintained server-side by the
     // `onStorageObjectFinalized` trigger; client-side uploads cannot
     // bump past the cap.
-    function projectDocFor(projectId) {
-      return firestore.get(/databases/(default)/documents/projects/$(projectId)).data;
+    function projectDocData(projectId) {
+      let doc = firestore.get(/databases/(default)/documents/projects/$(projectId));
+      return (doc != null && doc.data != null) ? doc.data : null;
     }
 
     function underStorageCap(projectId) {
-      return projectDocFor(projectId).storageCapBytes == null ||
-        (projectDocFor(projectId).storageBytesUsed == null
-          ? request.resource.size <= projectDocFor(projectId).storageCapBytes
-          : projectDocFor(projectId).storageBytesUsed + request.resource.size
-              <= projectDocFor(projectId).storageCapBytes);
+      let data = projectDocData(projectId);
+      let cap = data == null ? null : data.get('storageCapBytes', null);
+      let used = data == null ? 0 : data.get('storageBytesUsed', 0);
+      return cap == null || used + request.resource.size <= cap;
     }
 
     match /projects/{projectId}/purchaseOrders/{poId}/invoices/{invoiceId}/{fileName} {

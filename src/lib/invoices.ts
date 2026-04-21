@@ -24,7 +24,7 @@ import {
   uploadBytes,
   type StorageReference,
 } from 'firebase/storage';
-import { db, getStorageInstance } from './firebase';
+import { auth, db, getStorageInstance } from './firebase';
 import {
   assertStorageQuota,
   deleteStorageObject,
@@ -97,10 +97,10 @@ export async function createInvoice(
     await assertStorageQuota(projectId, input.file.size);
     const fileName = sanitizeFileName(input.file.name);
     const path = `projects/${projectId}/purchaseOrders/${poId}/invoices/${invoiceId}/${fileName}`;
+    const contentType = resolveContentType(input.file);
+    console.debug('[invoice-upload] path:', path, '| rawType:', input.file.type, '| resolvedType:', contentType, '| size:', input.file.size, '| uid:', auth.currentUser?.uid);
     const ref = storageRef(getStorageInstance(), path);
-    await uploadBytes(ref, input.file, {
-      contentType: resolveContentType(input.file),
-    });
+    await uploadBytes(ref, input.file, { contentType });
     const url = await getDownloadURL(ref);
     fileFields = {
       fileName,
