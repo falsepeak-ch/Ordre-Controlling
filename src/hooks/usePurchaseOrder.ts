@@ -46,7 +46,17 @@ export function usePurchaseOrder(
 
     const invCol = collection(db, 'projects', projectId, 'purchaseOrders', poId, 'invoices');
     const unsubInv = onSnapshot(invCol, (snap) => {
-      setInvoices(snap.docs.map((d) => ({ ...(d.data() as Invoice), id: d.id })));
+      setInvoices(
+        snap.docs.map((d) => {
+          const raw = d.data();
+          return {
+            ...(raw as Invoice),
+            id: d.id,
+            uploadedAt: tsToISO(raw.uploadedAt) ?? undefined,
+            paidAt: tsToISO(raw.paidAt),
+          };
+        }),
+      );
     });
 
     const apCol = collection(db, 'projects', projectId, 'purchaseOrders', poId, 'approvals');

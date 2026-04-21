@@ -33,6 +33,18 @@ export interface Project {
    */
   archived?: boolean;
   archivedAt?: string | null;
+  /**
+   * Cumulative bytes stored under `projects/{id}/...` in Firebase
+   * Storage. Maintained by the `onStorageObjectFinalized` /
+   * `onStorageObjectDeleted` Cloud Functions; not writable by clients.
+   */
+  storageBytesUsed?: number;
+  /**
+   * Hard cap on total bytes. 300 MB on free, 10 GB on Pro. Set on
+   * project creation; Cloud Functions update it when the owner's tier
+   * changes.
+   */
+  storageCapBytes?: number;
 }
 
 /**
@@ -169,6 +181,13 @@ export interface Invoice {
   lines: InvoiceLine[];
   uploadedBy: string;
   uploadedAt?: string;
+  /**
+   * ISO timestamp of when the invoice was marked paid. `null` or
+   * undefined means the invoice is still outstanding.
+   */
+  paidAt?: string | null;
+  /** Who marked the invoice as paid (display name). */
+  paidBy?: string | null;
 }
 
 export interface PurchaseOrder {

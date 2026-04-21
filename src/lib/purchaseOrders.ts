@@ -17,10 +17,12 @@
 
 import {
   addDoc,
+  collection,
   deleteDoc,
   doc,
   getDocs,
   query,
+  runTransaction,
   serverTimestamp,
   setDoc,
   updateDoc,
@@ -30,6 +32,7 @@ import {
 import { db } from './firebase';
 import { purchaseOrdersCol, projectDoc } from './firestore';
 import { createInvoice } from './invoices';
+import { deleteStorageObject } from './attachments';
 import type {
   Approval,
   InvoiceLine,
@@ -50,20 +53,66 @@ export interface POAuthor {
   initials: string;
 }
 
+// Sum of `total` across every invoice doc in the subcollection. Used by
+// the approve-with-bill flow to decide whether the new bill closes out
+// the PO. Must not rely on the root `po.invoices` array — that array is
+// never written back from the subcollection, so it's always stale.
+async function sumInvoicedFromSubcollection(
+  projectId: string,
+  poId: string,
+): Promise<number> {
+  const snap = await getDocs(
+    collection(db, 'projects', projectId, 'purchaseOrders', poId, 'invoices'),
+  );
+  let total = 0;
+  snap.forEach((d) => {
+    const raw = d.data() as { total?: number };
+    total += Number(raw.total ?? 0);
+  });
+  return total;
+}
+
 // ---------- PO number generation ----------
+// A counter doc per project at `projects/{id}/meta/poCounters` holds the
+// last-allocated number for each year: `{ [year]: number }`. Wrapping
+// the read + write in a transaction makes concurrent PO creation safe;
+// two clients racing no longer get the same number.
+//
+// On first use (or if the counter doc is missing, e.g. during a legacy
+// project migration) we seed from the max existing `PO-{year}-NNNN` in
+// the collection so we never recycle a number.
 async function nextPONumber(projectId: string): Promise<string> {
   const year = new Date().getFullYear();
-  const snap = await getDocs(
-    query(purchaseOrdersCol(projectId), where('number', '>=', `PO-${year}-`)),
-  );
-  const max = snap.docs.reduce((acc, d) => {
-    const n = d.data().number as string | undefined;
-    if (!n) return acc;
-    const parts = n.split('-');
-    const num = Number(parts[2] ?? 0);
-    return Number.isFinite(num) && num > acc ? num : acc;
-  }, 0);
-  return `PO-${year}-${String(max + 1).padStart(4, '0')}`;
+  const counterRef = doc(db, 'projects', projectId, 'meta', 'poCounters');
+
+  // Seed value — only read if the transaction sees no existing entry.
+  let seed: number | null = null;
+  async function computeSeed(): Promise<number> {
+    if (seed !== null) return seed;
+    const snap = await getDocs(
+      query(purchaseOrdersCol(projectId), where('number', '>=', `PO-${year}-`)),
+    );
+    seed = snap.docs.reduce((acc, d) => {
+      const n = d.data().number as string | undefined;
+      if (!n) return acc;
+      const parts = n.split('-');
+      const num = Number(parts[2] ?? 0);
+      return Number.isFinite(num) && num > acc ? num : acc;
+    }, 0);
+    return seed;
+  }
+
+  const next = await runTransaction(db, async (tx) => {
+    const snap = await tx.get(counterRef);
+    const data = (snap.exists() ? snap.data() : {}) as Record<string, number>;
+    const current = data[String(year)];
+    const base = typeof current === 'number' ? current : await computeSeed();
+    const allocated = base + 1;
+    tx.set(counterRef, { [String(year)]: allocated }, { merge: true });
+    return allocated;
+  });
+
+  return `PO-${year}-${String(next).padStart(4, '0')}`;
 }
 
 export function blankLine(): POLine {
@@ -100,7 +149,13 @@ export async function createDraftPO(
 ): Promise<string> {
   if (!input.supplierId) throw new Error('supplier-required');
   const number = await nextPONumber(projectId);
-  const ref = await addDoc(purchaseOrdersCol(projectId), {
+  // Go through the untyped `collection` helper here: the typed
+  // CollectionReference<PurchaseOrder> wants the full shape of a PO,
+  // but addDoc is creating a fresh doc without `id`/`invoices`/`approvals`
+  // (server-assigned ID, populated subcollections). The seed payload is
+  // complete enough for our rules + readers.
+  const untyped = collection(db, 'projects', projectId, 'purchaseOrders');
+  const ref = await addDoc(untyped, {
     number,
     supplierId: input.supplierId,
     status: 'draft' as POStatus,
@@ -112,7 +167,7 @@ export async function createDraftPO(
     closedAt: null,
     notes: (input.notes ?? '').trim(),
     lines: input.lines.map(sanitizeLine),
-  } as never);
+  });
   return ref.id;
 }
 
@@ -142,7 +197,6 @@ export async function submitPOForApproval(
 ): Promise<void> {
   const poRef = doc(purchaseOrdersCol(projectId), po.id);
 
-  const { collection } = await import('firebase/firestore');
   const existing = await getDocs(
     collection(db, 'projects', projectId, 'purchaseOrders', po.id, 'approvals'),
   );
@@ -231,10 +285,10 @@ export async function approveWithBill(
     (sum, l) => sum + l.quantity * l.unitPrice,
     0,
   );
-  const invoicedSoFar = (po.invoices ?? []).reduce(
-    (sum, inv) => sum + (inv.total ?? 0),
-    0,
-  );
+  // Read the authoritative invoiced total from the subcollection — the
+  // `po.invoices` array on the root doc is never written, so relying on
+  // it would skip the close-on-full-invoice transition.
+  const invoicedSoFar = await sumInvoicedFromSubcollection(projectId, po.id);
   const newInvoicedTotal = invoicedSoFar + Number(input.invoice.total);
   const shouldClose = committed > 0 && newInvoicedTotal >= committed;
 
@@ -323,8 +377,6 @@ export async function closePO(projectId: string, poId: string): Promise<void> {
 }
 
 export async function deletePO(projectId: string, poId: string): Promise<void> {
-  const { collection } = await import('firebase/firestore');
-  const { deleteStorageObject } = await import('./attachments');
   const batch = writeBatch(db);
   const [invSnap, apSnap, attSnap] = await Promise.all([
     getDocs(collection(db, 'projects', projectId, 'purchaseOrders', poId, 'invoices')),
