@@ -43,7 +43,7 @@ async function bumpCounter(projectId: string, deltaBytes: number) {
  * counter on the next upload to enforce the cap.
  */
 export const onStorageObjectFinalized = onObjectFinalized(
-  { region: 'europe-west1' },
+  { region: 'us-east1' },
   async (event) => {
     const projectId = projectIdFromPath(event.data.name);
     if (!projectId) return;
@@ -58,7 +58,7 @@ export const onStorageObjectFinalized = onObjectFinalized(
  * populated for delete events too.
  */
 export const onStorageObjectDeleted = onObjectDeleted(
-  { region: 'europe-west1' },
+  { region: 'us-east1' },
   async (event) => {
     const projectId = projectIdFromPath(event.data.name);
     if (!projectId) return;
