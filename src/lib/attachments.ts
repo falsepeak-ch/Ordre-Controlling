@@ -73,11 +73,27 @@ const MIME_BY_EXT: Record<string, string> = {
   csv: 'text/csv',
 };
 
+// Some platforms/browsers report non-standard but recognisable MIME types.
+// Normalise them to the canonical form that our Storage rules whitelist.
+const MIME_NORMALIZE: Record<string, string> = {
+  'application/x-pdf':   'application/pdf',
+  'application/acrobat': 'application/pdf',
+  'application/vnd.pdf': 'application/pdf',
+  'text/pdf':            'application/pdf',
+  'text/x-pdf':          'application/pdf',
+};
+
 export function resolveContentType(file: File): string {
-  if (file.type) return file.type;
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  if (ext && MIME_BY_EXT[ext]) return MIME_BY_EXT[ext];
-  return 'application/octet-stream';
+  const raw = file.type;
+  if (!raw) {
+    // Empty type (Safari / Finder drag) — fall back to extension lookup.
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    return (ext && MIME_BY_EXT[ext]) || 'application/octet-stream';
+  }
+  // Strip content-type parameters (e.g. "application/pdf; charset=utf-8")
+  // before comparing — the Storage rules regex requires an exact base-type match.
+  const base = raw.split(';')[0].trim().toLowerCase();
+  return MIME_NORMALIZE[base] ?? base;
 }
 
 /**

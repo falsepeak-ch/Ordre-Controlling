@@ -138,6 +138,9 @@ export function PODecisionModal({
       onClose();
     } catch (err) {
       console.warn('[poDecision] approve failed', err);
+      if ((err as { code?: string }).code === 'storage/unauthorized') {
+        console.error('[poDecision] storage/unauthorized — check Storage rules deployment and project member role');
+      }
       const message = err instanceof StorageQuotaExceededError
         ? t('attachments.quotaExceeded')
         : t('poForm.error');

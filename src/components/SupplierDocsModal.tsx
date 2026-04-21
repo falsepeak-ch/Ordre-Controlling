@@ -37,6 +37,9 @@ export function SupplierDocsModal({ open, onClose, projectId, supplier, canEdit 
       push({ message: t('attachments.addedToast'), icon: 'check-circle-fill' });
     } catch (err) {
       console.warn('[supplierDocs] upload failed', err);
+      if ((err as { code?: string }).code === 'storage/unauthorized') {
+        console.error('[supplierDocs] storage/unauthorized — check Storage rules deployment and project member role');
+      }
       const message = err instanceof StorageQuotaExceededError
         ? t('attachments.quotaExceeded')
         : t('attachments.uploadError');

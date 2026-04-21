@@ -50,7 +50,7 @@ service firebase.storage {
     // that could be served back to another member.
     function isAllowedContentType() {
       return request.resource.contentType.matches(
-        'application/pdf|image/.*|text/plain|text/csv|application/csv'
+        'application/pdf|application/x-pdf|image/.*|text/plain|text/csv|application/csv'
       );
     }
 
