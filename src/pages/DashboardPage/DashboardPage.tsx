@@ -255,8 +255,8 @@ function MetricCard({
           <Icon name={icon} size={14} />
         </span>
       </header>
-      <div className="metric-card-value">{loading ? <Spinner size={18} /> : value}</div>
       {note ? <span className="metric-card-note">{note}</span> : null}
+      <div className="metric-card-value">{loading ? <Spinner size={18} /> : value}</div>
     </article>
   );
 }
