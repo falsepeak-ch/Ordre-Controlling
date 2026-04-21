@@ -173,6 +173,84 @@
   font-size: 13.5px;
 }
 
+.dashboard-block-more {
+  font-size: 12.5px;
+  color: var(--fg-muted);
+  padding: 4px 8px;
+  border-radius: var(--r-6, 6px);
+  transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.dashboard-block-more:hover { color: var(--fg-deep); background: var(--surface-muted); }
+
+.dashboard-activity {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.dashboard-activity-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.dashboard-activity-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg);
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px var(--ring-border);
+}
+.dashboard-activity-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.dashboard-activity-text {
+  color: var(--fg-deep);
+  font-size: 13.5px;
+  line-height: 1.45;
+  text-decoration: none;
+}
+.dashboard-activity-text:hover { color: var(--fg); }
+.dashboard-activity-time { font-size: 11.5px; }
+
+.dashboard-queue {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.dashboard-queue-row {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) auto;
+  gap: var(--s-3);
+  align-items: center;
+  padding: var(--s-3) var(--s-4);
+  background: var(--surface-muted);
+  border-radius: var(--r-10);
+  color: var(--fg-deep);
+  font-size: 13px;
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.dashboard-queue-row:hover {
+  background: color-mix(in oklab, var(--surface-muted) 80%, var(--fg-base) 8%);
+  color: var(--fg);
+}
+.dashboard-queue-num { font-size: 12px; color: var(--fg-muted); }
+.dashboard-queue-by { font-size: 12px; }
+.dashboard-queue-amount { font-weight: 600; }
+
 @media (max-width: 980px) {
   .dashboard-metrics { grid-template-columns: repeat(2, 1fr); }
   .dashboard-secondary { grid-template-columns: 1fr; }

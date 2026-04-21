@@ -1,13 +1,82 @@
 <!doctype html>
-<html lang="en">
+<html lang="ca">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0f0f10" media="(prefers-color-scheme: dark)" />
-    <meta name="description" content="Ordre — track purchase orders, approvals and invoice reconciliation, line by line." />
+
+    <title>Ordre — Purchase orders, approvals & invoice reconciliation</title>
+    <meta
+      name="description"
+      content="Raise purchase orders, run them through your team's approval rules, and reconcile every invoice line by line. Built for small teams that are tired of spreadsheets."
+    />
+
+    <link rel="canonical" href="https://ordre.app/" />
+    <link rel="alternate" hreflang="ca" href="https://ordre.app/" />
+    <link rel="alternate" hreflang="es" href="https://ordre.app/" />
+    <link rel="alternate" hreflang="en" href="https://ordre.app/" />
+    <link rel="alternate" hreflang="x-default" href="https://ordre.app/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ordre" />
+    <meta property="og:url" content="https://ordre.app/" />
+    <meta property="og:title" content="Ordre — Purchase orders, approvals & invoice reconciliation" />
+    <meta
+      property="og:description"
+      content="Raise purchase orders, run them through your team's approval rules, and reconcile every invoice line by line."
+    />
+    <meta property="og:image" content="https://ordre.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="ca_ES" />
+    <meta property="og:locale:alternate" content="es_ES" />
+    <meta property="og:locale:alternate" content="en_GB" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Ordre — Purchase orders, approvals & invoice reconciliation" />
+    <meta
+      name="twitter:description"
+      content="Raise purchase orders, run them through your team's approval rules, and reconcile every invoice line by line."
+    />
+    <meta name="twitter:image" content="https://ordre.app/og-image.png" />
+
+    <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Structured data: Organization + SoftwareApplication -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "name": "Ordre",
+            "url": "https://ordre.app/",
+            "logo": "https://ordre.app/favicon.svg",
+            "email": "help@ordrecontrolling.com"
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "Ordre",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web",
+            "url": "https://ordre.app/",
+            "description": "Purchase orders, team approvals, and invoice reconciliation for small teams.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "EUR"
+            }
+          }
+        ]
+      }
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -28,8 +97,6 @@
         }
       })();
     </script>
-
-    <title>Ordre</title>
   </head>
   <body>
     <div id="root"></div>

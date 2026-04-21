@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Topbar } from '~/components/layout/Topbar';
 import { Card } from '~/components/ui/Card';
 import { Icon } from '~/components/ui/Icon';
+import { Pill } from '~/components/ui/Pill';
 import { Field, Input } from '~/components/ui/Input';
 import { Spinner } from '~/components/ui/Spinner';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
@@ -11,6 +12,19 @@ import { useProjectData } from '~/hooks/useProjectData';
 import { eur, eurFull, formatDate } from '~/lib/format';
 import type { Invoice, PurchaseOrder, Supplier } from '~/types';
 import './InvoicesPage.css';
+
+type PaidFilter = 'all' | 'unpaid' | 'paid' | 'overdue';
+
+function invoiceStatus(invoice: Invoice, now: Date): 'paid' | 'overdue' | 'unpaid' {
+  if (invoice.paidAt) return 'paid';
+  if (invoice.dueDate) {
+    const due = new Date(invoice.dueDate);
+    if (!Number.isNaN(due.getTime()) && due.getTime() < now.getTime()) {
+      return 'overdue';
+    }
+  }
+  return 'unpaid';
+}
 
 interface InvoiceRow {
   invoice: Invoice;
@@ -28,6 +42,8 @@ export function InvoicesPage() {
   const [poFilter, setPoFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [paidFilter, setPaidFilter] = useState<PaidFilter>('all');
+  const now = useMemo(() => new Date(), []);
 
   const supplierMap = useMemo(
     () => new Map(suppliers.map((s) => [s.id, s])),
@@ -54,6 +70,9 @@ export function InvoicesPage() {
     if (poFilter !== 'all') {
       list = list.filter((r) => r.po.id === poFilter);
     }
+    if (paidFilter !== 'all') {
+      list = list.filter((r) => invoiceStatus(r.invoice, now) === paidFilter);
+    }
     if (dateFrom) {
       list = list.filter((r) => (r.invoice.issueDate ?? '') >= dateFrom);
     }
@@ -67,7 +86,7 @@ export function InvoicesPage() {
     return list.sort((a, b) =>
       (b.invoice.issueDate ?? '').localeCompare(a.invoice.issueDate ?? ''),
     );
-  }, [allRows, supplierFilter, poFilter, dateFrom, dateTo, query]);
+  }, [allRows, supplierFilter, poFilter, paidFilter, dateFrom, dateTo, query, now]);
 
   const totals = useMemo(() => {
     const total = allRows.reduce((sum, r) => sum + r.invoice.total, 0);
@@ -140,6 +159,17 @@ export function InvoicesPage() {
               ))}
             </select>
 
+            <select
+              value={paidFilter}
+              onChange={(e) => setPaidFilter(e.target.value as PaidFilter)}
+              aria-label={t('invoices.paidStatusLabel')}
+            >
+              <option value="all">{t('invoices.paidFilter.all')}</option>
+              <option value="unpaid">{t('invoices.paidFilter.unpaid')}</option>
+              <option value="paid">{t('invoices.paidFilter.paid')}</option>
+              <option value="overdue">{t('invoices.paidFilter.overdue')}</option>
+            </select>
+
             <div className="inv-filter-dates">
               <label>{t('invoices.dateFrom')}</label>
               <Input
@@ -198,31 +228,45 @@ export function InvoicesPage() {
               <div>{t('invoices.table.issueDate')}</div>
               <div>{t('invoices.table.dueDate')}</div>
               <div className="text-right">{t('invoices.table.total')}</div>
-              <div>{t('invoices.table.uploadedBy')}</div>
+              <div>{t('invoices.table.status')}</div>
               <div />
             </div>
-            {filtered.map((row) => (
-              <Link
-                key={`${row.po.id}-${row.invoice.id}`}
-                to={`/app/p/${project.id}/purchase-orders/${row.po.id}`}
-                className="inv-row inv-row-interactive"
-              >
-                <div className="inv-row-number">{row.invoice.number}</div>
-                <div className="inv-row-po">{row.po.number.replace('PO-', '')}</div>
-                <div className="inv-row-supplier">
-                  <span className="inv-row-supplier-name">
-                    {row.supplier?.tradeName ?? row.supplier?.legalName ?? row.po.supplierId}
-                  </span>
-                </div>
-                <div className="inv-row-date">{formatDate(row.invoice.issueDate)}</div>
-                <div className="inv-row-date">{formatDate(row.invoice.dueDate)}</div>
-                <div className="inv-row-total">{eur(row.invoice.total)}</div>
-                <div className="inv-row-uploader">{row.invoice.uploadedBy ?? '—'}</div>
-                <div className="inv-row-caret">
-                  <Icon name="chevron-right" size={13} />
-                </div>
-              </Link>
-            ))}
+            {filtered.map((row) => {
+              const status = invoiceStatus(row.invoice, now);
+              return (
+                <Link
+                  key={`${row.po.id}-${row.invoice.id}`}
+                  to={`/app/p/${project.id}/purchase-orders/${row.po.id}`}
+                  className={[
+                    'inv-row',
+                    'inv-row-interactive',
+                    status === 'overdue' ? 'inv-row-overdue' : null,
+                    status === 'paid' ? 'inv-row-paid' : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
+                  <div className="inv-row-number">{row.invoice.number}</div>
+                  <div className="inv-row-po">{row.po.number.replace('PO-', '')}</div>
+                  <div className="inv-row-supplier">
+                    <span className="inv-row-supplier-name">
+                      {row.supplier?.tradeName ?? row.supplier?.legalName ?? row.po.supplierId}
+                    </span>
+                  </div>
+                  <div className="inv-row-date">{formatDate(row.invoice.issueDate)}</div>
+                  <div className="inv-row-date">{formatDate(row.invoice.dueDate)}</div>
+                  <div className="inv-row-total">{eur(row.invoice.total)}</div>
+                  <div>
+                    <Pill status={status === 'paid' ? 'closed' : status === 'overdue' ? 'rejected' : 'pending_approval'}>
+                      {t(`invoices.paidFilter.${status}`)}
+                    </Pill>
+                  </div>
+                  <div className="inv-row-caret">
+                    <Icon name="chevron-right" size={13} />
+                  </div>
+                </Link>
+              );
+            })}
           </section>
         )}
       </div>

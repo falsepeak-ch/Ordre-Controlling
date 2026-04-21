@@ -19,6 +19,8 @@ import { InvoicesPage } from '~/pages/InvoicesPage';
 import { ReportsPage } from '~/pages/ReportsPage';
 import { NotFoundPage } from '~/pages/NotFoundPage';
 import { ErrorPage } from '~/pages/ErrorPage';
+import { TermsPage } from '~/pages/TermsPage';
+import { PrivacyPage } from '~/pages/PrivacyPage';
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +30,8 @@ export const router = createBrowserRouter([
       { path: '/', element: <LandingPage /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/signup', element: <SignupPage /> },
+      { path: '/terms', element: <TermsPage /> },
+      { path: '/privacy', element: <PrivacyPage /> },
     ],
   },
   {

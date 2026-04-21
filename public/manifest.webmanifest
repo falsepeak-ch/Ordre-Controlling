@@ -1,0 +1,16 @@
+{
+  "name": "Ordre",
+  "short_name": "Ordre",
+  "description": "Purchase orders, approvals & invoice reconciliation.",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0f10",
+  "theme_color": "#0f0f10",
+  "lang": "ca",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "/apple-touch-icon.png", "type": "image/png", "sizes": "180x180", "purpose": "any" }
+  ]
+}
