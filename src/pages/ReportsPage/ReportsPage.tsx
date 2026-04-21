@@ -60,8 +60,13 @@ export function ReportsPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  const range: DateRange | undefined =
-    dateFrom && dateTo ? { from: dateFrom, to: dateTo } : undefined;
+  // Memo so the reference stays stable when the dates are empty — the
+  // downstream useMemo calls list `range` as a dep and would otherwise
+  // bust their caches on every render.
+  const range: DateRange | undefined = useMemo(
+    () => (dateFrom && dateTo ? { from: dateFrom, to: dateTo } : undefined),
+    [dateFrom, dateTo],
+  );
 
   const supplierMap = useMemo(
     () => new Map(suppliers.map((s) => [s.id, s])),

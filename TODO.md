@@ -1,70 +1,129 @@
 # TODO
 
-Remaining work for Ordre. Ordered by impact.
+Remaining work for Ordre. Most of the original list shipped in the April 2026
+production-readiness push (see `git log` and the plan file for details). What
+remains below is either deferred to a follow-up or intentionally out-of-scope
+until we validate demand.
 
 ---
 
-## Bugs / Data Issues
+## Deferred, not blocking launch
 
-- **Invoice data in list views is stale** — `useProjectData` reads `raw.invoices ?? []` from the PO document root, but invoices are stored in a subcollection and never written back to the root field. Only the `usePurchaseOrder` hook (single-PO detail view) correctly subscribes to the subcollection. Dashboard metrics and the PO list page rely on this stale array, so they will show `0` for invoiced amounts. Fix: either denormalize invoice totals back onto the PO document on every invoice write (in `createInvoice`/`updateInvoice`/`deleteInvoice`), or query the subcollection directly in `useProjectData`.
+### Billing
 
-- **Same issue applies to `approvals`** — `useProjectData` reads `raw.approvals ?? []` from the PO root document field, which may not match the subcollection data.
-
-- **Invoice file replacement not supported** — `updateInvoice` in `src/lib/invoices.ts` does not support swapping the attached file. The workaround is to delete and recreate the invoice. The function should delete the old Storage file and upload the new one in a single operation.
-
----
-
-## Dashboard Stubs
-
-- **"Recent activity" panel** — Shows a "coming next" placeholder. Should display a chronological feed of recent PO events (created, submitted, approved, rejected, closed, invoice uploaded) across the project.
-
-- **"Approvals waiting on you" panel** — Shows an empty-state message. Should mirror the ApprovalsQueuePage filtered to the current user's pending decisions, limited to 3–5 items with a "See all" link.
-
----
-
-## Missing Features
-
-### Invoices
-- **Payment status** — There is no concept of a paid vs. unpaid invoice. Add an optional `paidAt` field to the `Invoice` type and a "Mark as paid" action on the PO detail page.
-- **Invoice-level download from Invoices page** — The Invoices list page links to the parent PO but does not expose a direct file download link. Add a download icon column.
-- **Overdue tracking** — Invoices have a `dueDate` field but nothing surfaces overdue invoices anywhere. The Invoices page could highlight rows where `dueDate < today` and status is unpaid.
+- **Stripe self-serve billing.** The client + server framing is in place
+  (`VITE_BILLING_ENABLED` flag, `UpgradeModal` copy switches between beta and
+  checkout states, `users/{uid}.subscriptionStatus` read by
+  `SubscriptionContext`). What's missing: a Cloud Function `createCheckoutSession`,
+  a `stripeWebhook` HTTP endpoint that updates `users/{uid}` on Stripe events,
+  a `redirectToPortal` callable, and the Stripe price IDs wired through
+  `functions/.secret.local`. Until then, Pro is granted via
+  `npm run grant-pro -- <uid>`.
 
 ### Approvals
-- **Approval reminders** — No Cloud Function sends a reminder when a PO has been waiting for approval beyond a configurable threshold (e.g., 3 days). Add a scheduled function.
-- **Approval delegation** — No way to reassign or escalate a pending approval to another user.
-- **Multi-step approvals** — Currently any approver can unilaterally approve. No support for requiring N-of-M approvals.
 
-### Email Notifications
-- Only `sendProjectInvite` Cloud Function exists. Missing:
-  - Notify all approvers when a PO is submitted for approval.
-  - Notify the PO creator when their PO is approved/rejected.
-  - Notify the submitter when a PO is closed.
+- **Approval reminders.** Scheduled Cloud Function that pings approvers when a
+  PO has been pending beyond N days (default 3). Needs `onSchedule` trigger +
+  email template.
+- **Multi-step / N-of-M approvals.** Any owner-or-approver can unilaterally
+  close out a PO today. Larger teams will want "two approvers required" or a
+  fixed sequence.
+- **Approval delegation** (reassign pending approvals to a backup).
+
+### Email notifications (Cloud Functions)
+
+- On PO submitted → notify owners + approvers.
+- On PO approved / rejected → notify the submitter.
+- On PO closed → notify the submitter.
+  Template infrastructure already exists under
+  `functions/src/templates/inviteEmail.ts`; each new notification needs its own
+  template + onCreate trigger.
 
 ### Reports
-- **Export to CSV/PDF** — The Reports page has charts but no way to export data.
-- **Budget vs. actuals** — No concept of a project budget cap. Adding a project-level budget would enable a "budget remaining" KPI and progress bar on the dashboard.
-- **Committed-over-time by status** — The "Spend over time" chart currently plots committed (by PO creation date) and invoiced (by invoice issue date). A future improvement would add filtering by PO status transitions.
+
+- **CSV / PDF export** on [ReportsPage](src/pages/ReportsPage).
+- **Budget vs. actuals.** Add a project-level `budgetBytes` / `budgetAmount`
+  and surface "budget remaining" KPIs + a progress bar on the dashboard.
+- **Filterable committed-over-time.** The spend-over-time chart uses PO
+  creation date; a status-transition variant would be more useful for
+  planning.
 
 ### Suppliers
-- **Supplier contact portal** — Suppliers receive no direct communication. A future "portal" mode could let suppliers upload invoices themselves.
-- **Supplier performance metrics** — No view of on-time payment rate, average invoice amount, or open PO count per supplier (data is available, just not surfaced).
 
-### Bulk Operations
-- No bulk actions on the PO list (e.g., bulk export, bulk close).
-- No bulk invoice import.
+- **Supplier self-service portal.** Suppliers upload their own invoices —
+  needs per-supplier auth token + a separate public route.
+- **Supplier performance metrics** (on-time payment rate, average invoice
+  amount, open PO count). Data is there; we just don't render it.
 
-### Settings / Admin
-- **Audit log** — No tamper-evident log of who changed what and when. The `approvals` subcollection records approval decisions but nothing tracks PO edits, line deletions, or invoice uploads.
-- **Project currency** — Hardcoded to EUR. The `Project.currency` field exists but the rest of the codebase assumes EUR everywhere.
+### Bulk operations
+
+- Bulk PO export / close on [PurchaseOrdersPage](src/pages/PurchaseOrdersPage).
+- Bulk invoice import.
+
+### Settings / admin
+
+- **Audit log.** The `approvals` subcollection captures approval decisions,
+  but PO edits, line deletes, and invoice uploads aren't logged in a
+  tamper-evident way. Add a project-level `audit/` subcollection, append-only,
+  written from every mutation helper.
+- **Project currency.** `Project.currency` exists but [format.ts](src/lib/format.ts)
+  still hardcodes EUR in `eur` / `eurFull`. Thread project currency through
+  the formatters.
 
 ---
 
-## Code Quality / Cleanup
+## Code quality / cleanup (non-blocking)
 
-- **`formatFileSize` duplication** — Identical function defined in both `src/lib/invoices.ts` and `src/lib/attachments.ts`. Consolidate onto `attachments.ts` and remove the copy from `invoices.ts`.
+- **`useApprovalsQueue` opens N subscriptions.** One
+  [per-PO approvals listener](src/hooks/useApprovalsQueue.ts:91); with 200
+  POs that's 200 live listeners. Collapse to a single
+  `collectionGroup('approvals')` + `where('projectId','==',projectId)` query.
+  Requires denormalising `projectId` onto each approval doc + a
+  collectionGroup index.
+- **`PODecisionModal` duplicates invoice form UI.** The "Approve with bill"
+  modal re-implements a subset of `InvoiceFormModal`. Extract a shared
+  `InvoiceFields` component.
+- **Split `useProjectData`.** Currently bundles suppliers + POs + invoices +
+  approvals; pages that only need one pay for all. Carve out `usePurchaseOrders`,
+  `useSuppliersOnly`, etc., and keep `useProjectData` as the convenience
+  wrapper.
+- **Pagination.** `useProjectData`, the PO list, and the invoices list all
+  fetch everything. Fine at 50 POs, wasteful at 5000. Add `limit()` + "Show
+  more" cursors once we have data to warrant it.
 
-- **`src/components/ui/FileDropzone.tsx`** imports `formatFileSize` from `~/lib/invoices` — update this import after deduplication above.
+---
 
-- **`PODecisionModal` duplicates invoice form UI** — The "Approve with bill" modal (`src/components/PODecisionModal.tsx`) re-implements a subset of `InvoiceFormModal`. Consider extracting a shared `InvoiceFields` component.
+## Delivered in the April 2026 push (for reference)
 
-- **`useProjectData` loads both suppliers and POs** — These are two independent subscriptions bundled into one hook. If a page only needs POs (e.g., ApprovalsQueuePage), it still pays for a suppliers subscription. Consider splitting into `usePurchaseOrders` and keeping `useProjectData` as a convenience wrapper.
+- P0 data correctness: subcollection-aware `useProjectData`, `approveWithBill`
+  auto-close uses the real invoiced total, `nextPONumber` race-free via
+  transaction, locale-aware formatters.
+- Firebase App Check (reCAPTCHA v3) initialised client-side and enforced on
+  `sendProjectInvite` + `createProject`.
+- Free-tier quotas: server-enforced max-1-project (via `createProject`
+  callable), per-project storage cap (300 MB free / 10 GB Pro) maintained by
+  `onStorageObjectFinalized` / `onStorageObjectDeleted` triggers, enforced
+  in Storage rules, surfaced in Project Settings.
+- Landing-page redesign + full SEO/ASO infrastructure: 10 sections
+  (hero → social proof → contrast → how-it-works → features → testimonials →
+  pricing → FAQ → CTA), meta / OG / Twitter / JSON-LD, robots, sitemap,
+  manifest, hreflang, hosting cache headers, 43 MB hero asset replaced by a
+  CSS gradient. Terms + Privacy pages. Footer links.
+- Global React error boundary → PostHog exception capture (replaces the
+  short-lived Sentry wiring). ConfirmModal replaces every `window.confirm`
+  (11 call sites). `useNavigate` replaces in-app `window.location.href`.
+- Analytics stack: Firebase Analytics + PostHog (EU cloud), both consent-gated
+  via a monochrome cookie banner (`ConsentContext`, `ConsentBanner`). Banner
+  is re-openable from the footer and the Privacy page; decisions persist to
+  `localStorage`.
+- Ops: ESLint installed + configured, GitHub Actions CI (`type-check` +
+  `lint` + `build` for both web and functions), invite rate-limit
+  (10 / uid / hour), functions `lint` dead-script cleanup.
+- Invoice paid status (`paidAt`, "Mark as paid" on PO detail, overdue
+  highlighting in the invoices list). Invoice file replacement in
+  `updateInvoice`.
+- Dashboard "Recent activity" feed + "Approvals waiting on you" queue
+  synthesised from PO events.
+- `formatFileSize` deduped, 4-role model documented in AGENTS.md, storage
+  rules now whitelist content types (PDF / image / text), `as never` cast
+  removed.

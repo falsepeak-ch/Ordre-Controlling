@@ -193,7 +193,7 @@ export function ApprovalsQueuePage() {
                       </span>
                       {lastMyApproval?.comment ? (
                         <span className="muted" style={{ fontSize: 12.5, marginLeft: 'auto', maxWidth: '55%', textAlign: 'right' }}>
-                          "{lastMyApproval.comment}"
+                          &ldquo;{lastMyApproval.comment}&rdquo;
                         </span>
                       ) : null}
                     </div>
