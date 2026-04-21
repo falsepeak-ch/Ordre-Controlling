@@ -44,21 +44,57 @@ service firebase.storage {
       return request.resource.size < 25 * 1024 * 1024;
     }
 
+    // Restrict uploaded files to the kinds users actually attach in
+    // the app today: PDFs, images, plain text, and CSVs. Blocks .exe,
+    // .html (which could XSS via download URL), and anything else
+    // that could be served back to another member.
+    function isAllowedContentType() {
+      return request.resource.contentType.matches(
+        'application/pdf|image/.*|text/plain|text/csv|application/csv'
+      );
+    }
+
+    // Pull the project doc once per rule evaluation (Storage caches the
+    // `get` within a single request) and use it to enforce the free /
+    // pro storage cap. The counter is maintained server-side by the
+    // `onStorageObjectFinalized` trigger; client-side uploads cannot
+    // bump past the cap.
+    function projectDocFor(projectId) {
+      return firestore.get(/databases/(default)/documents/projects/$(projectId)).data;
+    }
+
+    function underStorageCap(projectId) {
+      return projectDocFor(projectId).storageCapBytes == null ||
+        (projectDocFor(projectId).storageBytesUsed == null
+          ? request.resource.size <= projectDocFor(projectId).storageCapBytes
+          : projectDocFor(projectId).storageBytesUsed + request.resource.size
+              <= projectDocFor(projectId).storageCapBytes);
+    }
+
     match /projects/{projectId}/purchaseOrders/{poId}/invoices/{invoiceId}/{fileName} {
       allow read: if isProjectMember(projectId);
-      allow create, update: if (canWriteProject(projectId) || canApproveProject(projectId)) && isUnder25MB();
+      allow create, update: if (canWriteProject(projectId) || canApproveProject(projectId))
+        && isUnder25MB()
+        && isAllowedContentType()
+        && underStorageCap(projectId);
       allow delete: if canWriteProject(projectId);
     }
 
     match /projects/{projectId}/purchaseOrders/{poId}/attachments/{attId}/{fileName} {
       allow read: if isProjectMember(projectId);
-      allow create, update: if canWriteProject(projectId) && isUnder25MB();
+      allow create, update: if canWriteProject(projectId)
+        && isUnder25MB()
+        && isAllowedContentType()
+        && underStorageCap(projectId);
       allow delete: if canWriteProject(projectId);
     }
 
     match /projects/{projectId}/suppliers/{supplierId}/docs/{docId}/{fileName} {
       allow read: if isProjectMember(projectId);
-      allow create, update: if canWriteProject(projectId) && isUnder25MB();
+      allow create, update: if canWriteProject(projectId)
+        && isUnder25MB()
+        && isAllowedContentType()
+        && underStorageCap(projectId);
       allow delete: if canWriteProject(projectId);
     }
 

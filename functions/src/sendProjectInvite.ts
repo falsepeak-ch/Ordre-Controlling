@@ -1,9 +1,45 @@
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { defineSecret, defineString } from 'firebase-functions/params';
 import { logger } from 'firebase-functions/v2';
 import * as nodemailer from 'nodemailer';
 import { renderInviteEmail, type InviteLocale } from './templates/inviteEmail';
+
+const INVITE_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const INVITE_RATE_MAX = 10; // max invites / uid / hour
+
+/**
+ * Sliding-window rate limit: read the uid's invite counter, evict
+ * entries older than the window, reject if the remaining count is
+ * above the cap, otherwise append "now" to the counter and let the
+ * request through.
+ */
+async function enforceInviteRateLimit(uid: string): Promise<void> {
+  const db = getFirestore();
+  const ref = db.doc(`rateLimits/invites/users/${uid}`);
+  const now = Date.now();
+  const cutoff = now - INVITE_RATE_WINDOW_MS;
+
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const prev = (snap.exists ? snap.data()?.timestamps : []) as number[] | undefined;
+    const recent = (prev ?? []).filter((ts) => ts > cutoff);
+    if (recent.length >= INVITE_RATE_MAX) {
+      throw new HttpsError(
+        'resource-exhausted',
+        'Too many invites in the last hour. Please wait and try again.',
+      );
+    }
+    tx.set(
+      ref,
+      {
+        timestamps: [...recent, now],
+        lastUpdated: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+  });
+}
 
 const EMAIL_USER = defineString('EMAIL_USER');
 const EMAIL_PASS = defineSecret('EMAIL_PASS');
@@ -46,12 +82,22 @@ export const sendProjectInvite = onCall(
     region: 'europe-west1',
     secrets: [EMAIL_PASS, APP_BASE_URL],
     cors: true,
+    enforceAppCheck: true,
   },
   async (req) => {
     const uid = req.auth?.uid;
     if (!uid) {
       throw new HttpsError('unauthenticated', 'Sign in to invite members.');
     }
+    if (!req.app) {
+      // enforceAppCheck: true already rejects, but keep an explicit
+      // guard so a stray non-enforced deploy still fails closed.
+      throw new HttpsError('failed-precondition', 'App Check token required.');
+    }
+
+    // Cap invites per uid per hour so a leaked client (or disgruntled
+    // member) can't spray hundreds of invite emails.
+    await enforceInviteRateLimit(uid);
 
     const payload = (req.data ?? {}) as Partial<InvitePayload>;
     const projectId = (payload.projectId ?? '').trim();

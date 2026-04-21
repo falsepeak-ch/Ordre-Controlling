@@ -55,25 +55,40 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Rate-limit counters. Writable only by admin-SDK Cloud Functions;
+    // clients must not inspect or tamper with them.
+    match /rateLimits/{path=**} {
+      allow read, write: if false;
+    }
+
     // ---------- Projects ----------
     match /projects/{projectId} {
       // Read: only members.
       allow read: if isSignedIn() && resource.data.members[request.auth.uid] != null;
 
-      // Create: the caller must be listed as owner in the incoming doc.
-      allow create: if isSignedIn() &&
-        request.resource.data.members[request.auth.uid] == 'owner';
+      // Create: disabled from the client. All project creation flows
+      // through the `createProject` Cloud Function (admin SDK), which
+      // enforces the free-tier project-count quota. Direct client-side
+      // creates would bypass that quota.
+      allow create: if false;
 
       // Update content (name, description, initial, etc.) while leaving
       // the members map untouched — any editor/owner may do this.
       // Changing the members map or the memberEmails/memberProfiles maps
-      // is owner-only.
+      // is owner-only. Additionally, `storageBytesUsed` and
+      // `storageCapBytes` are maintained by Cloud Functions only.
       allow update: if isSignedIn() && (
         (
           canWriteProject(projectId) &&
-          request.resource.data.members == resource.data.members
+          request.resource.data.members == resource.data.members &&
+          request.resource.data.storageBytesUsed == resource.data.storageBytesUsed &&
+          request.resource.data.storageCapBytes == resource.data.storageCapBytes
         ) ||
-        isProjectOwner(projectId)
+        (
+          isProjectOwner(projectId) &&
+          request.resource.data.storageBytesUsed == resource.data.storageBytesUsed &&
+          request.resource.data.storageCapBytes == resource.data.storageCapBytes
+        )
       );
 
       // Delete: owner only.
@@ -93,6 +108,15 @@ service cloud.firestore {
       match /categories/{id} {
         allow read: if isProjectMember(projectId);
         allow create, update, delete: if canWriteProject(projectId);
+      }
+
+      // Project-level counters (PO numbering, …). Editors and owners
+      // may mutate; nothing here is user-visible on its own. Kept as a
+      // distinct branch so the other subcollections' rules stay tight.
+      match /meta/{docId} {
+        allow read: if isProjectMember(projectId);
+        allow create, update: if canWriteProject(projectId);
+        allow delete: if isProjectOwner(projectId);
       }
 
       match /purchaseOrders/{poId} {
