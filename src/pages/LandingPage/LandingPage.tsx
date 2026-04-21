@@ -12,6 +12,12 @@ import './LandingPage.css';
 
 const BILLING_ENABLED = import.meta.env.VITE_BILLING_ENABLED === 'true';
 
+// Social-proof strip and testimonials are hidden until we have real
+// customer logos and quotes. Flip these back on (and update the
+// `logos.*` / `quotes.*` i18n strings) when the data is real.
+const SHOW_CUSTOMER_LOGOS = false;
+const SHOW_TESTIMONIALS = false;
+
 const STEPS: Array<{ key: 'commit' | 'approve' | 'reconcile'; icon: IconName }> = [
   { key: 'commit', icon: 'receipt-fill' },
   { key: 'approve', icon: 'shield-fill-check' },
@@ -87,17 +93,19 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ===== Social proof strip ===== */}
-      <section className="landing-logos" aria-label={t('landing.logosLabel')}>
-        <p className="landing-logos-label">{t('landing.logosLabel')}</p>
-        <ul className="landing-logos-row">
-          {['verdera', 'tallerpol', 'escenic', 'martianomusic', 'berlinfilm'].map((slug) => (
-            <li key={slug} className="landing-logos-item">
-              {t(`landing.logos.${slug}`)}
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/* ===== Social proof strip — hidden until real logos ===== */}
+      {SHOW_CUSTOMER_LOGOS ? (
+        <section className="landing-logos" aria-label={t('landing.logosLabel')}>
+          <p className="landing-logos-label">{t('landing.logosLabel')}</p>
+          <ul className="landing-logos-row">
+            {['verdera', 'tallerpol', 'escenic', 'martianomusic', 'berlinfilm'].map((slug) => (
+              <li key={slug} className="landing-logos-item">
+                {t(`landing.logos.${slug}`)}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {/* ===== Problem → Solution ===== */}
       <section className="landing-contrast">
@@ -175,24 +183,26 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ===== Testimonials ===== */}
-      <section className="landing-quotes">
-        <div className="landing-quotes-head">
-          <span className="eyebrow">{t('landing.quotesEyebrow')}</span>
-          <h2 className="display-xl">{t('landing.quotesTitle')}</h2>
-        </div>
-        <div className="landing-quotes-grid">
-          {TESTIMONIAL_KEYS.map((key) => (
-            <figure key={key} className="landing-quote">
-              <blockquote>{t(`landing.quotes.${key}.body`)}</blockquote>
-              <figcaption>
-                <span className="landing-quote-name">{t(`landing.quotes.${key}.name`)}</span>
-                <span className="landing-quote-role">{t(`landing.quotes.${key}.role`)}</span>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      </section>
+      {/* ===== Testimonials — hidden until real quotes ===== */}
+      {SHOW_TESTIMONIALS ? (
+        <section className="landing-quotes">
+          <div className="landing-quotes-head">
+            <span className="eyebrow">{t('landing.quotesEyebrow')}</span>
+            <h2 className="display-xl">{t('landing.quotesTitle')}</h2>
+          </div>
+          <div className="landing-quotes-grid">
+            {TESTIMONIAL_KEYS.map((key) => (
+              <figure key={key} className="landing-quote">
+                <blockquote>{t(`landing.quotes.${key}.body`)}</blockquote>
+                <figcaption>
+                  <span className="landing-quote-name">{t(`landing.quotes.${key}.name`)}</span>
+                  <span className="landing-quote-role">{t(`landing.quotes.${key}.role`)}</span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* ===== Pricing ===== */}
       <LandingPricing />

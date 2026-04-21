@@ -54,11 +54,8 @@ N/A — removed from the stack. PostHog captures exceptions.
 Deferred. `VITE_BILLING_ENABLED` stays unset; the Pro upgrade CTA is
 hidden; Pro access is granted with `npm run grant-pro -- <uid>`.
 
-Heads-up: a stale `createCheckoutSession` Cloud Function (nodejs20) is
-still deployed from pre-scaffolding work — it's not in this codebase.
-When Stripe wiring starts, either delete it via
-`firebase functions:delete createCheckoutSession --region europe-west1`
-or overwrite it with the real implementation.
+The zombie `createCheckoutSession` function from earlier scaffolding
+has been deleted — the slate is clean for when Stripe wiring starts.
 
 ---
 
