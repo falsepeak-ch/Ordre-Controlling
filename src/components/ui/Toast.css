@@ -27,7 +27,7 @@
   animation: toast-in 0.28s var(--ease-out) forwards;
 }
 
-.toast-error .toast-icon { color: #ff7272; }
+.toast-error .toast-icon { color: var(--status-danger); }
 
 .toast-icon {
   display: grid;

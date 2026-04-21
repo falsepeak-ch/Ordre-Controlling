@@ -43,17 +43,7 @@
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--link);
-}
-
-/* Thread the landing accent through every section eyebrow — the single
- * non-grayscale colour we allow (see AGENTS.md). Scoped to the landing
- * page so internal app pages keep their monochrome eyebrows. */
-.landing-how .eyebrow,
-.landing-features .eyebrow,
-.landing-pricing .eyebrow,
-.landing-faq .eyebrow {
-  color: var(--link);
+  color: var(--fg-muted);
 }
 
 .landing-hero-title {

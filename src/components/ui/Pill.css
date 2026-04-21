@@ -24,15 +24,44 @@
 .pill-tone-soft { background: var(--surface-muted); box-shadow: none; }
 
 .pill-status-draft .pill-dot { background: var(--status-draft); }
+
+.pill-status-pending_approval {
+  background: var(--status-warning-soft);
+  color: var(--status-warning);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--status-warning) 22%, transparent);
+  font-weight: 600;
+}
 .pill-status-pending_approval .pill-dot {
-  background: var(--status-pending);
+  background: var(--status-warning);
   animation: pill-pulse 1.8s var(--ease-in-out) infinite;
 }
-.pill-status-pending_approval { box-shadow: 0 0 0 1px var(--ring-border-strong); font-weight: 600; }
+
 .pill-status-approved .pill-dot { background: var(--status-approved); }
 .pill-status-approved { box-shadow: 0 0 0 1px var(--ring-border-strong); }
-.pill-status-rejected .pill-dot { background: var(--status-rejected); }
+
+.pill-status-rejected {
+  background: var(--status-danger-soft);
+  color: var(--status-danger);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--status-danger) 22%, transparent);
+}
+.pill-status-rejected .pill-dot { background: var(--status-danger); }
+
 .pill-status-closed .pill-dot { background: var(--status-closed); }
+
+.pill-status-partially_invoiced {
+  background: var(--status-success-soft);
+  color: var(--status-success);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--status-success) 22%, transparent);
+}
+.pill-status-partially_invoiced .pill-dot { background: var(--status-success); }
+
+.pill-status-partially_approved {
+  background: var(--status-warning-soft);
+  color: var(--status-warning);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--status-warning) 22%, transparent);
+  font-weight: 600;
+}
+.pill-status-partially_approved .pill-dot { background: var(--status-warning); }
 
 @keyframes pill-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }

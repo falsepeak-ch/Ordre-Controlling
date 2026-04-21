@@ -342,7 +342,7 @@ function LandingPricing() {
               </Button>
             ) : (
               <a
-                href="mailto:pro@ordrecontrolling.com?subject=Ordre%20Pro%20invite%20request"
+                href="mailto:help@ordrecontrolling.com?subject=Ordre%20Pro%20invite%20request"
                 style={{ textDecoration: 'none' }}
               >
                 <Button variant="primary" size="lg" fullWidth>

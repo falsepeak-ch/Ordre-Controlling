@@ -455,6 +455,7 @@
       "draft": "Esborrany",
       "pending_approval": "Pendents",
       "approved": "Aprovades",
+      "partially_invoiced": "Parcialment facturades",
       "rejected": "Rebutjades",
       "closed": "Tancades"
     },
@@ -462,6 +463,8 @@
       "draft": "Esborrany",
       "pending_approval": "Pendent d'aprovació",
       "approved": "Aprovada",
+      "partially_approved": "Parcialment aprovada",
+      "partially_invoiced": "Parcialment facturada",
       "rejected": "Rebutjada",
       "closed": "Tancada"
     },
@@ -514,8 +517,9 @@
     "invoiceIssued": "Emesa {{date}}",
     "invoiceDue": "Venciment {{date}}",
     "invoiceUploadedBy": "per {{by}}",
-    "approvalTrailTitle": "Aprovacions",
+    "approvalTrailTitle": "Historial",
     "approvalPendingNote": "Pendent de {{name}}",
+    "invoiceHistoryNote": "Factura {{number}} · {{amount}}",
     "supplierTitle": "Proveïdor",
     "pickLabel": "Per la línia:",
     "addInvoiceCta": "Puja factura",
@@ -742,28 +746,24 @@
     "rejectTitle": "Rebutjar {{number}}",
     "approveSubtitle": "Queda constància de qui, quan i amb quin comentari.",
     "rejectSubtitle": "Indica breument per què. El sol·licitant podrà re-escopar i tornar-la a enviar.",
-    "approvedToast": "Factura registrada i ordre actualitzada",
+    "approvedToast": "Ordre aprovada",
     "rejectedToast": "Ordre rebutjada",
     "closedToast": "Ordre tancada",
     "closeConfirm": "Tanques l'ordre? Deixarà de poder rebre factures.",
+    "reopenCta": "Reobre l'ordre",
+    "reopenedToast": "Ordre reoberta",
+    "reopenConfirm": "Reobres aquesta ordre? Tornarà a acceptar factures.",
     "deleteCta": "Elimina",
     "deleteConfirm": "Elimines permanentment aquesta ordre i totes les seves dades? No es pot desfer.",
     "deletedToast": "Ordre de compra eliminada"
   },
   "poDecision": {
-    "approveTitle": "Registra factura — {{number}}",
-    "approveSubtitle": "Puja la factura i introdueix l'import. El pressupost restant s'actualitza de manera immediata.",
-    "billTitle": "Dades de la factura",
+    "approveTitle": "Aprovar {{number}}",
+    "approveSubtitle": "Queda constància de qui, quan i amb quin comentari.",
+    "approveCta": "Aprova l'ordre",
     "committed": "Compromès",
     "alreadyInvoiced": "Ja facturat",
-    "remainingAfter": "Restant après aquesta factura",
-    "willClose": "L'ordre es tancarà",
-    "approveAndRecordCta": "Registra factura",
-    "approveAndCloseCta": "Registra i tanca l'ordre",
-    "approvedClosedToast": "Factura registrada — l'ordre queda completament facturada i tancada",
-    "amountRequired": "Introdueix l'import de la factura.",
-    "fileRequired": "Puja el fitxer de la factura.",
-    "mappingMismatch": "L'assignació per línies ({{mapped}}) no coincideix amb el total ({{total}})."
+    "remainingAfter": "Restant"
   },
   "projectSettings": {
     "pageTitle": "Configuració del projecte",
@@ -925,7 +925,12 @@
     },
     "requestedBy": "Demanat per {{name}}",
     "waitingFor": "També espera {{list}}",
-    "youActed": "Ja has registrat una factura"
+    "youActed": "Ja has registrat una factura",
+    "undoCta": "Desfer",
+    "undoConfirmTitle": "Desfer la decisió?",
+    "undoConfirmBody": "L'ordre tornarà a la cua d'aprovacions. Si hi havia una factura, s'esborrarà.",
+    "undoneToast": "Decisió desfeta",
+    "billedShort": "{{amount}} facturat"
   },
   "invoices": {
     "pageTitle": "Factures",

@@ -1,13 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useProjects } from '~/hooks/useProjects';
 import { useAuth } from '~/hooks/useAuth';
+import { useSubscription } from '~/hooks/useSubscription';
 import { CreateProjectModal } from '~/components/CreateProjectModal';
+import { UpgradeModal } from '~/components/UpgradeModal';
 import { RolePill } from '~/components/ui/RolePill';
 import { Icon } from '~/components/ui/Icon';
 import type { Project, Role } from '~/types';
 import './ProjectSwitcher.css';
+
+const FREE_PROJECT_LIMIT = 1;
 
 interface ProjectSwitcherProps {
   current: Project;
@@ -17,10 +21,18 @@ export function ProjectSwitcher({ current }: ProjectSwitcherProps) {
   const { t } = useTranslation();
   const { projects } = useProjects();
   const { user } = useAuth();
+  const { isPro } = useSubscription();
   const [open, setOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const ownedCount = useMemo(
+    () => projects.filter((p) => user && p.members[user.uid] === 'owner').length,
+    [projects, user],
+  );
+  const gated = !isPro && ownedCount >= FREE_PROJECT_LIMIT;
 
   useEffect(() => {
     if (!open) return;
@@ -97,7 +109,8 @@ export function ProjectSwitcher({ current }: ProjectSwitcherProps) {
                 className="project-switcher-option project-switcher-new"
                 onClick={() => {
                   setOpen(false);
-                  setCreateOpen(true);
+                  if (gated) setUpgradeOpen(true);
+                  else setCreateOpen(true);
                 }}
               >
                 <span className="project-switcher-option-monogram plus">
@@ -130,7 +143,12 @@ export function ProjectSwitcher({ current }: ProjectSwitcherProps) {
         ) : null}
       </div>
 
-      <CreateProjectModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <CreateProjectModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onLimitReached={() => setUpgradeOpen(true)}
+      />
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </>
   );
 }

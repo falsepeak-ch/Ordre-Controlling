@@ -20,7 +20,6 @@
   gap: var(--s-2);
   max-width: 720px;
 }
-.dashboard-hero .eyebrow { color: var(--link); }
 .dashboard-hero-sub {
   color: var(--fg-muted);
   font-size: 15.5px;
@@ -76,7 +75,7 @@
 }
 .metric-card-note {
   font-size: 11.5px;
-  color: var(--link);
+  color: var(--fg-muted);
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
   font-weight: 500;

@@ -137,6 +137,13 @@ export interface POLine {
 export type POStatus = 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'closed';
 
 /**
+ * UI-only status. Stored POs never have `partially_invoiced` or
+ * `partially_approved` — both are computed at render time. See
+ * `displayPOStatus`.
+ */
+export type DisplayPOStatus = POStatus | 'partially_invoiced' | 'partially_approved';
+
+/**
  * An append-only approval log entry. Created when an approver records
  * spend against a PO (approve + bill) or rejects it. There is no longer
  * any pre-assigned slot: approvers act on the PO directly, and the

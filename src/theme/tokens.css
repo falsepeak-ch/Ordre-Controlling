@@ -49,15 +49,28 @@
   /* Focus */
   --focus-ring: rgba(59, 130, 246, 0.5);
 
-  /* Accents — reserved for links and signalling only. */
+  /* Accents — reserved for actual links / interactive signal. */
   --link: #0099ff;
 
-  /* Status (monochrome dots; hue is off-limits elsewhere) */
-  --status-draft: #b8b8b8;
-  --status-pending: #242424;
-  --status-approved: #242424;
-  --status-rejected: #111111;
-  --status-closed: #b8b8b8;
+  /* Legacy alias — several callsites reference --fg-base instead of --fg. */
+  --fg-base: var(--fg);
+
+  /* Semantic status — used only on surfaces that communicate state.
+     Monochrome is the default; these hues are the single exception. */
+  --status-danger: #c04747;
+  --status-danger-soft: #fbeaea;
+  --status-warning: #a86b1f;
+  --status-warning-soft: #fbf2e4;
+  --status-success: #2d7a4f;
+  --status-success-soft: #e8f3ec;
+
+  /* Status tokens flow from the semantic set above. "Problems only" —
+     approved / draft / closed stay neutral; pending warns; rejected errors. */
+  --status-draft: var(--fg-subtle);
+  --status-pending: var(--status-warning);
+  --status-approved: var(--fg-deep);
+  --status-rejected: var(--status-danger);
+  --status-closed: var(--fg-subtle);
 
   /* Typography */
   --font-display: 'Cal Sans', 'Inter', system-ui, sans-serif;
@@ -141,11 +154,20 @@
 
   --link: #3aa5ff;
 
-  --status-draft: #595959;
-  --status-pending: #ededed;
-  --status-approved: #ededed;
-  --status-rejected: #ffffff;
-  --status-closed: #595959;
+  --fg-base: var(--fg);
+
+  --status-danger: #ef6b6b;
+  --status-danger-soft: color-mix(in oklab, #ef6b6b 18%, transparent);
+  --status-warning: #f0b76a;
+  --status-warning-soft: color-mix(in oklab, #f0b76a 18%, transparent);
+  --status-success: #52b27a;
+  --status-success-soft: color-mix(in oklab, #52b27a 18%, transparent);
+
+  --status-draft: var(--fg-subtle);
+  --status-pending: var(--status-warning);
+  --status-approved: var(--fg-deep);
+  --status-rejected: var(--status-danger);
+  --status-closed: var(--fg-subtle);
 }
 
 /* ----------------------------------------------------------------------------

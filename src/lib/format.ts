@@ -63,7 +63,11 @@ export function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso);
   const locale = currentLocale();
-  const date = d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+  const date = d.toLocaleDateString(locale, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
   const time = d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
   return `${date} · ${time}`;
 }

@@ -1,4 +1,4 @@
-import type { POLine, ProjectMetrics, PurchaseOrder } from '~/types';
+import type { DisplayPOStatus, POLine, ProjectMetrics, PurchaseOrder } from '~/types';
 
 export const lineCommitted = (line: POLine): number => line.quantity * line.unitPrice;
 
@@ -29,6 +29,17 @@ export function poTotals(po: PurchaseOrder): POTotals {
     for (const l of inv.lines ?? []) invoiced += l.amount;
   }
   return { committed, invoiced, remaining: committed - invoiced };
+}
+
+export function displayPOStatus(po: PurchaseOrder): DisplayPOStatus {
+  if (po.status === 'pending_approval') {
+    const hasApproved = (po.approvals ?? []).some((a) => a.decision === 'approved');
+    return hasApproved ? 'partially_approved' : po.status;
+  }
+  if (po.status !== 'approved') return po.status;
+  const { committed, invoiced } = poTotals(po);
+  if (committed > 0 && invoiced > 0 && invoiced < committed) return 'partially_invoiced';
+  return po.status;
 }
 
 const METRIC_EXCLUDED_STATUSES = new Set(['draft', 'rejected']);

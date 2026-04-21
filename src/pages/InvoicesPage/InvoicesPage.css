@@ -163,7 +163,7 @@
 .inv-row-caret {
   display: grid;
   place-items: center;
-  color: var(--fg-subtle);
+  color: var(--fg-muted);
   transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 
@@ -203,8 +203,8 @@
 .inv-empty-filter { text-align: center; padding: var(--s-8); }
 
 .inv-row-overdue {
-  background: color-mix(in oklab, var(--fg-base) 4%, transparent);
-  box-shadow: inset 3px 0 0 var(--fg-base);
+  background: var(--status-danger-soft);
+  box-shadow: inset 3px 0 0 var(--status-danger);
 }
 .inv-row-paid {
   opacity: 0.68;

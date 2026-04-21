@@ -29,7 +29,7 @@
 .progress-fill-over {
   background: repeating-linear-gradient(
     135deg,
-    var(--fg-deep) 0 4px,
-    color-mix(in oklab, var(--fg-deep) 75%, var(--surface)) 4px 8px
+    var(--status-danger) 0 4px,
+    color-mix(in oklab, var(--status-danger) 75%, var(--surface)) 4px 8px
   );
 }

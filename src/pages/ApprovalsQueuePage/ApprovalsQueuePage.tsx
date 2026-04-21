@@ -12,9 +12,13 @@ import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { useAuth } from '~/hooks/useAuth';
 import { useApprovalsQueue, type QueueEntry } from '~/hooks/useApprovalsQueue';
 import { useSuppliers } from '~/hooks/useSuppliers';
-import { poTotals } from '~/lib/reconcile';
+import { useConfirm } from '~/hooks/useConfirm';
+import { useToast } from '~/hooks/useToast';
+import { displayPOStatus, poTotals } from '~/lib/reconcile';
+import { undoApproval } from '~/lib/purchaseOrders';
+import { canApprove } from '~/lib/roles';
 import { eur, formatDate, relDate } from '~/lib/format';
-import type { PurchaseOrder } from '~/types';
+import type { Approval, PurchaseOrder } from '~/types';
 import './ApprovalsQueuePage.css';
 
 type Tab = 'pending' | 'decided';
@@ -25,15 +29,40 @@ export function ApprovalsQueuePage() {
   const { user } = useAuth();
   const { pending, decided, loading } = useApprovalsQueue(project.id, user?.uid);
   const { suppliers } = useSuppliers(project.id);
+  const { push } = useToast();
+  const confirm = useConfirm();
 
   const [tab, setTab] = useState<Tab>('pending');
   const [decisionEntry, setDecisionEntry] = useState<{
     entry: QueueEntry;
     mode: 'approve' | 'reject';
   } | null>(null);
+  const [undoingApprovalId, setUndoingApprovalId] = useState<string | null>(null);
 
   function supplierFor(po: PurchaseOrder) {
     return suppliers.find((s) => s.id === po.supplierId);
+  }
+
+  async function handleUndo(poId: string, approval: Approval) {
+    const ok = await confirm({
+      title: t('approvalsQueue.undoConfirmTitle'),
+      body: t('approvalsQueue.undoConfirmBody'),
+      confirmLabel: t('approvalsQueue.undoCta'),
+    });
+    if (!ok) return;
+    setUndoingApprovalId(approval.id);
+    try {
+      await undoApproval(project.id, poId, {
+        id: approval.id,
+        invoiceId: approval.invoiceId ?? null,
+      });
+      push({ message: t('approvalsQueue.undoneToast'), icon: 'check-circle-fill' });
+    } catch (err) {
+      console.warn('[approvalsQueue] undo failed', err);
+      push({ message: t('invoiceForm.error'), icon: 'x-circle-fill', tone: 'error' });
+    } finally {
+      setUndoingApprovalId(null);
+    }
   }
 
   const entries = tab === 'pending' ? pending : decided;
@@ -118,8 +147,8 @@ export function ApprovalsQueuePage() {
                     >
                       {entry.po.number}
                     </Link>
-                    <Pill status={entry.po.status}>
-                      {t(`pos.statusLabel.${entry.po.status}`)}
+                    <Pill status={displayPOStatus(entry.po)}>
+                      {t(`pos.statusLabel.${displayPOStatus(entry.po)}`)}
                     </Pill>
                   </div>
 
@@ -138,7 +167,14 @@ export function ApprovalsQueuePage() {
                         · {t('approvalsQueue.requestedBy', { name: entry.po.createdBy })}
                       </span>
                     </div>
-                    <div className="approvals-card-amount num">{eur(totals.committed)}</div>
+                    <div className="approvals-card-amounts">
+                      <div className="approvals-card-amount num">{eur(totals.committed)}</div>
+                      {totals.invoiced > 0 ? (
+                        <div className="approvals-card-billed muted num">
+                          {t('approvalsQueue.billedShort', { amount: eur(totals.invoiced) })}
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
 
                   {entry.po.notes ? (
@@ -158,24 +194,26 @@ export function ApprovalsQueuePage() {
                           </span>
                         ) : null}
                       </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDecisionEntry({ entry, mode: 'reject' })}
-                          leading={<Icon name="x-circle-fill" size={13} />}
-                        >
-                          {t('poActions.rejectCta')}
-                        </Button>
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => setDecisionEntry({ entry, mode: 'approve' })}
-                          leading={<Icon name="check-circle-fill" size={13} />}
-                        >
-                          {t('poActions.approveCta')}
-                        </Button>
-                      </div>
+                      {entry.po.status === 'pending_approval' ? (
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDecisionEntry({ entry, mode: 'reject' })}
+                            leading={<Icon name="x-circle-fill" size={13} />}
+                          >
+                            {t('poActions.rejectCta')}
+                          </Button>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => setDecisionEntry({ entry, mode: 'approve' })}
+                            leading={<Icon name="check-circle-fill" size={13} />}
+                          >
+                            {t('poActions.approveCta')}
+                          </Button>
+                        </div>
+                      ) : null}
                     </div>
                   ) : (
                     <div className="approvals-card-decision">
@@ -192,9 +230,21 @@ export function ApprovalsQueuePage() {
                         </span>
                       </span>
                       {lastMyApproval?.comment ? (
-                        <span className="muted" style={{ fontSize: 12.5, marginLeft: 'auto', maxWidth: '55%', textAlign: 'right' }}>
+                        <span className="muted" style={{ fontSize: 12.5, maxWidth: '45%', textAlign: 'right' }}>
                           &ldquo;{lastMyApproval.comment}&rdquo;
                         </span>
+                      ) : null}
+                      {lastMyApproval && canApprove(role) ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleUndo(entry.po.id, lastMyApproval)}
+                          disabled={undoingApprovalId === lastMyApproval.id}
+                          leading={<Icon name="x-circle-fill" size={13} />}
+                          style={{ marginLeft: 'auto' }}
+                        >
+                          {t('approvalsQueue.undoCta')}
+                        </Button>
                       ) : null}
                     </div>
                   )}

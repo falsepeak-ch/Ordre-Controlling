@@ -177,10 +177,12 @@
 .pos-row-progress { display: flex; align-items: center; gap: 8px; }
 .pos-row-progress .progress { flex: 1; }
 .pos-row-pct { font-size: 11.5px; color: var(--fg-muted); min-width: 30px; text-align: right; }
+.pos-row-pct-over { color: var(--status-danger); font-weight: 600; }
+.pos-row-amount.is-over { color: var(--status-danger); font-weight: 600; }
 .pos-row-caret {
   display: grid;
   place-items: center;
-  color: var(--fg-subtle);
+  color: var(--fg-muted);
   transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 .text-right { text-align: right; }

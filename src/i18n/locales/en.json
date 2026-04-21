@@ -455,6 +455,7 @@
       "draft": "Draft",
       "pending_approval": "Pending",
       "approved": "Approved",
+      "partially_invoiced": "Partially invoiced",
       "rejected": "Rejected",
       "closed": "Closed"
     },
@@ -462,6 +463,8 @@
       "draft": "Draft",
       "pending_approval": "Pending approval",
       "approved": "Approved",
+      "partially_approved": "Partially approved",
+      "partially_invoiced": "Partially invoiced",
       "rejected": "Rejected",
       "closed": "Closed"
     },
@@ -514,8 +517,9 @@
     "invoiceIssued": "Issued {{date}}",
     "invoiceDue": "Due {{date}}",
     "invoiceUploadedBy": "by {{by}}",
-    "approvalTrailTitle": "Approval trail",
+    "approvalTrailTitle": "History",
     "approvalPendingNote": "Waiting on {{name}}",
+    "invoiceHistoryNote": "Invoice {{number}} · {{amount}}",
     "supplierTitle": "Supplier",
     "pickLabel": "For line:",
     "addInvoiceCta": "Upload invoice",
@@ -742,28 +746,24 @@
     "rejectTitle": "Reject {{number}}",
     "approveSubtitle": "The decision is logged with your name, a timestamp, and the comment.",
     "rejectSubtitle": "A short reason helps the requester re-scope and resubmit.",
-    "approvedToast": "Bill recorded and PO updated",
+    "approvedToast": "PO approved",
     "rejectedToast": "PO rejected",
     "closedToast": "PO closed",
     "closeConfirm": "Close this PO? It won't accept new invoices.",
+    "reopenCta": "Reopen PO",
+    "reopenedToast": "PO reopened",
+    "reopenConfirm": "Reopen this PO? It will accept new invoices again.",
     "deleteCta": "Delete",
     "deleteConfirm": "Permanently delete this PO and all its data? This cannot be undone.",
     "deletedToast": "Purchase order deleted"
   },
   "poDecision": {
-    "approveTitle": "Record bill — {{number}}",
-    "approveSubtitle": "Upload the bill and enter the amount. The remaining budget is updated immediately.",
-    "billTitle": "Bill details",
+    "approveTitle": "Approve {{number}}",
+    "approveSubtitle": "The decision is logged with your name, a timestamp, and the comment.",
+    "approveCta": "Approve PO",
     "committed": "Committed",
     "alreadyInvoiced": "Already invoiced",
-    "remainingAfter": "Remaining after this bill",
-    "willClose": "PO will close",
-    "approveAndRecordCta": "Record bill",
-    "approveAndCloseCta": "Record bill & close PO",
-    "approvedClosedToast": "Bill recorded — PO is now fully invoiced and closed",
-    "amountRequired": "Enter the bill amount.",
-    "fileRequired": "Upload the bill file.",
-    "mappingMismatch": "Line mapping ({{mapped}}) doesn't match the total ({{total}})."
+    "remainingAfter": "Remaining"
   },
   "projectSettings": {
     "pageTitle": "Project settings",
@@ -925,7 +925,12 @@
     },
     "requestedBy": "Requested by {{name}}",
     "waitingFor": "Also waiting on {{list}}",
-    "youActed": "You've already recorded a bill"
+    "youActed": "You've already recorded a bill",
+    "undoCta": "Undo",
+    "undoConfirmTitle": "Undo this decision?",
+    "undoConfirmBody": "The PO will return to the approvals queue. If a bill was recorded, it will be deleted.",
+    "undoneToast": "Decision undone",
+    "billedShort": "{{amount}} billed"
   },
   "invoices": {
     "pageTitle": "Invoices",

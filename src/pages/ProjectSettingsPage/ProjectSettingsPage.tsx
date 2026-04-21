@@ -173,7 +173,8 @@ function StorageSection() {
   const used = project.storageBytesUsed ?? 0;
   const cap = project.storageCapBytes;
   const hasCap = typeof cap === 'number' && cap > 0;
-  const pct = hasCap ? Math.min(100, Math.round((used / cap!) * 100)) : 0;
+  const pct = hasCap ? Math.round((used / cap!) * 100) : 0;
+  const over = pct > 100;
 
   return (
     <Card size="md" className="settings-card">
@@ -200,10 +201,19 @@ function StorageSection() {
             ) : null}
           </span>
           {hasCap ? (
-            <span className="muted num" style={{ fontSize: 13 }}>{pct}%</span>
+            <span
+              className="num"
+              style={{
+                fontSize: 13,
+                color: over ? 'var(--status-danger)' : 'var(--fg-muted)',
+                fontWeight: over ? 600 : 400,
+              }}
+            >
+              {pct}%
+            </span>
           ) : null}
         </div>
-        {hasCap ? <Progress value={pct} /> : null}
+        {hasCap ? <Progress value={Math.min(100, pct)} tone={over ? 'over' : 'solid'} /> : null}
       </div>
     </Card>
   );

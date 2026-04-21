@@ -1,10 +1,10 @@
 import type { HTMLAttributes, ReactNode } from 'react';
-import type { POStatus } from '~/types';
+import type { DisplayPOStatus } from '~/types';
 import './Pill.css';
 
 interface PillProps extends HTMLAttributes<HTMLSpanElement> {
   tone?: 'default' | 'soft';
-  status?: POStatus;
+  status?: DisplayPOStatus;
   dot?: boolean;
   children: ReactNode;
 }

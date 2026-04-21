@@ -14,7 +14,7 @@ interface Props {
 type Plan = 'monthly' | 'annual';
 
 const BILLING_ENABLED = import.meta.env.VITE_BILLING_ENABLED === 'true';
-const PRO_CONTACT_EMAIL = 'pro@ordrecontrolling.com';
+const PRO_CONTACT_EMAIL = 'help@ordrecontrolling.com';
 
 export function UpgradeModal({ open, onClose }: Props) {
   const { t } = useTranslation();

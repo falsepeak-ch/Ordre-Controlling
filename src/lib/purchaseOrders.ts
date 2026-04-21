@@ -2,17 +2,18 @@
    Purchase-order lifecycle helpers.
 
    Status transitions:
-     draft → pending_approval → closed
-                              ↘ rejected
+     draft → pending_approval → approved → closed
+                                        ↘ rejected
+     (reopen: closed → approved)
 
-   Approval model (v2):
+   Approval model (v3):
      Submitting a PO sends it to `pending_approval`. Any owner or
-     approver-role member can then record spend by uploading a bill and
-     entering an amount. Each approval event appends to the approvals
-     log (append-only audit trail) and writes a matching invoice doc.
-     The PO stays in `pending_approval` while more spend can land; it
-     automatically transitions to `closed` once `invoiced >= committed`.
-     Rejection closes the PO with no further bills.
+     approver-role member can then approve or reject with a comment —
+     approval is purely a logged decision and does not require a bill.
+     Bills (invoices) are uploaded independently via `InvoiceFormModal`
+     and may be attached from `pending_approval` onwards. Closing the
+     PO is a separate user action; invoices may exceed the committed
+     total (over-budget is a scannable state, not a block).
    ========================================================================== */
 
 import {
@@ -20,6 +21,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   query,
   runTransaction,
@@ -31,11 +33,10 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { purchaseOrdersCol, projectDoc } from './firestore';
-import { createInvoice } from './invoices';
+import { deleteInvoice } from './invoices';
 import { deleteStorageObject } from './attachments';
 import type {
   Approval,
-  InvoiceLine,
   POLine,
   POStatus,
   PurchaseOrder,
@@ -51,25 +52,6 @@ export interface POAuthor {
   uid: string;
   displayName: string;
   initials: string;
-}
-
-// Sum of `total` across every invoice doc in the subcollection. Used by
-// the approve-with-bill flow to decide whether the new bill closes out
-// the PO. Must not rely on the root `po.invoices` array — that array is
-// never written back from the subcollection, so it's always stale.
-async function sumInvoicedFromSubcollection(
-  projectId: string,
-  poId: string,
-): Promise<number> {
-  const snap = await getDocs(
-    collection(db, 'projects', projectId, 'purchaseOrders', poId, 'invoices'),
-  );
-  let total = 0;
-  snap.forEach((d) => {
-    const raw = d.data() as { total?: number };
-    total += Number(raw.total ?? 0);
-  });
-  return total;
 }
 
 // ---------- PO number generation ----------
@@ -212,52 +194,24 @@ export async function submitPOForApproval(
   await batch.commit();
 }
 
-// ---------- Approve with bill (records spend) ----------
-export interface ApproveWithBillInput {
+// ---------- Approve (logged decision, no bill) ----------
+export interface ApprovePOInput {
   approverUid: string;
   approverDisplayName: string;
   approverRoleLabel: string;
-  invoice: {
-    number: string;
-    issueDate: string;
-    dueDate: string;
-    total: number;
-    lines: InvoiceLine[];
-    file?: File | null;
-  };
   comment?: string;
 }
 
 /**
- * Records a spend event against a PO:
- *   1. Uploads the bill to Storage + creates the invoice doc.
- *   2. Appends an approval-log entry (uid, amount, invoiceId, comment).
- *   3. If invoiced total now meets/exceeds committed, closes the PO.
- *
- * Kept as a client-side sequence because Storage uploads can't be part
- * of a Firestore batch — the worst failure mode is an orphan invoice,
- * which editors can delete manually.
+ * Records an approval decision against a PO. Appends an approval-log
+ * entry (uid, comment — no amount, no invoiceId) and moves the PO to
+ * `approved`. Closing the PO and recording bills are separate actions.
  */
-export async function approveWithBill(
+export async function approvePO(
   projectId: string,
   po: PurchaseOrder,
-  input: ApproveWithBillInput,
+  input: ApprovePOInput,
 ): Promise<void> {
-  if (!input.invoice.number.trim()) throw new Error('invoice-number-required');
-  if (!input.invoice.total || input.invoice.total <= 0) {
-    throw new Error('invoice-total-required');
-  }
-
-  const invoiceId = await createInvoice(projectId, po.id, {
-    number: input.invoice.number,
-    issueDate: input.invoice.issueDate,
-    dueDate: input.invoice.dueDate,
-    total: input.invoice.total,
-    lines: input.invoice.lines,
-    uploadedBy: input.approverDisplayName,
-    file: input.invoice.file ?? null,
-  });
-
   const approvalId = newApprovalId();
   const apRef = doc(
     db,
@@ -268,39 +222,23 @@ export async function approveWithBill(
     'approvals',
     approvalId,
   );
-  const approvalDoc = {
+  const poRef = doc(purchaseOrdersCol(projectId), po.id);
+
+  const batch = writeBatch(db);
+  batch.set(apRef, {
     id: approvalId,
     approverUid: input.approverUid,
     approver: input.approverDisplayName,
     initials: initialsFrom(input.approverDisplayName),
     role: input.approverRoleLabel,
     decision: 'approved' as const,
-    amount: Number(input.invoice.total),
-    invoiceId,
     comment: (input.comment ?? '').trim() || null,
     decidedAt: serverTimestamp(),
-  };
-
-  const committed = po.lines.reduce(
-    (sum, l) => sum + l.quantity * l.unitPrice,
-    0,
-  );
-  // Read the authoritative invoiced total from the subcollection — the
-  // `po.invoices` array on the root doc is never written, so relying on
-  // it would skip the close-on-full-invoice transition.
-  const invoicedSoFar = await sumInvoicedFromSubcollection(projectId, po.id);
-  const newInvoicedTotal = invoicedSoFar + Number(input.invoice.total);
-  const shouldClose = committed > 0 && newInvoicedTotal >= committed;
-
-  const poRef = doc(purchaseOrdersCol(projectId), po.id);
-  const batch = writeBatch(db);
-  batch.set(apRef, approvalDoc);
-  const poPatch: Record<string, unknown> = { approvedAt: serverTimestamp() };
-  if (shouldClose) {
-    poPatch.status = 'closed';
-    poPatch.closedAt = serverTimestamp();
-  }
-  batch.update(poRef, poPatch);
+  });
+  batch.update(poRef, {
+    status: 'approved',
+    approvedAt: serverTimestamp(),
+  });
   await batch.commit();
 }
 
@@ -340,6 +278,65 @@ export async function rejectPO(
   await batch.commit();
 }
 
+/**
+ * Reverts a previous approval/rejection decision. Deletes the approval
+ * log entry, and if the approval recorded a bill, deletes the matching
+ * invoice doc + Storage object too. The PO returns to
+ * `pending_approval` and re-enters the approvals queue.
+ *
+ * Intentionally destructive: the user explicitly asked to undo, so we
+ * don't leave an orphan invoice behind. Any other approvers' entries on
+ * the same PO are untouched.
+ */
+export async function undoApproval(
+  projectId: string,
+  poId: string,
+  approval: Pick<Approval, 'id' | 'invoiceId'>,
+): Promise<void> {
+  if (approval.invoiceId) {
+    const invRef = doc(
+      db,
+      'projects',
+      projectId,
+      'purchaseOrders',
+      poId,
+      'invoices',
+      approval.invoiceId,
+    );
+    try {
+      const snap = await getDoc(invRef);
+      if (snap.exists()) {
+        const data = snap.data() as { storagePath?: string };
+        await deleteInvoice(projectId, poId, {
+          id: approval.invoiceId,
+          storagePath: data.storagePath,
+        });
+      }
+    } catch (err) {
+      console.warn('[purchaseOrders] undoApproval invoice cleanup failed', err);
+    }
+  }
+
+  const apRef = doc(
+    db,
+    'projects',
+    projectId,
+    'purchaseOrders',
+    poId,
+    'approvals',
+    approval.id,
+  );
+  const poRef = doc(purchaseOrdersCol(projectId), poId);
+  const batch = writeBatch(db);
+  batch.delete(apRef);
+  batch.update(poRef, {
+    status: 'pending_approval',
+    approvedAt: null,
+    closedAt: null,
+  });
+  await batch.commit();
+}
+
 function newApprovalId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return `ap_${crypto.randomUUID().slice(0, 12)}`;
@@ -358,21 +355,25 @@ function initialsFrom(name: string): string {
 
 /**
  * True if the user has already recorded an approval event for this PO
- * (used to surface "you've already approved" affordances). Because the
- * log is now append-only, a user CAN approve multiple times as more
- * bills arrive — this helper just tells you whether at least one event
- * exists.
+ * (used to surface "you've already approved" affordances).
  */
 export function hasApprovalFrom(po: PurchaseOrder, uid: string | undefined): boolean {
   if (!uid) return false;
   return (po.approvals ?? []).some((a: Approval) => a.approverUid === uid);
 }
 
-// ---------- Close / delete ----------
+// ---------- Close / reopen / delete ----------
 export async function closePO(projectId: string, poId: string): Promise<void> {
   await updateDoc(doc(purchaseOrdersCol(projectId), poId), {
     status: 'closed',
     closedAt: serverTimestamp(),
+  });
+}
+
+export async function reopenPO(projectId: string, poId: string): Promise<void> {
+  await updateDoc(doc(purchaseOrdersCol(projectId), poId), {
+    status: 'approved',
+    closedAt: null,
   });
 }
 

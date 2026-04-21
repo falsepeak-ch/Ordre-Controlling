@@ -8,7 +8,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '~/lib/firebase';
 import { purchaseOrdersCol, tsToISO } from '~/lib/firestore';
-import type { Approval, PurchaseOrder } from '~/types';
+import type { Approval, Invoice, PurchaseOrder } from '~/types';
 
 export interface QueueEntry {
   po: PurchaseOrder;
@@ -27,8 +27,8 @@ export interface UseApprovalsQueueResult {
  * Real-time approvals queue for the current user.
  *
  * pending  — POs in `pending_approval` (any approver/owner may act)
- * decided  — closed/rejected POs that have at least one approval log entry
- *            from this user
+ * decided  — approved/closed/rejected POs that have at least one approval
+ *            log entry from this user
  */
 export function useApprovalsQueue(
   projectId: string,
@@ -37,6 +37,7 @@ export function useApprovalsQueue(
   const [pendingPOs, setPendingPOs] = useState<Map<string, PurchaseOrder>>(new Map());
   const [decidedPOs, setDecidedPOs] = useState<Map<string, PurchaseOrder>>(new Map());
   const [approvalsByPO, setApprovalsByPO] = useState<Map<string, Approval[]>>(new Map());
+  const [invoicesByPO, setInvoicesByPO] = useState<Map<string, Invoice[]>>(new Map());
   const [posReady, setPosReady] = useState(false);
 
   useEffect(() => {
@@ -44,7 +45,10 @@ export function useApprovalsQueue(
     setPosReady(false);
 
     const unsubPending = onSnapshot(
-      query(purchaseOrdersCol(projectId), where('status', '==', 'pending_approval')),
+      query(
+        purchaseOrdersCol(projectId),
+        where('status', 'in', ['pending_approval']),
+      ),
       (snap) => {
         const m = new Map<string, PurchaseOrder>();
         snap.docs.forEach((d) => {
@@ -65,7 +69,10 @@ export function useApprovalsQueue(
     );
 
     const unsubDecided = onSnapshot(
-      query(purchaseOrdersCol(projectId), where('status', 'in', ['closed', 'rejected'])),
+      query(
+        purchaseOrdersCol(projectId),
+        where('status', 'in', ['approved', 'closed', 'rejected']),
+      ),
       (snap) => {
         const m = new Map<string, PurchaseOrder>();
         snap.docs.forEach((d) => {
@@ -87,13 +94,13 @@ export function useApprovalsQueue(
     return () => { unsubPending(); unsubDecided(); };
   }, [projectId, uid]);
 
-  // Subscribe to approvals subcollection for each relevant PO
+  // Subscribe to approvals + invoices subcollections for each relevant PO
   useEffect(() => {
     if (!projectId || !uid) return;
     const relevant = new Set<string>([...pendingPOs.keys(), ...decidedPOs.keys()]);
     const unsubs: Unsubscribe[] = [];
     relevant.forEach((poId) => {
-      const unsub = onSnapshot(
+      const unsubAp = onSnapshot(
         collection(db, 'projects', projectId, 'purchaseOrders', poId, 'approvals'),
         (snap) => {
           const rows: Approval[] = snap.docs.map((d) => {
@@ -104,7 +111,23 @@ export function useApprovalsQueue(
         },
         (err) => console.warn('[approvalsQueue] approvals error', poId, err),
       );
-      unsubs.push(unsub);
+      const unsubInv = onSnapshot(
+        collection(db, 'projects', projectId, 'purchaseOrders', poId, 'invoices'),
+        (snap) => {
+          const rows: Invoice[] = snap.docs.map((d) => {
+            const raw = d.data();
+            return {
+              ...(raw as Invoice),
+              id: d.id,
+              uploadedAt: tsToISO(raw.uploadedAt) ?? undefined,
+              paidAt: tsToISO(raw.paidAt),
+            };
+          });
+          setInvoicesByPO((prev) => { const n = new Map(prev); n.set(poId, rows); return n; });
+        },
+        (err) => console.warn('[approvalsQueue] invoices error', poId, err),
+      );
+      unsubs.push(unsubAp, unsubInv);
     });
     return () => unsubs.forEach((u) => u());
   }, [projectId, uid, pendingPOs, decidedPOs]);
@@ -116,14 +139,16 @@ export function useApprovalsQueue(
 
     for (const po of pendingPOs.values()) {
       const approvals = approvalsByPO.get(po.id) ?? [];
+      const invoices = invoicesByPO.get(po.id) ?? [];
       const iHaveActed = approvals.some((a) => a.approverUid === uid);
-      p.push({ po: { ...po, approvals }, approvals, iHaveActed });
+      p.push({ po: { ...po, approvals, invoices }, approvals, iHaveActed });
     }
 
     for (const po of decidedPOs.values()) {
       const approvals = approvalsByPO.get(po.id) ?? [];
+      const invoices = invoicesByPO.get(po.id) ?? [];
       const mine = approvals.some((a) => a.approverUid === uid);
-      if (mine) d.push({ po: { ...po, approvals }, approvals, iHaveActed: true });
+      if (mine) d.push({ po: { ...po, approvals, invoices }, approvals, iHaveActed: true });
     }
 
     p.sort((a, b) => (b.po.submittedAt ?? '').localeCompare(a.po.submittedAt ?? ''));
@@ -135,7 +160,7 @@ export function useApprovalsQueue(
     );
 
     return { pending: p, decided: d };
-  }, [pendingPOs, decidedPOs, approvalsByPO, uid]);
+  }, [pendingPOs, decidedPOs, approvalsByPO, invoicesByPO, uid]);
 
   return { pending, decided, loading: !posReady };
 }

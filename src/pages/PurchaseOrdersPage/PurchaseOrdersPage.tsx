@@ -13,18 +13,19 @@ import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { useProjectData } from '~/hooks/useProjectData';
 import { useSuppliers } from '~/hooks/useSuppliers';
 import { canEdit } from '~/lib/roles';
-import { poTotals } from '~/lib/reconcile';
+import { displayPOStatus, poTotals } from '~/lib/reconcile';
 import { eur, eurFull, relDate } from '~/lib/format';
-import type { POStatus } from '~/types';
+import type { DisplayPOStatus } from '~/types';
 import './PurchaseOrdersPage.css';
 
-const STATUS_TABS: Array<POStatus | 'all'> = [
+const STATUS_TABS: Array<DisplayPOStatus | 'all'> = [
   'all',
   'draft',
   'pending_approval',
   'approved',
-  'rejected',
+  'partially_invoiced',
   'closed',
+  'rejected',
 ];
 
 export function PurchaseOrdersPage() {
@@ -33,7 +34,7 @@ export function PurchaseOrdersPage() {
   const { purchaseOrders, loading } = useProjectData(project.id);
   const { suppliers } = useSuppliers(project.id);
 
-  const [filter, setFilter] = useState<POStatus | 'all'>('all');
+  const [filter, setFilter] = useState<DisplayPOStatus | 'all'>('all');
   const [query, setQuery] = useState('');
 
   const writable = canEdit(role);
@@ -44,7 +45,7 @@ export function PurchaseOrdersPage() {
 
   const filtered = useMemo(() => {
     let list = purchaseOrders.slice();
-    if (filter !== 'all') list = list.filter((p) => p.status === filter);
+    if (filter !== 'all') list = list.filter((p) => displayPOStatus(p) === filter);
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter((p) => {
@@ -194,9 +195,11 @@ export function PurchaseOrdersPage() {
             </div>
             {filtered.map((po) => {
               const t2 = poTotals(po);
-              const pct = t2.committed
-                ? Math.min(100, Math.round((t2.invoiced / t2.committed) * 100))
-                : 0;
+              const rawPct = t2.committed ? Math.round((t2.invoiced / t2.committed) * 100) : 0;
+              const over = rawPct > 100;
+              const full = rawPct === 100;
+              const pct = over ? rawPct : Math.min(100, rawPct);
+              const displayStatus = displayPOStatus(po);
               const supplier = supplierMap.get(po.supplierId);
               return (
                 <Link
@@ -231,15 +234,19 @@ export function PurchaseOrdersPage() {
                     </div>
                   </div>
                   <div className="text-right num pos-row-amount">{eur(t2.committed)}</div>
-                  <div className="text-right num pos-row-amount">
-                    {eur(Math.max(0, t2.remaining))}
+                  <div className={`text-right num pos-row-amount${over ? ' is-over' : ''}`}>
+                    {over ? `+${eur(Math.abs(t2.remaining))}` : eur(Math.max(0, t2.remaining))}
                   </div>
                   <div className="pos-row-progress">
-                    <Progress value={pct} size="thin" tone={pct === 100 ? 'solid' : 'striped'} />
-                    <span className="pos-row-pct num">{pct}%</span>
+                    <Progress
+                      value={Math.min(100, pct)}
+                      size="thin"
+                      tone={over ? 'over' : full ? 'solid' : 'striped'}
+                    />
+                    <span className={`pos-row-pct num${over ? ' pos-row-pct-over' : ''}`}>{pct}%</span>
                   </div>
                   <div>
-                    <Pill status={po.status}>{t(`pos.statusLabel.${po.status}`)}</Pill>
+                    <Pill status={displayStatus}>{t(`pos.statusLabel.${displayStatus}`)}</Pill>
                   </div>
                   <div className="pos-row-caret">
                     <Icon name="chevron-right" size={13} />

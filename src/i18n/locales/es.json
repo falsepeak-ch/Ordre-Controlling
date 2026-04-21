@@ -455,6 +455,7 @@
       "draft": "Borrador",
       "pending_approval": "Pendientes",
       "approved": "Aprobadas",
+      "partially_invoiced": "Parcialmente facturadas",
       "rejected": "Rechazadas",
       "closed": "Cerradas"
     },
@@ -462,6 +463,8 @@
       "draft": "Borrador",
       "pending_approval": "Pendiente de aprobación",
       "approved": "Aprobada",
+      "partially_approved": "Parcialmente aprobada",
+      "partially_invoiced": "Parcialmente facturada",
       "rejected": "Rechazada",
       "closed": "Cerrada"
     },
@@ -514,8 +517,9 @@
     "invoiceIssued": "Emitida {{date}}",
     "invoiceDue": "Vence {{date}}",
     "invoiceUploadedBy": "por {{by}}",
-    "approvalTrailTitle": "Aprobaciones",
+    "approvalTrailTitle": "Historial",
     "approvalPendingNote": "Pendiente de {{name}}",
+    "invoiceHistoryNote": "Factura {{number}} · {{amount}}",
     "supplierTitle": "Proveedor",
     "pickLabel": "Para la línea:",
     "addInvoiceCta": "Sube factura",
@@ -742,28 +746,24 @@
     "rejectTitle": "Rechazar {{number}}",
     "approveSubtitle": "Queda constancia de quién, cuándo y con qué comentario.",
     "rejectSubtitle": "Indica brevemente por qué. Se podrá re-escopar y enviar de nuevo.",
-    "approvedToast": "Factura registrada y orden actualizada",
+    "approvedToast": "Orden aprobada",
     "rejectedToast": "Orden rechazada",
     "closedToast": "Orden cerrada",
     "closeConfirm": "¿Cerrar la orden? Dejará de poder recibir facturas.",
+    "reopenCta": "Reabrir orden",
+    "reopenedToast": "Orden reabierta",
+    "reopenConfirm": "¿Reabrir esta orden? Volverá a aceptar facturas.",
     "deleteCta": "Eliminar",
     "deleteConfirm": "¿Eliminar permanentemente esta orden y todos sus datos? No se puede deshacer.",
     "deletedToast": "Orden de compra eliminada"
   },
   "poDecision": {
-    "approveTitle": "Registrar factura — {{number}}",
-    "approveSubtitle": "Sube la factura e introduce el importe. El presupuesto restante se actualiza de inmediato.",
-    "billTitle": "Datos de la factura",
+    "approveTitle": "Aprobar {{number}}",
+    "approveSubtitle": "Queda constancia de quién, cuándo y con qué comentario.",
+    "approveCta": "Aprobar orden",
     "committed": "Comprometido",
     "alreadyInvoiced": "Ya facturado",
-    "remainingAfter": "Restante tras esta factura",
-    "willClose": "La orden se cerrará",
-    "approveAndRecordCta": "Registrar factura",
-    "approveAndCloseCta": "Registrar y cerrar orden",
-    "approvedClosedToast": "Factura registrada — la orden queda completamente facturada y cerrada",
-    "amountRequired": "Introduce el importe de la factura.",
-    "fileRequired": "Sube el archivo de la factura.",
-    "mappingMismatch": "La asignación por líneas ({{mapped}}) no coincide con el total ({{total}})."
+    "remainingAfter": "Restante"
   },
   "projectSettings": {
     "pageTitle": "Configuración del proyecto",
@@ -925,7 +925,12 @@
     },
     "requestedBy": "Pedido por {{name}}",
     "waitingFor": "También espera {{list}}",
-    "youActed": "Ya has registrado una factura"
+    "youActed": "Ya has registrado una factura",
+    "undoCta": "Deshacer",
+    "undoConfirmTitle": "¿Deshacer la decisión?",
+    "undoConfirmBody": "La OP volverá a la cola de aprobaciones. Si había una factura, se eliminará.",
+    "undoneToast": "Decisión deshecha",
+    "billedShort": "{{amount}} facturado"
   },
   "invoices": {
     "pageTitle": "Facturas",

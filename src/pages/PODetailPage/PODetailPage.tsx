@@ -19,14 +19,14 @@ import { usePOAttachments } from '~/hooks/usePOAttachments';
 import { useSuppliers } from '~/hooks/useSuppliers';
 import { useToast } from '~/hooks/useToast';
 import { useConfirm } from '~/hooks/useConfirm';
-import { poTotals, lineCommitted, lineInvoiced } from '~/lib/reconcile';
+import { displayPOStatus, poTotals, lineCommitted, lineInvoiced } from '~/lib/reconcile';
 import { canApprove, canEdit, canManage } from '~/lib/roles';
-import { closePO, deletePO, submitPOForApproval } from '~/lib/purchaseOrders';
+import { closePO, deletePO, reopenPO, submitPOForApproval } from '~/lib/purchaseOrders';
 import { deleteInvoice, setInvoicePaid } from '~/lib/invoices';
 import { addPOAttachment, deletePOAttachment } from '~/lib/poAttachments';
 import { StorageQuotaExceededError } from '~/lib/attachments';
-import { eur, eurFull, formatDate } from '~/lib/format';
-import type { Invoice, POLine, PurchaseOrder } from '~/types';
+import { eur, eurFull, formatDate, formatDateTime } from '~/lib/format';
+import type { Approval, Invoice, POLine, PurchaseOrder } from '~/types';
 import './PODetailPage.css';
 
 export function PODetailPage() {
@@ -41,7 +41,7 @@ export function PODetailPage() {
   const confirm = useConfirm();
   const navigate = useNavigate();
   const [decisionMode, setDecisionMode] = useState<null | 'approve' | 'reject'>(null);
-  const [busyAction, setBusyAction] = useState<null | 'submit' | 'close' | 'delete'>(null);
+  const [busyAction, setBusyAction] = useState<null | 'submit' | 'close' | 'reopen' | 'delete'>(null);
   const [invoiceFormOpen, setInvoiceFormOpen] = useState(false);
   const [invoiceBeingEdited, setInvoiceBeingEdited] = useState<Invoice | null>(null);
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
@@ -52,6 +52,40 @@ export function PODetailPage() {
   );
 
   const totals = useMemo(() => (po ? poTotals(po) : null), [po]);
+
+  type HistoryEvent =
+    | { kind: 'approval'; at: string | null; approval: Approval; invoice?: Invoice }
+    | { kind: 'invoice'; at: string | null; invoice: Invoice };
+
+  const historyEvents = useMemo<HistoryEvent[]>(() => {
+    if (!po) return [];
+    const invoicesById = new Map(po.invoices.map((inv) => [inv.id, inv]));
+    const approvalInvoiceIds = new Set(
+      po.approvals.map((a) => a.invoiceId).filter((x): x is string => Boolean(x)),
+    );
+    const events: HistoryEvent[] = [
+      ...po.approvals.map<HistoryEvent>((a) => ({
+        kind: 'approval',
+        at: a.decidedAt,
+        approval: a,
+        invoice: a.invoiceId ? invoicesById.get(a.invoiceId) : undefined,
+      })),
+      ...po.invoices
+        .filter((inv) => !approvalInvoiceIds.has(inv.id))
+        .map<HistoryEvent>((inv) => ({
+          kind: 'invoice',
+          at: inv.uploadedAt ?? null,
+          invoice: inv,
+        })),
+    ];
+    events.sort((x, y) => {
+      if (!x.at && !y.at) return 0;
+      if (!x.at) return 1;
+      if (!y.at) return -1;
+      return x.at.localeCompare(y.at);
+    });
+    return events;
+  }, [po]);
 
   function openNewInvoice() {
     setInvoiceBeingEdited(null);
@@ -172,6 +206,24 @@ export function PODetailPage() {
     }
   }
 
+  async function handleReopenPO() {
+    if (!po) return;
+    const ok = await confirm({
+      title: t('poActions.reopenConfirm'),
+      confirmLabel: t('poActions.reopenCta'),
+    });
+    if (!ok) return;
+    setBusyAction('reopen');
+    try {
+      await reopenPO(project.id, po.id);
+      push({ message: t('poActions.reopenedToast'), icon: 'check-circle-fill' });
+    } catch {
+      push({ message: t('poForm.error'), icon: 'x-circle-fill', tone: 'error' });
+    } finally {
+      setBusyAction(null);
+    }
+  }
+
   if (notFound) return <Navigate to={`/app/p/${project.id}/purchase-orders`} replace />;
   if (loading || !po || !totals) {
     return (
@@ -188,6 +240,7 @@ export function PODetailPage() {
     ? Math.min(100, Math.round((totals.invoiced / totals.committed) * 100))
     : 0;
   const overInvoiced = totals.invoiced > totals.committed;
+  const displayStatus = displayPOStatus(po);
 
   return (
     <>
@@ -231,6 +284,7 @@ export function PODetailPage() {
             onApprove={() => setDecisionMode('approve')}
             onReject={() => setDecisionMode('reject')}
             onClose={handleClosePO}
+            onReopen={handleReopenPO}
           />
         }
       />
@@ -260,7 +314,7 @@ export function PODetailPage() {
       <div className="po-detail-page">
         <section className="po-hero reveal">
           <div className="po-hero-status">
-            <Pill status={po.status}>{t(`pos.statusLabel.${po.status}`)}</Pill>
+            <Pill status={displayStatus}>{t(`pos.statusLabel.${displayStatus}`)}</Pill>
             {supplier?.tags?.[0] ? (
               <span className="po-hero-tag">{supplier.tags[0]}</span>
             ) : null}
@@ -405,7 +459,7 @@ export function PODetailPage() {
                 <h3 className="display-sm mb-0">{t('poDetail.invoicesTitle')}</h3>
                 <span className="count-chip">{po.invoices.length}</span>
                 <span className="grow" />
-                {canEdit(role) && po.status === 'approved' ? (
+                {canEdit(role) && (po.status === 'pending_approval' || po.status === 'approved' || po.status === 'closed') ? (
                   <Button
                     variant="subtle"
                     size="sm"
@@ -531,7 +585,7 @@ export function PODetailPage() {
                     <div className="po-timeline-row">
                       <Avatar name={po.createdBy} size="sm" />
                       <strong>{po.createdBy}</strong>
-                      <span className="muted po-timeline-time">{formatDate(po.createdAt)}</span>
+                      <span className="muted po-timeline-time">{formatDateTime(po.createdAt)}</span>
                     </div>
                     <span className="muted">
                       {po.lines.length === 1
@@ -542,34 +596,69 @@ export function PODetailPage() {
                   </div>
                 </li>
 
-                {po.approvals.map((a) => (
-                  <li
-                    key={a.id}
-                    className={[
-                      'po-timeline-item',
-                      a.decision === 'approved'
-                        ? 'is-done'
-                        : a.decision === 'rejected'
-                          ? 'is-reject'
-                          : 'is-active',
-                    ].join(' ')}
-                  >
-                    <span className="po-timeline-glyph" aria-hidden="true" />
-                    <div className="po-timeline-main">
-                      <div className="po-timeline-row">
-                        <Avatar initials={a.initials} size="sm" />
-                        <strong>{a.approver}</strong>
-                        <span className="muted po-timeline-time">
-                          {a.decidedAt
-                            ? formatDate(a.decidedAt)
-                            : t('poDetail.approvalPendingNote', { name: a.approver })}
+                {historyEvents.map((ev) => {
+                  if (ev.kind === 'approval') {
+                    const a = ev.approval;
+                    return (
+                      <li
+                        key={`a-${a.id}`}
+                        className={[
+                          'po-timeline-item',
+                          a.decision === 'approved'
+                            ? 'is-done'
+                            : a.decision === 'rejected'
+                              ? 'is-reject'
+                              : 'is-active',
+                        ].join(' ')}
+                      >
+                        <span className="po-timeline-glyph" aria-hidden="true" />
+                        <div className="po-timeline-main">
+                          <div className="po-timeline-row">
+                            <Avatar initials={a.initials} size="sm" />
+                            <strong>{a.approver}</strong>
+                            <span className="muted po-timeline-time">
+                              {a.decidedAt
+                                ? formatDateTime(a.decidedAt)
+                                : t('poDetail.approvalPendingNote', { name: a.approver })}
+                            </span>
+                          </div>
+                          {a.comment ? <span className="muted">{a.comment}</span> : null}
+                          {ev.invoice ? (
+                            <span className="muted">
+                              {t('poDetail.invoiceHistoryNote', {
+                                number: ev.invoice.number,
+                                amount: eur(ev.invoice.total),
+                              })}
+                            </span>
+                          ) : null}
+                        </div>
+                      </li>
+                    );
+                  }
+                  const inv = ev.invoice;
+                  return (
+                    <li key={`i-${inv.id}`} className="po-timeline-item is-done">
+                      <span className="po-timeline-glyph" aria-hidden="true" />
+                      <div className="po-timeline-main">
+                        <div className="po-timeline-row">
+                          <Avatar name={inv.uploadedBy} size="sm" />
+                          <strong>{inv.uploadedBy}</strong>
+                          {inv.uploadedAt ? (
+                            <span className="muted po-timeline-time">
+                              {formatDateTime(inv.uploadedAt)}
+                            </span>
+                          ) : null}
+                        </div>
+                        <span className="muted">
+                          {t('poDetail.invoiceHistoryNote', {
+                            number: inv.number,
+                            amount: eur(inv.total),
+                          })}
                         </span>
                       </div>
-                      {a.comment ? <span className="muted">{a.comment}</span> : null}
-                      {a.role ? <span className="muted" style={{ fontSize: 11.5 }}>{a.role}</span> : null}
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
@@ -638,18 +727,20 @@ function POActions({
   onApprove,
   onReject,
   onClose,
+  onReopen,
 }: {
   po: PurchaseOrder;
   projectId: string;
   userRole: 'owner' | 'editor' | 'approver' | 'viewer';
   userUid: string | undefined;
-  busy: null | 'submit' | 'close' | 'delete';
+  busy: null | 'submit' | 'close' | 'reopen' | 'delete';
   onDelete: () => void;
   onEditDraft: () => void;
   onSubmit: () => void;
   onApprove: () => void;
   onReject: () => void;
   onClose: () => void;
+  onReopen: () => void;
 }) {
   const { t } = useTranslation();
   void userUid;
@@ -657,6 +748,7 @@ function POActions({
   const approverHere = canApprove(userRole);
   const isOwner = canManage(userRole);
   const canClose = isOwner && po.status === 'approved';
+  const canReopen = isOwner && po.status === 'closed';
 
   const deleteBtn = isOwner ? (
     <Button
@@ -738,7 +830,24 @@ function POActions({
     );
   }
 
-  // Closed / rejected / viewer: only delete for owners.
+  // Closed: owners can reopen.
+  if (canReopen) {
+    return (
+      <>
+        {deleteBtn}
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={onReopen}
+          isLoading={busy === 'reopen'}
+        >
+          {t('poActions.reopenCta')}
+        </Button>
+      </>
+    );
+  }
+
+  // Rejected / viewer: only delete for owners.
   return deleteBtn;
 }
 
