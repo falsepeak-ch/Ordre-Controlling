@@ -19,6 +19,7 @@ import type { Project, Role } from '~/types';
 import './ProjectsListPage.css';
 
 const FREE_PROJECT_LIMIT = 1;
+const BILLING_ENABLED = import.meta.env.VITE_BILLING_ENABLED === 'true';
 
 export function ProjectsListPage() {
   const { t } = useTranslation();
@@ -68,7 +69,7 @@ export function ProjectsListPage() {
         <div className="projects-topbar-actions">
           <LocaleToggle />
           <ThemeToggle />
-          {!isPro && (
+          {BILLING_ENABLED && !isPro && (
             <Button
               variant="ghost"
               size="sm"
@@ -134,7 +135,11 @@ export function ProjectsListPage() {
         )}
       </main>
 
-      <CreateProjectModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <CreateProjectModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onLimitReached={() => setUpgradeOpen(true)}
+      />
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </div>
   );

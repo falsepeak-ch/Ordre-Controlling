@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import {
+  assertStorageQuota,
   deleteStorageObject,
   randomAttachmentId,
   uploadAttachment,
@@ -28,6 +29,7 @@ export async function addPOAttachment(
   poId: string,
   input: AddPOAttachmentInput,
 ): Promise<string> {
+  await assertStorageQuota(projectId, input.file.size);
   const id = randomAttachmentId('att');
   const path = `projects/${projectId}/purchaseOrders/${poId}/attachments/${id}`;
   const uploaded = await uploadAttachment(path, input.file);

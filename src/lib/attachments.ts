@@ -10,7 +10,42 @@ import {
   ref as storageRef,
   uploadBytes,
 } from 'firebase/storage';
+import { getDoc } from 'firebase/firestore';
 import { getStorageInstance } from './firebase';
+import { projectDoc } from './firestore';
+
+export class StorageQuotaExceededError extends Error {
+  readonly projectId: string;
+  readonly wouldExceedBy: number;
+  constructor(projectId: string, wouldExceedBy: number) {
+    super('quota-exceeded');
+    this.name = 'StorageQuotaExceededError';
+    this.projectId = projectId;
+    this.wouldExceedBy = wouldExceedBy;
+  }
+}
+
+/**
+ * Read the project's current storage counters and throw
+ * `StorageQuotaExceededError` if `extraBytes` would push it over the
+ * cap. The Storage rules enforce this server-side too; the client-side
+ * check just surfaces a friendlier error before the upload fires.
+ */
+export async function assertStorageQuota(
+  projectId: string,
+  extraBytes: number,
+): Promise<void> {
+  const snap = await getDoc(projectDoc(projectId));
+  if (!snap.exists()) return;
+  const data = snap.data() as { storageBytesUsed?: number; storageCapBytes?: number };
+  const cap = data.storageCapBytes;
+  if (cap == null) return;
+  const used = data.storageBytesUsed ?? 0;
+  const next = used + extraBytes;
+  if (next > cap) {
+    throw new StorageQuotaExceededError(projectId, next - cap);
+  }
+}
 
 export function sanitizeFileName(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 120) || 'file';

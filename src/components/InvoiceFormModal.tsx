@@ -7,6 +7,7 @@ import { FileDropzone } from '~/components/ui/FileDropzone';
 import { Icon } from '~/components/ui/Icon';
 import { useToast } from '~/hooks/useToast';
 import { createInvoice, updateInvoice } from '~/lib/invoices';
+import { StorageQuotaExceededError } from '~/lib/attachments';
 import { lineCommitted, lineInvoiced } from '~/lib/reconcile';
 import { eur, eurFull } from '~/lib/format';
 import type { Invoice, InvoiceLine, PurchaseOrder } from '~/types';
@@ -126,14 +127,21 @@ export function InvoiceFormModal({
     setBusy(true);
     try {
       if (editing && invoice) {
-        await updateInvoice(projectId, po.id, invoice.id, {
-          number,
-          issueDate,
-          dueDate,
-          total: totalNumber,
-          lines,
-          uploadedBy,
-        });
+        await updateInvoice(
+          projectId,
+          po.id,
+          invoice.id,
+          {
+            number,
+            issueDate,
+            dueDate,
+            total: totalNumber,
+            lines,
+            uploadedBy,
+            file,
+          },
+          { storagePath: invoice.storagePath },
+        );
       } else {
         await createInvoice(projectId, po.id, {
           number,
@@ -149,7 +157,10 @@ export function InvoiceFormModal({
       onClose();
     } catch (err) {
       console.warn('[invoiceForm] save failed', err);
-      push({ message: t('invoiceForm.error'), icon: 'x-circle-fill', tone: 'error' });
+      const message = err instanceof StorageQuotaExceededError
+        ? t('attachments.quotaExceeded')
+        : t('invoiceForm.error');
+      push({ message, icon: 'x-circle-fill', tone: 'error' });
     } finally {
       setBusy(false);
     }

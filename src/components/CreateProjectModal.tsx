@@ -6,15 +6,21 @@ import { Button } from '~/components/ui/Button';
 import { Field, Input, Textarea } from '~/components/ui/Input';
 import { useAuth } from '~/hooks/useAuth';
 import { useToast } from '~/hooks/useToast';
-import { createProject } from '~/lib/projects';
+import { createProject, ProjectLimitReachedError } from '~/lib/projects';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   redirectOnCreate?: boolean;
+  onLimitReached?: () => void;
 }
 
-export function CreateProjectModal({ open, onClose, redirectOnCreate = true }: Props) {
+export function CreateProjectModal({
+  open,
+  onClose,
+  redirectOnCreate = true,
+  onLimitReached,
+}: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { push } = useToast();
@@ -48,7 +54,13 @@ export function CreateProjectModal({ open, onClose, redirectOnCreate = true }: P
       reset();
       onClose();
       if (redirectOnCreate) navigate(`/app/p/${id}`);
-    } catch {
+    } catch (err) {
+      if (err instanceof ProjectLimitReachedError) {
+        reset();
+        onClose();
+        onLimitReached?.();
+        return;
+      }
       push({ message: t('signup.error'), icon: 'x-circle-fill', tone: 'error' });
       setBusy(false);
     }

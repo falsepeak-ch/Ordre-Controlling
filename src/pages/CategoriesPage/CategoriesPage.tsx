@@ -11,6 +11,7 @@ import { ImportCategoriesModal } from '~/components/ImportCategoriesModal';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { useCategories } from '~/hooks/useCategories';
 import { useToast } from '~/hooks/useToast';
+import { useConfirm } from '~/hooks/useConfirm';
 import { canEdit } from '~/lib/roles';
 import { categoriesToCsv, deleteCategory } from '~/lib/categories';
 import type { Category } from '~/types';
@@ -21,6 +22,7 @@ export function CategoriesPage() {
   const { project, role } = useCurrentProject();
   const { categories, loading } = useCategories(project.id);
   const { push } = useToast();
+  const confirm = useConfirm();
 
   const [query, setQuery] = useState('');
   const [formOpen, setFormOpen] = useState(false);
@@ -53,8 +55,11 @@ export function CategoriesPage() {
   }
 
   async function onDelete(c: Category) {
-    if (!window.confirm(t('categories.form.confirmDelete', { code: c.code, concept: c.concept })))
-      return;
+    const ok = await confirm({
+      title: t('categories.form.confirmDelete', { code: c.code, concept: c.concept }),
+      confirmLabel: t('common.delete'),
+    });
+    if (!ok) return;
     try {
       await deleteCategory(project.id, c.id);
       push({ message: t('categories.form.deletedToast'), icon: 'check-circle-fill' });

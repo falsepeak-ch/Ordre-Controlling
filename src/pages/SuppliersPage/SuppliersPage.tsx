@@ -12,6 +12,7 @@ import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { useSuppliers } from '~/hooks/useSuppliers';
 import { useProjectData } from '~/hooks/useProjectData';
 import { useToast } from '~/hooks/useToast';
+import { useConfirm } from '~/hooks/useConfirm';
 import { canEdit } from '~/lib/roles';
 import { deleteSupplier } from '~/lib/suppliers';
 import { eur } from '~/lib/format';
@@ -25,6 +26,7 @@ export function SuppliersPage() {
   const { suppliers, loading } = useSuppliers(project.id);
   const { purchaseOrders } = useProjectData(project.id);
   const { push } = useToast();
+  const confirm = useConfirm();
 
   const [query, setQuery] = useState('');
   const [formOpen, setFormOpen] = useState(false);
@@ -58,8 +60,11 @@ export function SuppliersPage() {
   }, [purchaseOrders]);
 
   async function handleDelete(s: Supplier) {
-    if (!window.confirm(t('suppliers.form.confirmDelete', { name: s.tradeName || s.legalName })))
-      return;
+    const ok = await confirm({
+      title: t('suppliers.form.confirmDelete', { name: s.tradeName || s.legalName }),
+      confirmLabel: t('common.delete'),
+    });
+    if (!ok) return;
     try {
       await deleteSupplier(project.id, s.id);
       push({ message: t('suppliers.form.deleted'), icon: 'check-circle-fill' });

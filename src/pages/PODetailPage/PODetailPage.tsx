@@ -18,11 +18,13 @@ import { usePurchaseOrder } from '~/hooks/usePurchaseOrder';
 import { usePOAttachments } from '~/hooks/usePOAttachments';
 import { useSuppliers } from '~/hooks/useSuppliers';
 import { useToast } from '~/hooks/useToast';
+import { useConfirm } from '~/hooks/useConfirm';
 import { poTotals, lineCommitted, lineInvoiced } from '~/lib/reconcile';
 import { canApprove, canEdit, canManage } from '~/lib/roles';
 import { closePO, deletePO, submitPOForApproval } from '~/lib/purchaseOrders';
-import { deleteInvoice } from '~/lib/invoices';
+import { deleteInvoice, setInvoicePaid } from '~/lib/invoices';
 import { addPOAttachment, deletePOAttachment } from '~/lib/poAttachments';
+import { StorageQuotaExceededError } from '~/lib/attachments';
 import { eur, eurFull, formatDate } from '~/lib/format';
 import type { Invoice, POLine, PurchaseOrder } from '~/types';
 import './PODetailPage.css';
@@ -36,6 +38,7 @@ export function PODetailPage() {
   const { suppliers } = useSuppliers(project.id);
   const { attachments } = usePOAttachments(project.id, poId);
   const { push } = useToast();
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const [decisionMode, setDecisionMode] = useState<null | 'approve' | 'reject'>(null);
   const [busyAction, setBusyAction] = useState<null | 'submit' | 'close' | 'delete'>(null);
@@ -58,8 +61,33 @@ export function PODetailPage() {
     setInvoiceBeingEdited(inv);
     setInvoiceFormOpen(true);
   }
+  async function handleTogglePaid(inv: Invoice) {
+    if (!po) return;
+    const nowPaid = !inv.paidAt;
+    try {
+      await setInvoicePaid(
+        project.id,
+        po.id,
+        inv.id,
+        nowPaid,
+        user?.displayName ?? user?.email ?? 'You',
+      );
+      push({
+        message: t(nowPaid ? 'invoices.paidToast' : 'invoices.unpaidToast'),
+        icon: 'check-circle-fill',
+      });
+    } catch (err) {
+      console.warn('[poDetail] mark-paid failed', err);
+      push({ message: t('invoiceForm.error'), icon: 'x-circle-fill', tone: 'error' });
+    }
+  }
+
   async function handleDeleteInvoice(inv: Invoice) {
-    if (!window.confirm(t('invoiceForm.confirmDelete'))) return;
+    const ok = await confirm({
+      title: t('invoiceForm.confirmDelete'),
+      confirmLabel: t('common.delete'),
+    });
+    if (!ok) return;
     try {
       await deleteInvoice(project.id, po?.id ?? '', inv);
       push({ message: t('invoiceForm.deletedToast'), icon: 'check-circle-fill' });
@@ -81,7 +109,10 @@ export function PODetailPage() {
       push({ message: t('attachments.addedToast'), icon: 'check-circle-fill' });
     } catch (err) {
       console.warn('[poDetail] attachment upload failed', err);
-      push({ message: t('attachments.uploadError'), icon: 'x-circle-fill', tone: 'error' });
+      const message = err instanceof StorageQuotaExceededError
+        ? t('attachments.quotaExceeded')
+        : t('attachments.uploadError');
+      push({ message, icon: 'x-circle-fill', tone: 'error' });
     } finally {
       setUploadingAttachment(false);
     }
@@ -89,7 +120,11 @@ export function PODetailPage() {
 
   async function handleDeleteAttachment(item: AttachmentItem) {
     if (!po || !item.id) return;
-    if (!window.confirm(t('attachments.deleteConfirm'))) return;
+    const ok = await confirm({
+      title: t('attachments.deleteConfirm'),
+      confirmLabel: t('common.delete'),
+    });
+    if (!ok) return;
     try {
       await deletePOAttachment(project.id, po.id, {
         id: item.id,
@@ -103,7 +138,11 @@ export function PODetailPage() {
 
   async function handleDeletePO() {
     if (!po) return;
-    if (!window.confirm(t('poActions.deleteConfirm'))) return;
+    const ok = await confirm({
+      title: t('poActions.deleteConfirm'),
+      confirmLabel: t('common.delete'),
+    });
+    if (!ok) return;
     setBusyAction('delete');
     try {
       await deletePO(project.id, po.id);
@@ -111,6 +150,24 @@ export function PODetailPage() {
       navigate(`/app/p/${project.id}/purchase-orders`);
     } catch {
       push({ message: t('poForm.error'), icon: 'x-circle-fill', tone: 'error' });
+      setBusyAction(null);
+    }
+  }
+
+  async function handleClosePO() {
+    if (!po) return;
+    const ok = await confirm({
+      title: t('poActions.closeConfirm'),
+      confirmLabel: t('poActions.closeCta'),
+    });
+    if (!ok) return;
+    setBusyAction('close');
+    try {
+      await closePO(project.id, po.id);
+      push({ message: t('poActions.closedToast'), icon: 'check-circle-fill' });
+    } catch {
+      push({ message: t('poForm.error'), icon: 'x-circle-fill', tone: 'error' });
+    } finally {
       setBusyAction(null);
     }
   }
@@ -173,18 +230,7 @@ export function PODetailPage() {
             }}
             onApprove={() => setDecisionMode('approve')}
             onReject={() => setDecisionMode('reject')}
-            onClose={async () => {
-              if (!window.confirm(t('poActions.closeConfirm'))) return;
-              setBusyAction('close');
-              try {
-                await closePO(project.id, po.id);
-                push({ message: t('poActions.closedToast'), icon: 'check-circle-fill' });
-              } catch {
-                push({ message: t('poForm.error'), icon: 'x-circle-fill', tone: 'error' });
-              } finally {
-                setBusyAction(null);
-              }
-            }}
+            onClose={handleClosePO}
           />
         }
       />
@@ -437,6 +483,15 @@ export function PODetailPage() {
                         <div className="po-invoice-total num">{eurFull(inv.total)}</div>
                         {canEdit(role) ? (
                           <div className="po-invoice-actions">
+                            <button
+                              type="button"
+                              className="po-invoice-action"
+                              onClick={() => handleTogglePaid(inv)}
+                              aria-label={inv.paidAt ? t('invoices.markUnpaidCta') : t('invoices.markPaidCta')}
+                              title={inv.paidAt ? t('invoices.markUnpaidCta') : t('invoices.markPaidCta')}
+                            >
+                              <Icon name={inv.paidAt ? 'check-circle-fill' : 'check'} size={12} />
+                            </button>
                             <button
                               type="button"
                               className="po-invoice-action"

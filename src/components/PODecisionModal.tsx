@@ -7,6 +7,7 @@ import { FileDropzone } from '~/components/ui/FileDropzone';
 import { Icon } from '~/components/ui/Icon';
 import { useToast } from '~/hooks/useToast';
 import { approveWithBill, rejectPO } from '~/lib/purchaseOrders';
+import { StorageQuotaExceededError } from '~/lib/attachments';
 import { lineCommitted, lineInvoiced, poTotals } from '~/lib/reconcile';
 import { eur } from '~/lib/format';
 import type { InvoiceLine, PurchaseOrder, Role } from '~/types';
@@ -137,7 +138,10 @@ export function PODecisionModal({
       onClose();
     } catch (err) {
       console.warn('[poDecision] approve failed', err);
-      push({ message: t('poForm.error'), icon: 'x-circle-fill', tone: 'error' });
+      const message = err instanceof StorageQuotaExceededError
+        ? t('attachments.quotaExceeded')
+        : t('poForm.error');
+      push({ message, icon: 'x-circle-fill', tone: 'error' });
     } finally {
       setBusy(false);
     }

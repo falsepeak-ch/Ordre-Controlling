@@ -13,6 +13,7 @@ import { useCategories } from '~/hooks/useCategories';
 import { usePurchaseOrder } from '~/hooks/usePurchaseOrder';
 import { useAuth } from '~/hooks/useAuth';
 import { useToast } from '~/hooks/useToast';
+import { useConfirm } from '~/hooks/useConfirm';
 import {
   blankLine,
   createDraftPO,
@@ -30,6 +31,7 @@ export function POFormPage() {
   const { project, role } = useCurrentProject();
   const { user } = useAuth();
   const { push } = useToast();
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const { poId } = useParams<{ poId?: string }>();
   const editing = Boolean(poId);
@@ -60,7 +62,16 @@ export function POFormPage() {
     setInitialized(true);
   }, [editing, po, initialized]);
 
-  // Guard clauses
+  const loading = suppliersLoading || (editing && (poLoading || !initialized));
+
+  // ---- Helpers ----
+  const totalCommitted = useMemo(
+    () => lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0),
+    [lines],
+  );
+
+  // Guard clauses (after all hooks — so hook order stays stable even
+  // when we early-redirect).
   if (!canEdit(role)) {
     return <Navigate to={`/app/p/${project.id}/purchase-orders`} replace />;
   }
@@ -70,14 +81,6 @@ export function POFormPage() {
   if (editing && po && po.status !== 'draft') {
     return <Navigate to={`/app/p/${project.id}/purchase-orders/${po.id}`} replace />;
   }
-
-  const loading = suppliersLoading || (editing && (poLoading || !initialized));
-
-  // ---- Helpers ----
-  const totalCommitted = useMemo(
-    () => lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0),
-    [lines],
-  );
 
   function setLine(idx: number, patch: Partial<POLine>) {
     setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
@@ -187,7 +190,11 @@ export function POFormPage() {
 
   async function onDeleteDraft() {
     if (!editing || !po) return;
-    if (!window.confirm(t('poForm.confirmDeleteDraft'))) return;
+    const ok = await confirm({
+      title: t('poForm.confirmDeleteDraft'),
+      confirmLabel: t('common.delete'),
+    });
+    if (!ok) return;
     try {
       await deletePO(project.id, po.id);
       push({ message: t('poForm.draftDeletedToast'), icon: 'check-circle-fill' });

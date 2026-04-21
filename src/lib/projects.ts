@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   deleteDoc,
   deleteField,
@@ -8,7 +7,6 @@ import {
   onSnapshot,
   query,
   serverTimestamp,
-  setDoc,
   updateDoc,
   where,
   writeBatch,
@@ -17,7 +15,7 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import i18next from 'i18next';
 import { db, functions } from './firebase';
-import { findUserByEmail, projectDoc, projectsCol, userDoc } from './firestore';
+import { findUserByEmail, projectDoc, projectsCol } from './firestore';
 import type { Project, Role } from '~/types';
 
 type InviteLocale = 'ca' | 'es' | 'en';
@@ -34,6 +32,27 @@ const sendProjectInviteCallable = httpsCallable<SendProjectInvitePayload, { ok: 
   functions,
   'sendProjectInvite',
 );
+
+interface CreateProjectPayload {
+  name: string;
+  description?: string;
+  displayName: string;
+  email: string;
+  photoURL: string | null;
+}
+
+const createProjectCallable = httpsCallable<CreateProjectPayload, { projectId: string }>(
+  functions,
+  'createProject',
+);
+
+/** Thrown when the free-tier project limit blocks creation. */
+export class ProjectLimitReachedError extends Error {
+  constructor() {
+    super('project-limit-reached');
+    this.name = 'ProjectLimitReachedError';
+  }
+}
 
 function currentInviteLocale(): InviteLocale {
   const raw = (i18next.language || 'ca').slice(0, 2).toLowerCase();
@@ -59,35 +78,28 @@ export async function createProject(
   const name = input.name.trim();
   if (!name) throw new Error('Project name required');
 
-  const email = owner.email.toLowerCase();
-  const data = {
-    name,
-    description: input.description?.trim() ?? '',
-    currency: 'EUR' as const,
-    initial: deriveInitial(name),
-    createdBy: owner.uid,
-    createdAt: serverTimestamp(),
-    members: { [owner.uid]: 'owner' as Role },
-    memberEmails: { [owner.uid]: email },
-    memberProfiles: {
-      [owner.uid]: {
-        displayName: owner.displayName,
-        email,
-        photoURL: owner.photoURL,
-      },
-    },
-  };
-
-  const ref = await addDoc(projectsCol(), data as never);
-
-  if (!owner) return ref.id;
-  // Set default project for the user if they don't have one yet.
-  await setDoc(
-    userDoc(owner.uid),
-    { defaultProjectId: ref.id },
-    { merge: true },
-  );
-  return ref.id;
+  try {
+    const res = await createProjectCallable({
+      name,
+      description: input.description?.trim() ?? '',
+      displayName: owner.displayName,
+      email: owner.email.toLowerCase(),
+      photoURL: owner.photoURL,
+    });
+    return res.data.projectId;
+  } catch (err) {
+    // Firebase callable errors surface the HttpsError code in `err.code`
+    // (e.g. "functions/resource-exhausted"). The server also attaches
+    // a structured `details.code` for more precise client handling.
+    const asFns = err as { code?: string; details?: { code?: string } };
+    if (
+      asFns.code === 'functions/resource-exhausted' ||
+      asFns.details?.code === 'project-limit-reached'
+    ) {
+      throw new ProjectLimitReachedError();
+    }
+    throw err;
+  }
 }
 
 export function listenProjectsForUser(

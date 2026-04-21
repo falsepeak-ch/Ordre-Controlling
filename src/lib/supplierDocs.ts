@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import {
+  assertStorageQuota,
   deleteStorageObject,
   randomAttachmentId,
   uploadAttachment,
@@ -28,6 +29,7 @@ export async function addSupplierDoc(
   supplierId: string,
   input: AddSupplierDocInput,
 ): Promise<string> {
+  await assertStorageQuota(projectId, input.file.size);
   const id = randomAttachmentId('doc');
   const path = `projects/${projectId}/suppliers/${supplierId}/docs/${id}`;
   const uploaded = await uploadAttachment(path, input.file);

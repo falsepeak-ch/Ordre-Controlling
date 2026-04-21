@@ -25,7 +25,17 @@ import {
   type StorageReference,
 } from 'firebase/storage';
 import { db, getStorageInstance } from './firebase';
+import {
+  assertStorageQuota,
+  deleteStorageObject,
+  formatFileSize,
+  sanitizeFileName,
+} from './attachments';
 import type { Invoice, InvoiceLine } from '~/types';
+
+// Re-export so existing callers can keep importing from `~/lib/invoices`
+// while the helper lives in `~/lib/attachments`.
+export { formatFileSize };
 
 export interface InvoiceInput {
   number: string;
@@ -56,17 +66,6 @@ function newInvoiceId(): string {
   return `inv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function sanitizeFileName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 120) || 'file';
-}
-
-export function formatFileSize(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
-  const kb = bytes / 1024;
-  if (kb < 1024) return `${Math.round(kb)} KB`;
-  return `${(kb / 1024).toFixed(1)} MB`;
-}
-
 function normaliseLines(lines: InvoiceLine[]): InvoiceLine[] {
   return lines
     .filter((l) => l.lineId && Number(l.amount) > 0)
@@ -94,6 +93,7 @@ export async function createInvoice(
   } = {};
 
   if (input.file) {
+    await assertStorageQuota(projectId, input.file.size);
     const fileName = sanitizeFileName(input.file.name);
     const path = `projects/${projectId}/purchaseOrders/${poId}/invoices/${invoiceId}/${fileName}`;
     const ref = storageRef(getStorageInstance(), path);
@@ -129,14 +129,17 @@ export async function createInvoice(
 }
 
 /**
- * Update metadata / line mapping on an existing invoice. File changes
- * are not supported yet — delete and re-create to swap a file.
+ * Update metadata / line mapping on an existing invoice. When `file`
+ * is provided the old Storage object is deleted after the new upload
+ * succeeds, and the fileName/fileSize/fileUrl/storagePath fields are
+ * rewritten to point at the new object.
  */
 export async function updateInvoice(
   projectId: string,
   poId: string,
   invoiceId: string,
   patch: Partial<InvoiceInput>,
+  previous?: Pick<Invoice, 'storagePath'>,
 ): Promise<void> {
   const payload: Record<string, unknown> = {};
   if (patch.number !== undefined) payload.number = patch.number.trim();
@@ -144,8 +147,56 @@ export async function updateInvoice(
   if (patch.dueDate !== undefined) payload.dueDate = patch.dueDate;
   if (patch.total !== undefined) payload.total = Number(patch.total);
   if (patch.lines !== undefined) payload.lines = normaliseLines(patch.lines);
+
+  // File swap: upload new first, then schedule cleanup of the old one.
+  if (patch.file) {
+    await assertStorageQuota(projectId, patch.file.size);
+    const fileName = sanitizeFileName(patch.file.name);
+    const path = `projects/${projectId}/purchaseOrders/${poId}/invoices/${invoiceId}/${fileName}`;
+    const ref = storageRef(getStorageInstance(), path);
+    await uploadBytes(ref, patch.file, {
+      contentType: patch.file.type || 'application/octet-stream',
+    });
+    const url = await getDownloadURL(ref);
+    payload.fileName = fileName;
+    payload.fileSize = formatFileSize(patch.file.size);
+    payload.fileUrl = url;
+    payload.storagePath = path;
+
+    // Best-effort: delete the previous object. If the storage path
+    // matches the new one (same filename) we skip to avoid deleting
+    // the file we just uploaded.
+    if (previous?.storagePath && previous.storagePath !== path) {
+      await deleteStorageObject(previous.storagePath);
+    }
+  }
+
   if (Object.keys(payload).length === 0) return;
   await updateDoc(doc(invoicesCol(projectId, poId), invoiceId), payload);
+}
+
+/**
+ * Mark an invoice as paid (or unpaid, with paid=false).
+ */
+export async function setInvoicePaid(
+  projectId: string,
+  poId: string,
+  invoiceId: string,
+  paid: boolean,
+  actorDisplayName: string,
+): Promise<void> {
+  const ref = doc(invoicesCol(projectId, poId), invoiceId);
+  if (paid) {
+    await updateDoc(ref, {
+      paidAt: serverTimestamp(),
+      paidBy: actorDisplayName,
+    });
+  } else {
+    await updateDoc(ref, {
+      paidAt: null,
+      paidBy: null,
+    });
+  }
 }
 
 /**

@@ -5,7 +5,9 @@ import { AttachmentsList, type AttachmentItem } from '~/components/AttachmentsLi
 import { useSupplierDocs } from '~/hooks/useSupplierDocs';
 import { useAuth } from '~/hooks/useAuth';
 import { useToast } from '~/hooks/useToast';
+import { useConfirm } from '~/hooks/useConfirm';
 import { addSupplierDoc, deleteSupplierDoc } from '~/lib/supplierDocs';
+import { StorageQuotaExceededError } from '~/lib/attachments';
 import type { Supplier } from '~/types';
 
 interface Props {
@@ -20,6 +22,7 @@ export function SupplierDocsModal({ open, onClose, projectId, supplier, canEdit 
   const { t } = useTranslation();
   const { user } = useAuth();
   const { push } = useToast();
+  const confirm = useConfirm();
   const { docs } = useSupplierDocs(projectId, supplier.id);
   const [uploading, setUploading] = useState(false);
 
@@ -34,7 +37,10 @@ export function SupplierDocsModal({ open, onClose, projectId, supplier, canEdit 
       push({ message: t('attachments.addedToast'), icon: 'check-circle-fill' });
     } catch (err) {
       console.warn('[supplierDocs] upload failed', err);
-      push({ message: t('attachments.uploadError'), icon: 'x-circle-fill', tone: 'error' });
+      const message = err instanceof StorageQuotaExceededError
+        ? t('attachments.quotaExceeded')
+        : t('attachments.uploadError');
+      push({ message, icon: 'x-circle-fill', tone: 'error' });
     } finally {
       setUploading(false);
     }
@@ -42,7 +48,11 @@ export function SupplierDocsModal({ open, onClose, projectId, supplier, canEdit 
 
   async function handleDelete(item: AttachmentItem) {
     if (!item.id) return;
-    if (!window.confirm(t('attachments.deleteConfirm'))) return;
+    const ok = await confirm({
+      title: t('attachments.deleteConfirm'),
+      confirmLabel: t('common.delete'),
+    });
+    if (!ok) return;
     try {
       await deleteSupplierDoc(projectId, supplier.id, {
         id: item.id,

@@ -8,9 +8,11 @@ import { Button } from '~/components/ui/Button';
 import { Field, Input, Textarea } from '~/components/ui/Input';
 import { Pill } from '~/components/ui/Pill';
 import { Modal } from '~/components/ui/Modal';
+import { Progress } from '~/components/ui/Progress';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { useAuth } from '~/hooks/useAuth';
 import { useToast } from '~/hooks/useToast';
+import { useConfirm } from '~/hooks/useConfirm';
 import {
   archiveProject,
   deleteEmptyProject,
@@ -69,6 +71,7 @@ export function ProjectSettingsPage() {
         ) : null}
 
         <GeneralSection />
+        <StorageSection />
         <OwnershipSection uid={user?.uid} />
         <ArchiveSection archived={!!project.archived} />
         <DangerSection onDeleted={() => navigate('/app')} />
@@ -153,12 +156,66 @@ function GeneralSection() {
   );
 }
 
+// ---------- Storage ----------
+
+function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${Math.round(kb)} KB`;
+  const mb = kb / 1024;
+  if (mb < 1024) return `${mb.toFixed(1)} MB`;
+  return `${(mb / 1024).toFixed(2)} GB`;
+}
+
+function StorageSection() {
+  const { t } = useTranslation();
+  const { project } = useCurrentProject();
+  const used = project.storageBytesUsed ?? 0;
+  const cap = project.storageCapBytes;
+  const hasCap = typeof cap === 'number' && cap > 0;
+  const pct = hasCap ? Math.min(100, Math.round((used / cap!) * 100)) : 0;
+
+  return (
+    <Card size="md" className="settings-card">
+      <header className="settings-card-head">
+        <h2 className="display-sm mb-0">{t('projectSettings.storageTitle')}</h2>
+        <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+          {t('projectSettings.storageHint')}
+        </p>
+      </header>
+      <div className="settings-card-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+          }}
+        >
+          <span className="num" style={{ fontSize: 18, fontWeight: 600 }}>
+            {formatBytes(used)}
+            {hasCap ? (
+              <span className="muted" style={{ fontWeight: 400, marginLeft: 6 }}>
+                / {formatBytes(cap!)}
+              </span>
+            ) : null}
+          </span>
+          {hasCap ? (
+            <span className="muted num" style={{ fontSize: 13 }}>{pct}%</span>
+          ) : null}
+        </div>
+        {hasCap ? <Progress value={pct} /> : null}
+      </div>
+    </Card>
+  );
+}
+
 // ---------- Ownership ----------
 
 function OwnershipSection({ uid }: { uid: string | undefined }) {
   const { t } = useTranslation();
   const { project } = useCurrentProject();
   const { push } = useToast();
+  const confirm = useConfirm();
   const [target, setTarget] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -180,7 +237,11 @@ function OwnershipSection({ uid }: { uid: string | undefined }) {
     if (!target || !uid) return;
     const name =
       project.memberProfiles?.[target]?.displayName ?? target;
-    if (!window.confirm(t('projectSettings.ownershipConfirm', { name }))) return;
+    const ok = await confirm({
+      title: t('projectSettings.ownershipConfirm', { name }),
+      confirmLabel: t('projectSettings.ownershipCta'),
+    });
+    if (!ok) return;
     setBusy(true);
     try {
       await transferOwnership(project.id, uid, target);
@@ -245,10 +306,15 @@ function ArchiveSection({ archived }: { archived: boolean }) {
   const { t } = useTranslation();
   const { project } = useCurrentProject();
   const { push } = useToast();
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
 
   async function onArchive() {
-    if (!window.confirm(t('projectSettings.archiveConfirm', { name: project.name }))) return;
+    const ok = await confirm({
+      title: t('projectSettings.archiveConfirm', { name: project.name }),
+      confirmLabel: t('projectSettings.archiveCta'),
+    });
+    if (!ok) return;
     setBusy(true);
     try {
       await archiveProject(project.id);

@@ -10,6 +10,7 @@ import { RolePill } from '~/components/ui/RolePill';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { useAuth } from '~/hooks/useAuth';
 import { useToast } from '~/hooks/useToast';
+import { useConfirm } from '~/hooks/useConfirm';
 import { addMemberByEmail, removeMember, updateMemberRole } from '~/lib/projects';
 import { canManage } from '~/lib/roles';
 import type { Role } from '~/types';
@@ -22,6 +23,7 @@ export function MembersPage() {
   const { project, role } = useCurrentProject();
   const { user } = useAuth();
   const { push } = useToast();
+  const confirm = useConfirm();
 
   const [email, setEmail] = useState('');
   const [newRole, setNewRole] = useState<Role>('editor');
@@ -86,7 +88,11 @@ export function MembersPage() {
   }
 
   async function handleRemove(uid: string, name: string) {
-    if (!window.confirm(t('members.removeConfirm', { name }))) return;
+    const ok = await confirm({
+      title: t('members.removeConfirm', { name }),
+      confirmLabel: t('common.remove'),
+    });
+    if (!ok) return;
     try {
       await removeMember(project.id, uid);
       push({ message: t('members.removedToast', { name }), icon: 'check-circle-fill' });

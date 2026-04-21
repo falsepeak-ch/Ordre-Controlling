@@ -13,6 +13,9 @@ interface Props {
 
 type Plan = 'monthly' | 'annual';
 
+const BILLING_ENABLED = import.meta.env.VITE_BILLING_ENABLED === 'true';
+const PRO_CONTACT_EMAIL = 'pro@ordrecontrolling.com';
+
 export function UpgradeModal({ open, onClose }: Props) {
   const { t } = useTranslation();
   const { redirectToCheckout } = useSubscription();
@@ -24,7 +27,6 @@ export function UpgradeModal({ open, onClose }: Props) {
     setBusy(true);
     try {
       await redirectToCheckout(plan);
-      // redirectToCheckout navigates away; the lines below only run on error.
     } catch {
       push({ message: t('paywall.disabledNotice'), icon: 'x-circle-fill', tone: 'error' });
       setBusy(false);
@@ -37,52 +39,73 @@ export function UpgradeModal({ open, onClose }: Props) {
       onClose={() => !busy && onClose()}
       size="md"
       title={t('paywall.unlockProjectsTitle')}
-      subtitle={t('paywall.unlockProjectsBody')}
+      subtitle={
+        BILLING_ENABLED
+          ? t('paywall.unlockProjectsBody')
+          : t('paywall.betaBody')
+      }
       footer={
-        <>
-          <Button variant="ghost" onClick={onClose} disabled={busy}>
-            {t('paywall.cancel')}
-          </Button>
-          <Button variant="primary" onClick={handleUpgrade} isLoading={busy}>
-            {t('paywall.upgradeCta')}
-          </Button>
-        </>
+        BILLING_ENABLED ? (
+          <>
+            <Button variant="ghost" onClick={onClose} disabled={busy}>
+              {t('paywall.cancel')}
+            </Button>
+            <Button variant="primary" onClick={handleUpgrade} isLoading={busy}>
+              {t('paywall.upgradeCta')}
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="ghost" onClick={onClose}>
+              {t('paywall.cancel')}
+            </Button>
+            <a
+              href={`mailto:${PRO_CONTACT_EMAIL}?subject=${encodeURIComponent('Ordre Pro invite request')}`}
+              onClick={onClose}
+              style={{ textDecoration: 'none' }}
+            >
+              <Button variant="primary">
+                {t('paywall.requestInviteCta')}
+              </Button>
+            </a>
+          </>
+        )
       }
     >
-      {/* Plan toggle */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 8,
-          marginBottom: 20,
-        }}
-      >
-        {(['annual', 'monthly'] as Plan[]).map((p) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => setPlan(p)}
-            style={{
-              flex: 1,
-              padding: '8px 12px',
-              borderRadius: 8,
-              border: plan === p ? '1.5px solid var(--fg-base)' : '1.5px solid var(--border-subtle)',
-              background: plan === p ? 'var(--fg-base)' : 'transparent',
-              color: plan === p ? 'var(--bg-base)' : 'var(--fg-muted)',
-              fontSize: 13,
-              fontWeight: plan === p ? 600 : 400,
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
-          >
-            {p === 'annual'
-              ? `${t('pricing.annualBadge')} · ${t('pricing.plans.proMarketingYearly')}`
-              : `${t('pricing.monthlyBadge')} · ${t('pricing.plans.proMarketingMonthly')}`}
-          </button>
-        ))}
-      </div>
+      {BILLING_ENABLED ? (
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            marginBottom: 20,
+          }}
+        >
+          {(['annual', 'monthly'] as Plan[]).map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setPlan(p)}
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                borderRadius: 8,
+                border: plan === p ? '1.5px solid var(--fg-base)' : '1.5px solid var(--border-subtle)',
+                background: plan === p ? 'var(--fg-base)' : 'transparent',
+                color: plan === p ? 'var(--bg-base)' : 'var(--fg-muted)',
+                fontSize: 13,
+                fontWeight: plan === p ? 600 : 400,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              {p === 'annual'
+                ? `${t('pricing.annualBadge')} · ${t('pricing.plans.proMarketingYearly')}`
+                : `${t('pricing.monthlyBadge')} · ${t('pricing.plans.proMarketingMonthly')}`}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
-      {/* Feature list */}
       <ul
         style={{
           display: 'flex',

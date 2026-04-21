@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import { Button } from './Button';
-import { formatFileSize } from '~/lib/invoices';
+import { formatFileSize } from '~/lib/attachments';
 import './FileDropzone.css';
 
 interface FileDropzoneProps {
