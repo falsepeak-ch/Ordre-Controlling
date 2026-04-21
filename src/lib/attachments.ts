@@ -52,6 +52,35 @@ export function sanitizeFileName(name: string): string {
 }
 
 /**
+ * Safari (and sometimes macOS Finder-drag in Chrome) leave `file.type`
+ * empty. Falling back to `application/octet-stream` makes our Storage
+ * rules reject the upload, which surfaces as an unhelpful 403. Resolve
+ * the MIME from the file extension instead — only for types our rules
+ * whitelist, otherwise we still let octet-stream through and Storage
+ * rejects intentionally (e.g. `.exe`).
+ */
+const MIME_BY_EXT: Record<string, string> = {
+  pdf: 'application/pdf',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  heic: 'image/heic',
+  heif: 'image/heif',
+  svg: 'image/svg+xml',
+  txt: 'text/plain',
+  csv: 'text/csv',
+};
+
+export function resolveContentType(file: File): string {
+  if (file.type) return file.type;
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  if (ext && MIME_BY_EXT[ext]) return MIME_BY_EXT[ext];
+  return 'application/octet-stream';
+}
+
+/**
  * Human-readable file size. Kept identical to the invoice formatter so
  * we can collapse invoices onto this helper in a later pass.
  */
@@ -82,7 +111,7 @@ export async function uploadAttachment(
   const fullPath = `${path}/${fileName}`;
   const ref = storageRef(getStorageInstance(), fullPath);
   await uploadBytes(ref, file, {
-    contentType: file.type || 'application/octet-stream',
+    contentType: resolveContentType(file),
   });
   const fileUrl = await getDownloadURL(ref);
   return {

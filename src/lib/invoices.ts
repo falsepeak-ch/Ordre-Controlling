@@ -29,6 +29,7 @@ import {
   assertStorageQuota,
   deleteStorageObject,
   formatFileSize,
+  resolveContentType,
   sanitizeFileName,
 } from './attachments';
 import type { Invoice, InvoiceLine } from '~/types';
@@ -98,7 +99,7 @@ export async function createInvoice(
     const path = `projects/${projectId}/purchaseOrders/${poId}/invoices/${invoiceId}/${fileName}`;
     const ref = storageRef(getStorageInstance(), path);
     await uploadBytes(ref, input.file, {
-      contentType: input.file.type || 'application/octet-stream',
+      contentType: resolveContentType(input.file),
     });
     const url = await getDownloadURL(ref);
     fileFields = {
@@ -155,7 +156,7 @@ export async function updateInvoice(
     const path = `projects/${projectId}/purchaseOrders/${poId}/invoices/${invoiceId}/${fileName}`;
     const ref = storageRef(getStorageInstance(), path);
     await uploadBytes(ref, patch.file, {
-      contentType: patch.file.type || 'application/octet-stream',
+      contentType: resolveContentType(patch.file),
     });
     const url = await getDownloadURL(ref);
     payload.fileName = fileName;
