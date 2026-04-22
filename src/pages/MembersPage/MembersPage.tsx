@@ -23,8 +23,6 @@ import type { Role } from '~/types';
 import '~/theme/page-layout.css';
 import './MembersPage.css';
 
-const ROLE_ORDER: Role[] = ['owner', 'editor', 'approver', 'viewer'];
-
 function memberErrorMessage(
   err: unknown,
   t: TFunction,
@@ -59,6 +57,7 @@ export function MembersPage() {
   const [newRole, setNewRole] = useState<Role>('editor');
   const [busy, setBusy] = useState(false);
 
+  const selfUid = user?.uid;
   const members = useMemo(() => {
     const entries = Object.entries(project.members);
     return entries
@@ -72,8 +71,12 @@ export function MembersPage() {
           photoURL: profile?.photoURL ?? null,
         };
       })
-      .sort((a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role));
-  }, [project]);
+      .sort((a, b) => {
+        if (a.uid === selfUid) return -1;
+        if (b.uid === selfUid) return 1;
+        return a.displayName.localeCompare(b.displayName, undefined, { sensitivity: 'base' });
+      });
+  }, [project, selfUid]);
 
   const canEditMembers = canManage(role);
   const ownerCount = members.filter((m) => m.role === 'owner').length;
