@@ -10,8 +10,8 @@
    either boot the SDKs (opt-in) or ask them to stop capturing (opt-out).
    ========================================================================== */
 
+import type { PostHog } from 'posthog-js';
 import { logEvent, setUserId, isSupported, getAnalytics, type Analytics } from 'firebase/analytics';
-import posthog from 'posthog-js';
 import { analytics as firebaseAnalyticsRef, app, setAnalyticsInstance } from './firebase';
 import { readStoredConsent, type ConsentState } from '~/contexts/ConsentContext';
 
@@ -19,6 +19,7 @@ const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
 const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://eu.i.posthog.com';
 const IS_DEV = import.meta.env.DEV;
 
+let posthog: PostHog | null = null;
 let posthogBooted = false;
 let firebaseAnalyticsBooted = false;
 let pendingUser: { uid: string; email?: string | null } | null = null;
@@ -38,7 +39,7 @@ async function ensureFirebaseAnalytics(): Promise<Analytics | null> {
   }
 }
 
-function bootPosthog(): void {
+async function bootPosthog(): Promise<void> {
   if (posthogBooted) return;
   if (!POSTHOG_KEY) {
     if (!IS_DEV) {
@@ -48,7 +49,8 @@ function bootPosthog(): void {
     }
     return;
   }
-  posthog.init(POSTHOG_KEY, {
+  const { default: ph } = await import('posthog-js');
+  ph.init(POSTHOG_KEY, {
     api_host: POSTHOG_HOST,
     person_profiles: 'identified_only',
     capture_pageview: 'history_change',
@@ -61,18 +63,19 @@ function bootPosthog(): void {
     // pending or denied we load the module but stay in opt-out state,
     // and flip it on via `opt_in_capturing()` when the user accepts.
     opt_out_capturing_by_default: true,
-    loaded: (ph) => {
-      if (IS_DEV) ph.debug(false);
+    loaded: (instance) => {
+      if (IS_DEV) instance.debug(false);
     },
   });
+  posthog = ph;
   posthogBooted = true;
 }
 
-function applyConsent(state: ConsentState): void {
+async function applyConsent(state: ConsentState): Promise<void> {
   if (state.analytics) {
     // PostHog
-    bootPosthog();
-    if (posthogBooted) {
+    await bootPosthog();
+    if (posthog) {
       try {
         posthog.opt_in_capturing();
         if (pendingUser) {
@@ -85,7 +88,7 @@ function applyConsent(state: ConsentState): void {
     // Firebase Analytics
     void ensureFirebaseAnalytics();
   } else {
-    if (posthogBooted) {
+    if (posthog) {
       try {
         posthog.opt_out_capturing();
       } catch { /* ignore */ }
@@ -107,14 +110,12 @@ function applyConsent(state: ConsentState): void {
  */
 export function initAnalytics(): void {
   const stored = readStoredConsent();
-  if (stored) {
-    applyConsent(stored);
-  }
+  if (stored) void applyConsent(stored);
 
   if (typeof window !== 'undefined') {
     window.addEventListener('ordre:consent', (event) => {
       const detail = (event as CustomEvent<ConsentState>).detail;
-      if (detail) applyConsent(detail);
+      if (detail) void applyConsent(detail);
     });
   }
 }
@@ -123,13 +124,13 @@ export function initAnalytics(): void {
 export function identifyAnalyticsUser(user: { uid: string; email?: string | null } | null): void {
   pendingUser = user;
   if (!user) {
-    if (posthogBooted) {
+    if (posthog) {
       try { posthog.reset(); } catch { /* ignore */ }
     }
     return;
   }
 
-  if (posthogBooted && posthog.has_opted_in_capturing?.()) {
+  if (posthog && posthog.has_opted_in_capturing?.()) {
     try {
       posthog.identify(user.uid, user.email ? { email: user.email } : {});
     } catch { /* ignore */ }
@@ -144,7 +145,7 @@ export function identifyAnalyticsUser(user: { uid: string; email?: string | null
 
 /** Fire-and-forget product event. No-op when analytics is off. */
 export function trackEvent(name: string, props?: Record<string, unknown>): void {
-  if (posthogBooted && posthog.has_opted_in_capturing?.()) {
+  if (posthog && posthog.has_opted_in_capturing?.()) {
     try { posthog.capture(name, props); } catch { /* ignore */ }
   }
   if (firebaseAnalyticsRef) {
@@ -158,7 +159,7 @@ export function trackEvent(name: string, props?: Record<string, unknown>): void 
  * prod failures stay visible somewhere.
  */
 export function captureAnalyticsError(err: unknown, context?: Record<string, unknown>): void {
-  if (posthogBooted && posthog.has_opted_in_capturing?.()) {
+  if (posthog && posthog.has_opted_in_capturing?.()) {
     try {
       posthog.captureException(err, context);
       return;

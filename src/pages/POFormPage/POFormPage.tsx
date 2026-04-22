@@ -21,9 +21,10 @@ import {
   submitPOForApproval,
   updateDraftPO,
 } from '~/lib/purchaseOrders';
-import { canEdit } from '~/lib/roles';
+import { canEdit, canManage } from '~/lib/roles';
 import { eur, eurFull, initialsFromName } from '~/lib/format';
 import type { POLine } from '~/types';
+import '~/theme/page-layout.css';
 import './POFormPage.css';
 
 export function POFormPage() {
@@ -54,7 +55,7 @@ export function POFormPage() {
   useEffect(() => {
     if (!editing) return;
     if (!po) return;
-    if (po.status !== 'draft') return;
+    if (po.status !== 'draft' && po.status !== 'pending_approval') return;
     if (initialized) return;
     setSupplierId(po.supplierId);
     setNotes(po.notes ?? '');
@@ -78,9 +79,15 @@ export function POFormPage() {
   if (editing && notFound) {
     return <Navigate to={`/app/p/${project.id}/purchase-orders`} replace />;
   }
-  if (editing && po && po.status !== 'draft') {
-    return <Navigate to={`/app/p/${project.id}/purchase-orders/${po.id}`} replace />;
+  if (editing && po) {
+    const editable =
+      po.status === 'draft' ||
+      (po.status === 'pending_approval' && canManage(role));
+    if (!editable) {
+      return <Navigate to={`/app/p/${project.id}/purchase-orders/${po.id}`} replace />;
+    }
   }
+  const isModifyingPending = editing && po?.status === 'pending_approval';
 
   function setLine(idx: number, patch: Partial<POLine>) {
     setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
@@ -218,41 +225,57 @@ export function POFormPage() {
           </Link>
         }
         actions={
-          <>
-            {editing && po ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onDeleteDraft}
-                leading={<Icon name="trash-fill" size={13} />}
-              >
-                {t('poForm.deleteDraft')}
-              </Button>
-            ) : null}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => saveDraft()}
-              isLoading={savingDraft}
-              disabled={submitting}
-            >
-              {savingDraft ? t('poForm.savingDraft') : t('poForm.saveDraftShort')}
-            </Button>
+          isModifyingPending ? (
             <Button
               variant="primary"
               size="sm"
-              onClick={onSubmitForApproval}
-              isLoading={submitting}
-              leading={<Icon name="shield-fill-check" size={13} />}
-              disabled={savingDraft}
+              onClick={async () => {
+                if (!validBasic()) return;
+                const id = await saveDraft();
+                if (id) navigate(`/app/p/${project.id}/purchase-orders/${id}`);
+              }}
+              isLoading={savingDraft}
+              leading={<Icon name="check-circle-fill" size={13} />}
             >
-              {submitting ? t('poForm.submitting') : t('poForm.submit')}
+              {savingDraft ? t('poForm.savingDraft') : t('poForm.saveCta')}
             </Button>
-          </>
+          ) : (
+            <>
+              {editing && po ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onDeleteDraft}
+                  leading={<Icon name="trash-fill" size={13} />}
+                >
+                  {t('poForm.deleteDraft')}
+                </Button>
+              ) : null}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => saveDraft()}
+                isLoading={savingDraft}
+                disabled={submitting}
+              >
+                {savingDraft ? t('poForm.savingDraft') : t('poForm.saveDraftShort')}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={onSubmitForApproval}
+                isLoading={submitting}
+                leading={<Icon name="shield-fill-check" size={13} />}
+                disabled={savingDraft}
+              >
+                {submitting ? t('poForm.submitting') : t('poForm.submit')}
+              </Button>
+            </>
+          )
         }
       />
 
-      <div className="po-form-page">
+      <div className="po-form-page page-container">
         {loading ? (
           <div className="po-form-loader"><Spinner size={22} /></div>
         ) : (
@@ -260,10 +283,18 @@ export function POFormPage() {
             <section className="po-form-hero reveal">
               <span className="eyebrow">{t('nav.purchaseOrders')}</span>
               <h1 className="display-xl">
-                {editing ? t('poForm.editTitle') : t('poForm.createTitle')}
+                {isModifyingPending
+                  ? t('poForm.modifyTitle')
+                  : editing
+                    ? t('poForm.editTitle')
+                    : t('poForm.createTitle')}
               </h1>
               <p className="po-form-sub muted">
-                {editing ? t('poForm.editSubtitle') : t('poForm.createSubtitle')}
+                {isModifyingPending
+                  ? t('poForm.modifySubtitle')
+                  : editing
+                    ? t('poForm.editSubtitle')
+                    : t('poForm.createSubtitle')}
               </p>
             </section>
 

@@ -18,6 +18,7 @@ import { deleteSupplier } from '~/lib/suppliers';
 import { eur } from '~/lib/format';
 import { poTotals } from '~/lib/reconcile';
 import type { Supplier } from '~/types';
+import '~/theme/page-layout.css';
 import './SuppliersPage.css';
 
 export function SuppliersPage() {
@@ -86,6 +87,15 @@ export function SuppliersPage() {
     <>
       <Topbar
         title={t('suppliers.pageTitle')}
+        subtitle={
+          suppliers.length > 0 ? (
+            <span className="muted" style={{ fontSize: 13 }}>
+              {suppliers.length === 1
+                ? t('suppliers.countOne')
+                : t('suppliers.countOther', { count: suppliers.length })}
+            </span>
+          ) : null
+        }
         actions={
           writable ? (
             <Button variant="primary" size="sm" leading={<Icon name="plus" size={13} />} onClick={openCreate}>
@@ -95,19 +105,7 @@ export function SuppliersPage() {
         }
       />
 
-      <div className="suppliers-page">
-        <section className="suppliers-hero reveal">
-          <span className="eyebrow">
-            {suppliers.length === 1
-              ? t('suppliers.countOne')
-              : t('suppliers.countOther', { count: suppliers.length })}
-          </span>
-          <h1 className="display-xl">{t('suppliers.pageTitle')}</h1>
-          <p className="suppliers-hero-sub">
-            {t('suppliers.heroSubtitle', { project: project.name })}
-          </p>
-        </section>
-
+      <div className="suppliers-page page-container">
         {suppliers.length > 0 ? (
           <section className="suppliers-filter reveal reveal-d1">
             <Field>

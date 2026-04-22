@@ -8,15 +8,18 @@ import { Pill } from '~/components/ui/Pill';
 import { SEOHead } from '~/components/SEOHead';
 import type { IconName } from '~/icons/manifest';
 import { eur } from '~/lib/format';
+import { useRevealOnView } from './useRevealOnView';
 import './LandingPage.css';
 
 const BILLING_ENABLED = import.meta.env.VITE_BILLING_ENABLED === 'true';
 
-// Social-proof strip and testimonials are hidden until we have real
-// customer logos and quotes. Flip these back on (and update the
-// `logos.*` / `quotes.*` i18n strings) when the data is real.
-const SHOW_CUSTOMER_LOGOS = false;
+// Testimonials and customer-logo strip are hidden until we have real quotes /
+// real logos. Flip these back on (and update the matching `quotes.*` /
+// `logos.*` strings) once the data exists.
 const SHOW_TESTIMONIALS = false;
+const SHOW_CUSTOMER_LOGOS = false;
+
+const LOGO_KEYS = ['verdera', 'tallerpol', 'escenic', 'martianomusic', 'berlinfilm'] as const;
 
 const STEPS: Array<{ key: 'commit' | 'approve' | 'reconcile'; icon: IconName }> = [
   { key: 'commit', icon: 'receipt-fill' },
@@ -66,6 +69,7 @@ export function LandingPage() {
       <section className="landing-hero">
         <div className="landing-hero-gradient" aria-hidden="true" />
         <div className="landing-hero-inner">
+          <HeroBadge label={t('landing.heroBadge')} />
           <span className="landing-eyebrow">{t('landing.heroEyebrow')}</span>
           <h1 className="landing-hero-title display-hero">{t('landing.heroTitle')}</h1>
           <p className="landing-hero-sub">{t('landing.heroSubtitle')}</p>
@@ -93,17 +97,22 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ===== Social proof strip — hidden until real logos ===== */}
+      {/* ===== Stats strip ===== */}
+      <StatsStrip />
+
+      {/* ===== Logo marquee — hidden until real customer logos ===== */}
       {SHOW_CUSTOMER_LOGOS ? (
         <section className="landing-logos" aria-label={t('landing.logosLabel')}>
           <p className="landing-logos-label">{t('landing.logosLabel')}</p>
-          <ul className="landing-logos-row">
-            {['verdera', 'tallerpol', 'escenic', 'martianomusic', 'berlinfilm'].map((slug) => (
-              <li key={slug} className="landing-logos-item">
-                {t(`landing.logos.${slug}`)}
-              </li>
-            ))}
-          </ul>
+          <div className="landing-marquee">
+            <ul className="landing-marquee-track">
+              {[...LOGO_KEYS, ...LOGO_KEYS].map((slug, i) => (
+                <li key={`${slug}-${i}`} className="landing-logos-item">
+                  {t(`landing.logos.${slug}`)}
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
       ) : null}
 
@@ -149,19 +158,24 @@ export function LandingPage() {
         </div>
         <div className="landing-how-grid">
           {STEPS.map((p, i) => (
-            <article key={p.key} className="landing-step reveal reveal-d1">
-              <div className="landing-step-head">
-                <span className="landing-step-num">0{i + 1}</span>
-                <span className="landing-step-icon">
-                  <Icon name={p.icon} size={20} />
-                </span>
-              </div>
-              <h3 className="display-md">{t(`landing.pillar${cap(p.key)}Title`)}</h3>
-              <p>{t(`landing.pillar${cap(p.key)}Body`)}</p>
-            </article>
+            <RevealStep key={p.key} delayClass={`reveal-d${i + 1}`}>
+              <article className="landing-step">
+                <div className="landing-step-head">
+                  <span className="landing-step-num">0{i + 1}</span>
+                  <span className="landing-step-icon">
+                    <Icon name={p.icon} size={20} />
+                  </span>
+                </div>
+                <h3 className="display-md">{t(`landing.pillar${cap(p.key)}Title`)}</h3>
+                <p>{t(`landing.pillar${cap(p.key)}Body`)}</p>
+              </article>
+            </RevealStep>
           ))}
         </div>
       </section>
+
+      {/* ===== Dark feature showcase ===== */}
+      <ShowcaseSection />
 
       {/* ===== Feature grid ===== */}
       <section className="landing-features">
@@ -226,20 +240,136 @@ export function LandingPage() {
 
       {/* ===== Final CTA ===== */}
       <section className="landing-cta">
+        <div className="landing-cta-glow" aria-hidden="true" />
         <div className="landing-cta-inner">
           <h2 className="display-hero">{t('landing.finalCtaTitle')}</h2>
           <p className="landing-cta-sub">{t('landing.finalCtaBody')}</p>
           <div className="landing-cta-buttons">
-            <Button variant="primary" size="lg" onClick={() => navigate('/signup')}>
+            <Button
+              variant="primary"
+              size="lg"
+              className="landing-cta-primary"
+              onClick={() => navigate('/signup')}
+            >
               {t('landing.ctaPrimary')}
             </Button>
-            <Link to="/terms" className="landing-cta-link">
-              {t('footer.terms')}
-            </Link>
           </div>
         </div>
       </section>
     </>
+  );
+}
+
+function HeroBadge({ label }: { label: string }) {
+  return (
+    <span className="landing-hero-badge" aria-label={label}>
+      <span className="landing-hero-badge-dot" aria-hidden="true" />
+      <span className="landing-hero-badge-text">{label}</span>
+    </span>
+  );
+}
+
+function StatsStrip() {
+  const { t } = useTranslation();
+  const { ref, visible } = useRevealOnView<HTMLDivElement>();
+
+  return (
+    <section className="landing-stats" ref={ref} aria-label="Product highlights">
+      <div className={`landing-stats-inner reveal-on-view${visible ? ' is-visible' : ''}`}>
+        <Stat
+          value={t('landing.stats.languagesValue')}
+          label={t('landing.stats.languagesLabel')}
+        />
+        <Stat
+          value={t('landing.stats.freeValue')}
+          label={t('landing.stats.freeLabel')}
+        />
+        <Stat
+          value={t('landing.stats.setupValue')}
+          label={t('landing.stats.setupLabel')}
+        />
+      </div>
+    </section>
+  );
+}
+
+function Stat({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="landing-stat">
+      <span className="landing-stat-value num">{value}</span>
+      <span className="landing-stat-label">{label}</span>
+    </div>
+  );
+}
+
+function ShowcaseSection() {
+  const { t } = useTranslation();
+  const { ref, visible } = useRevealOnView<HTMLDivElement>();
+
+  return (
+    <section className="landing-showcase" ref={ref}>
+      <div className={`landing-showcase-inner reveal-on-view${visible ? ' is-visible' : ''}`}>
+        <div className="landing-showcase-text">
+          <span className="eyebrow landing-showcase-eyebrow">{t('landing.showcase.eyebrow')}</span>
+          <h2 className="display-xl">{t('landing.showcase.title')}</h2>
+          <p className="landing-showcase-body">{t('landing.showcase.body')}</p>
+          <ul className="landing-showcase-bullets">
+            <li><Icon name="check-circle-fill" size={14} />{t('landing.showcase.bullet1')}</li>
+            <li><Icon name="check-circle-fill" size={14} />{t('landing.showcase.bullet2')}</li>
+            <li><Icon name="check-circle-fill" size={14} />{t('landing.showcase.bullet3')}</li>
+          </ul>
+        </div>
+        <div className="landing-showcase-mock" aria-hidden="true">
+          <ApprovalsMockCard />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ApprovalsMockCard() {
+  const { t } = useTranslation();
+  const rows = [
+    { key: 'mockRow1', amount: 540, pct: 0, status: 'pending' as const },
+    { key: 'mockRow2', amount: 420, pct: 0, status: 'pending' as const },
+    { key: 'mockRow3', amount: 280, pct: 0, status: 'pending' as const },
+  ];
+  return (
+    <div className="landing-showcase-card">
+      <div className="landing-showcase-card-glow" aria-hidden="true" />
+      <header className="landing-showcase-card-head">
+        <div>
+          <h4 className="landing-showcase-card-title">{t('landing.showcase.mockTitle')}</h4>
+          <p className="landing-showcase-card-sub">{t('landing.showcase.mockSubtitle')}</p>
+        </div>
+        <Pill status="pending">3</Pill>
+      </header>
+      <ul className="landing-showcase-card-list">
+        {rows.map((r, i) => (
+          <li key={r.key} className="landing-showcase-card-row">
+            <span className="landing-showcase-card-avatar">
+              {String.fromCharCode(65 + i)}
+            </span>
+            <span className="landing-showcase-card-row-text">
+              <span className="landing-showcase-card-row-title">{t(`landing.showcase.${r.key}`)}</span>
+              <span className="landing-showcase-card-row-meta num">{eur(r.amount)}</span>
+            </span>
+            <button type="button" className="landing-showcase-card-action" tabIndex={-1}>
+              <Icon name="check-circle-fill" size={14} />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function RevealStep({ children, delayClass }: { children: ReactNode; delayClass: string }) {
+  const { ref, visible } = useRevealOnView<HTMLDivElement>();
+  return (
+    <div ref={ref} className={`reveal-on-view ${delayClass}${visible ? ' is-visible' : ''}`}>
+      {children}
+    </div>
   );
 }
 

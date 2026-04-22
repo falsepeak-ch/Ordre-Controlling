@@ -42,6 +42,7 @@
     "done": "Fet",
     "optional": "opcional",
     "more": "Més",
+    "moreActions": "Més accions",
     "empty": "Res a mostrar",
     "add": "Afegeix",
     "remove": "Treu",
@@ -193,8 +194,35 @@
         "a": "Els codis es poden importar per CSV avui. La importació de proveïdors està al roadmap. Les factures — expressament no, cada factura necessita algú que l'assigni a les línies."
       }
     },
+    "heroBadge": "Beta · Gratis per als primers equips",
+    "stats": {
+      "languagesValue": "3 idiomes",
+      "languagesLabel": "perquè els equips internacionals treballin junts",
+      "freeValue": "Gratis",
+      "freeLabel": "comença gratis i creix quan vulguis",
+      "setupValue": "<5 min",
+      "setupLabel": "del registre a la teva primera PO aprovada"
+    },
+    "showcase": {
+      "eyebrow": "Aprovacions que no frenen",
+      "title": "Aprova des de qualsevol lloc, en segons.",
+      "body": "Les POs pendents arriben a una cua neta, ordenades per qui està bloquejant què. Aprova amb un comentari o rebutja amb un motiu — cada decisió queda registrada amb data i hora.",
+      "bullet1": "Cua estil Slack, ordenada per urgència",
+      "bullet2": "Comentari en aprovar, sense pantalles extra",
+      "bullet3": "Registre auditable, per sempre",
+      "mockTitle": "Cua d'aprovacions",
+      "mockSubtitle": "3 esperant · 1.240 € en joc",
+      "mockRow1": "Lloguer de plató",
+      "mockRow2": "Equip d'il·luminació · 2 setmanes",
+      "mockRow3": "Catering · dia 4"
+    },
     "finalCtaTitle": "Deixa de perdre el fil del que t'has compromès.",
     "finalCtaBody": "Crea el primer projecte en menys d'un minut. Gratis per sempre per a equips petits."
+  },
+  "auth": {
+    "bullet1": "Crea i aprova ordres de compra en minuts.",
+    "bullet2": "Concilia cada factura línia a línia.",
+    "bullet3": "Gratuït per a un projecte, sense targeta."
   },
   "login": {
     "title": "Torna a entrar.",
@@ -700,8 +728,10 @@
   "poForm": {
     "createTitle": "Nova ordre de compra",
     "editTitle": "Edita l'esborrany",
+    "modifyTitle": "Modifica l'ordre",
     "createSubtitle": "Afegeix les línies i envia a aprovació quan estigui a punt.",
     "editSubtitle": "L'ordre està en esborrany. Pots modificar-la lliurement fins que l'enviïs.",
+    "modifySubtitle": "Aquesta ordre està pendent d'aprovació. Els canvis són visibles per a qui aprovi.",
     "supplierLabel": "Proveïdor",
     "supplierPlaceholder": "Tria un proveïdor…",
     "supplierMissing": "Cap proveïdor disponible. Crea'n un primer.",
@@ -721,6 +751,7 @@
     "totalCommitted": "Total compromès",
     "saveDraft": "Desa com a esborrany",
     "saveDraftShort": "Desa esborrany",
+    "saveCta": "Desa",
     "submit": "Envia a aprovació",
     "submitting": "Enviant…",
     "savingDraft": "Desant…",
@@ -740,6 +771,7 @@
     "rejectCta": "Rebutja",
     "closeCta": "Tanca l'ordre",
     "editDraftCta": "Edita esborrany",
+    "modifyCta": "Modifica",
     "submitForApproval": "Envia a aprovació",
     "commentPlaceholder": "Comentari opcional per a qui l'ha demanat",
     "approveTitle": "Aprovar {{number}}",

@@ -19,6 +19,7 @@ import { undoApproval } from '~/lib/purchaseOrders';
 import { canApprove } from '~/lib/roles';
 import { eur, formatDate, relDate } from '~/lib/format';
 import type { Approval, PurchaseOrder } from '~/types';
+import '~/theme/page-layout.css';
 import './ApprovalsQueuePage.css';
 
 type Tab = 'pending' | 'decided';
@@ -80,15 +81,7 @@ export function ApprovalsQueuePage() {
         }
       />
 
-      <div className="approvals-page">
-        <section className="approvals-hero reveal">
-          <span className="eyebrow">{t('nav.approvals')}</span>
-          <h1 className="display-xl">{t('approvalsQueue.pageTitle')}</h1>
-          <p className="approvals-hero-sub">
-            {t('approvalsQueue.heroSubtitle', { project: project.name })}
-          </p>
-        </section>
-
+      <div className="approvals-page page-container page-container--default">
         <section className="approvals-tabs reveal reveal-d1" role="tablist">
           <button
             type="button"

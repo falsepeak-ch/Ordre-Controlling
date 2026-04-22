@@ -1,0 +1,66 @@
+.iv-backdrop {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in oklab, var(--surface-inverted) 75%, transparent);
+  display: grid;
+  place-items: center;
+  padding: var(--s-5);
+  z-index: 200;
+  animation: iv-fade 0.15s var(--ease-out);
+  backdrop-filter: blur(8px) saturate(120%);
+}
+
+.iv-img {
+  max-width: 100%;
+  max-height: calc(100vh - 80px);
+  object-fit: contain;
+  border-radius: var(--r-8);
+  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.5);
+  animation: iv-pop 0.2s var(--ease-out);
+}
+
+.iv-pdf {
+  width: min(860px, calc(100vw - 40px));
+  height: calc(100vh - 80px);
+  border: none;
+  border-radius: var(--r-8);
+  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.5);
+  animation: iv-pop 0.2s var(--ease-out);
+  background: white;
+}
+
+.iv-btn {
+  position: fixed;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-8);
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklab, var(--surface) 90%, transparent);
+  color: var(--fg);
+  box-shadow: var(--elevation-2);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.iv-btn:hover {
+  background: var(--surface);
+}
+
+.iv-close {
+  top: var(--s-5);
+  right: var(--s-5);
+}
+
+.iv-external {
+  top: var(--s-5);
+  left: var(--s-5);
+}
+
+@keyframes iv-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes iv-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}

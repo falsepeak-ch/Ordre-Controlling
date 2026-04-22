@@ -1,19 +1,6 @@
 .inv-page {
-  padding: var(--s-8);
-  max-width: 1280px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-7);
+  /* Layout handled by .page-container */
 }
-.inv-hero {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-  max-width: 720px;
-}
-.inv-hero-sub { color: var(--fg-muted); font-size: 15.5px; line-height: 1.55; }
-
 /* ===== Totals strip ===== */
 .inv-totals {
   display: grid;
@@ -223,5 +210,4 @@
   .inv-row > :nth-child(3),
   .inv-row > :nth-child(5),
   .inv-row > :nth-child(7) { display: none; }
-  .inv-page { padding: var(--s-5); }
 }

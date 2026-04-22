@@ -15,6 +15,7 @@ import { useConfirm } from '~/hooks/useConfirm';
 import { canEdit } from '~/lib/roles';
 import { categoriesToCsv, deleteCategory } from '~/lib/categories';
 import type { Category } from '~/types';
+import '~/theme/page-layout.css';
 import './CategoriesPage.css';
 
 export function CategoriesPage() {
@@ -85,6 +86,15 @@ export function CategoriesPage() {
     <>
       <Topbar
         title={t('categories.pageTitle')}
+        subtitle={
+          categories.length > 0 ? (
+            <span className="muted" style={{ fontSize: 13 }}>
+              {categories.length === 1
+                ? t('categories.countOne')
+                : t('categories.countOther', { count: categories.length })}
+            </span>
+          ) : null
+        }
         actions={
           writable ? (
             <>
@@ -118,19 +128,7 @@ export function CategoriesPage() {
         }
       />
 
-      <div className="categories-page">
-        <section className="categories-hero reveal">
-          <span className="eyebrow">
-            {categories.length === 1
-              ? t('categories.countOne')
-              : t('categories.countOther', { count: categories.length })}
-          </span>
-          <h1 className="display-xl">{t('categories.pageTitle')}</h1>
-          <p className="categories-hero-sub">
-            {t('categories.heroSubtitle', { project: project.name })}
-          </p>
-        </section>
-
+      <div className="categories-page page-container page-container--default">
         {categories.length > 0 ? (
           <section className="categories-filter reveal reveal-d1">
             <Field>

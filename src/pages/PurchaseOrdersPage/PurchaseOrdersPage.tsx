@@ -16,6 +16,7 @@ import { canEdit } from '~/lib/roles';
 import { displayPOStatus, poTotals } from '~/lib/reconcile';
 import { eur, eurFull, relDate } from '~/lib/format';
 import type { DisplayPOStatus } from '~/types';
+import '~/theme/page-layout.css';
 import './PurchaseOrdersPage.css';
 
 const STATUS_TABS: Array<DisplayPOStatus | 'all'> = [
@@ -81,6 +82,15 @@ export function PurchaseOrdersPage() {
     <>
       <Topbar
         title={t('pos.pageTitle')}
+        subtitle={
+          purchaseOrders.length > 0 ? (
+            <span className="muted" style={{ fontSize: 13 }}>
+              {purchaseOrders.length === 1
+                ? t('pos.countOne')
+                : t('pos.countOther', { count: purchaseOrders.length })}
+            </span>
+          ) : null
+        }
         actions={
           writable ? (
             <Button
@@ -95,17 +105,7 @@ export function PurchaseOrdersPage() {
         }
       />
 
-      <div className="pos-page">
-        <section className="pos-hero reveal">
-          <span className="eyebrow">
-            {purchaseOrders.length === 1
-              ? t('pos.countOne')
-              : t('pos.countOther', { count: purchaseOrders.length })}
-          </span>
-          <h1 className="display-xl">{t('pos.pageTitle')}</h1>
-          <p className="pos-hero-sub">{t('pos.heroSubtitle', { project: project.name })}</p>
-        </section>
-
+      <div className="pos-page page-container">
         {purchaseOrders.length > 0 ? (
           <section className="pos-totals reveal reveal-d1">
             <div className="pos-total-cell">

@@ -78,7 +78,9 @@
   background: transparent;
   border: 0;
   cursor: pointer;
-  font: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  line-height: inherit;
 }
 
 @media (max-width: 720px) {

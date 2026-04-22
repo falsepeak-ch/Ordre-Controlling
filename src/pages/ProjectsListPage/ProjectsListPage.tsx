@@ -16,6 +16,7 @@ import { useAuth } from '~/hooks/useAuth';
 import { useProjects } from '~/hooks/useProjects';
 import { useSubscription } from '~/hooks/useSubscription';
 import type { Project, Role } from '~/types';
+import '~/theme/page-layout.css';
 import './ProjectsListPage.css';
 
 const FREE_PROJECT_LIMIT = 1;
@@ -65,7 +66,7 @@ export function ProjectsListPage() {
   return (
     <div className="projects-page">
       <header className="projects-topbar">
-        <Logo size="md" />
+        <Logo variant="wordmark" size="md" />
         <div className="projects-topbar-actions">
           <LocaleToggle />
           <ThemeToggle />
@@ -94,7 +95,7 @@ export function ProjectsListPage() {
         </div>
       </header>
 
-      <main className="projects-main">
+      <main className="projects-main page-container">
         <section className="projects-hero reveal">
           <div className="projects-hero-left">
             <span className="eyebrow">

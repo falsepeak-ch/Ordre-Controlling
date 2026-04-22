@@ -9,6 +9,8 @@ import { Pill } from '~/components/ui/Pill';
 import { Progress } from '~/components/ui/Progress';
 import { Avatar } from '~/components/ui/Avatar';
 import { Spinner } from '~/components/ui/Spinner';
+import { ActionMenu } from '~/components/ui/ActionMenu';
+import { ImageViewer } from '~/components/ui/ImageViewer';
 import { PODecisionModal } from '~/components/PODecisionModal';
 import { InvoiceFormModal } from '~/components/InvoiceFormModal';
 import { AttachmentsList, type AttachmentItem } from '~/components/AttachmentsList';
@@ -27,6 +29,7 @@ import { addPOAttachment, deletePOAttachment } from '~/lib/poAttachments';
 import { StorageQuotaExceededError } from '~/lib/attachments';
 import { eur, eurFull, formatDate, formatDateTime } from '~/lib/format';
 import type { Approval, Invoice, POLine, PurchaseOrder } from '~/types';
+import '~/theme/page-layout.css';
 import './PODetailPage.css';
 
 export function PODetailPage() {
@@ -45,6 +48,7 @@ export function PODetailPage() {
   const [invoiceFormOpen, setInvoiceFormOpen] = useState(false);
   const [invoiceBeingEdited, setInvoiceBeingEdited] = useState<Invoice | null>(null);
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const [viewer, setViewer] = useState<{ url: string; name?: string } | null>(null);
 
   const supplier = useMemo(
     () => suppliers.find((s) => s.id === po?.supplierId),
@@ -265,6 +269,9 @@ export function PODetailPage() {
             onEditDraft={() =>
               navigate(`/app/p/${project.id}/purchase-orders/${po.id}/edit`)
             }
+            onModify={() =>
+              navigate(`/app/p/${project.id}/purchase-orders/${po.id}/edit`)
+            }
             onSubmit={async () => {
               setBusyAction('submit');
               try {
@@ -311,7 +318,9 @@ export function PODetailPage() {
         uploadedBy={user?.displayName ?? user?.email ?? 'You'}
       />
 
-      <div className="po-detail-page">
+      <ImageViewer url={viewer?.url ?? null} fileName={viewer?.name} onClose={() => setViewer(null)} />
+
+      <div className="po-detail-page page-container">
         <section className="po-hero reveal">
           <div className="po-hero-status">
             <Pill status={displayStatus}>{t(`pos.statusLabel.${displayStatus}`)}</Pill>
@@ -484,87 +493,110 @@ export function PODetailPage() {
                 <ul className="po-invoices">
                   {po.invoices.map((inv) => (
                     <li key={inv.id} className="po-invoice">
-                      <button
-                        type="button"
-                        className="po-invoice-doc po-invoice-doc-btn"
-                        onClick={() => inv.fileUrl && window.open(inv.fileUrl, '_blank', 'noopener')}
-                        disabled={!inv.fileUrl}
-                        aria-label={inv.fileName ?? inv.file ?? inv.number}
-                      >
-                        <Icon name="file-earmark-text-fill" size={18} />
-                      </button>
-                      <div className="po-invoice-main">
-                        <span className="po-invoice-number mono">
-                          {inv.fileUrl ? (
-                            <a
-                              href={inv.fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="po-invoice-link"
-                            >
-                              {inv.number}
-                            </a>
-                          ) : (
-                            inv.number
-                          )}
-                        </span>
-                        <span className="po-invoice-meta">
-                          {t('poDetail.invoiceIssued', {
-                            date: formatDate(inv.issueDate),
-                          })}{' '}
-                          · {t('poDetail.invoiceDue', { date: formatDate(inv.dueDate) })} ·{' '}
-                          {t('poDetail.invoiceUploadedBy', { by: inv.uploadedBy })}
-                          {inv.fileSize ? ` · ${inv.fileSize}` : ''}
-                        </span>
-                        <ul className="po-invoice-lines">
-                          {inv.lines.map((il) => {
-                            const line = po.lines.find((l) => l.id === il.lineId);
-                            return (
-                              <li key={il.lineId + il.amount} className="po-invoice-mapped">
-                                <span className="po-invoice-mapped-arrow">↳</span>
-                                <span className="po-invoice-mapped-desc">
-                                  {line?.description ?? t('poDetail.pickLabel')}
-                                </span>
-                                <span className="num po-invoice-mapped-amount">
-                                  {eurFull(il.amount)}
-                                </span>
-                              </li>
-                            );
-                          })}
-                        </ul>
+                      <div className="po-invoice-head">
+                        <button
+                          type="button"
+                          className="po-invoice-doc po-invoice-doc-btn"
+                          onClick={() => {
+                            if (!inv.fileUrl) return;
+                            if (/\.(jpe?g|png|gif|webp|svg|avif|heic|pdf)$/i.test(inv.fileName ?? inv.fileUrl)) {
+                              setViewer({ url: inv.fileUrl, name: inv.fileName });
+                            } else {
+                              window.open(inv.fileUrl, '_blank', 'noopener');
+                            }
+                          }}
+                          disabled={!inv.fileUrl}
+                          aria-label={inv.fileName ?? inv.file ?? inv.number}
+                        >
+                          <Icon name="file-earmark-text-fill" size={18} />
+                        </button>
+                        <div className="po-invoice-main">
+                          <span className="po-invoice-number mono">
+                            {inv.fileUrl ? (
+                              /\.(jpe?g|png|gif|webp|svg|avif|heic|pdf)$/i.test(inv.fileName ?? inv.fileUrl) ? (
+                                <button
+                                  type="button"
+                                  className="po-invoice-link po-invoice-link-btn"
+                                  onClick={() => setViewer({ url: inv.fileUrl!, name: inv.fileName })}
+                                >
+                                  {inv.number}
+                                </button>
+                              ) : (
+                                <a
+                                  href={inv.fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="po-invoice-link"
+                                >
+                                  {inv.number}
+                                </a>
+                              )
+                            ) : (
+                              inv.number
+                            )}
+                            {inv.paidAt ? (
+                              <Pill status="paid" tone="soft">
+                                {t('invoices.paidFilter.paid')}
+                              </Pill>
+                            ) : null}
+                          </span>
+                          <span className="po-invoice-meta">
+                            {t('poDetail.invoiceIssued', {
+                              date: formatDate(inv.issueDate),
+                            })}{' '}
+                            · {t('poDetail.invoiceDue', { date: formatDate(inv.dueDate) })} ·{' '}
+                            {t('poDetail.invoiceUploadedBy', { by: inv.uploadedBy })}
+                            {inv.fileSize ? ` · ${inv.fileSize}` : ''}
+                          </span>
+                          <ul className="po-invoice-lines">
+                            {inv.lines.map((il) => {
+                              const line = po.lines.find((l) => l.id === il.lineId);
+                              return (
+                                <li key={il.lineId + il.amount} className="po-invoice-mapped">
+                                  <span className="po-invoice-mapped-arrow">↳</span>
+                                  <span className="po-invoice-mapped-desc">
+                                    {line?.description ?? t('poDetail.pickLabel')}
+                                  </span>
+                                  <span className="num po-invoice-mapped-amount">
+                                    {eurFull(il.amount)}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
                       </div>
-                      <div className="po-invoice-right">
+                      {inv.lines.length > 1 ? (
                         <div className="po-invoice-total num">{eurFull(inv.total)}</div>
-                        {canEdit(role) ? (
-                          <div className="po-invoice-actions">
-                            <button
-                              type="button"
-                              className="po-invoice-action"
-                              onClick={() => handleTogglePaid(inv)}
-                              aria-label={inv.paidAt ? t('invoices.markUnpaidCta') : t('invoices.markPaidCta')}
-                              title={inv.paidAt ? t('invoices.markUnpaidCta') : t('invoices.markPaidCta')}
-                            >
-                              <Icon name={inv.paidAt ? 'check-circle-fill' : 'check'} size={12} />
-                            </button>
-                            <button
-                              type="button"
-                              className="po-invoice-action"
-                              onClick={() => openEditInvoice(inv)}
-                              aria-label={t('common.edit')}
-                            >
-                              <Icon name="pencil-fill" size={12} />
-                            </button>
-                            <button
-                              type="button"
-                              className="po-invoice-action"
-                              onClick={() => handleDeleteInvoice(inv)}
-                              aria-label={t('common.remove')}
-                            >
-                              <Icon name="trash-fill" size={12} />
-                            </button>
-                          </div>
-                        ) : null}
-                      </div>
+                      ) : null}
+                      {canEdit(role) ? (
+                        <div className="po-invoice-menu">
+                          <ActionMenu
+                            triggerLabel={t('common.moreActions')}
+                            triggerClassName="po-invoice-menu-trigger"
+                            items={[
+                              {
+                                icon: inv.paidAt ? 'check-circle-fill' : 'check',
+                                label: inv.paidAt
+                                  ? t('invoices.markUnpaidCta')
+                                  : t('invoices.markPaidCta'),
+                                onSelect: () => handleTogglePaid(inv),
+                              },
+                              {
+                                icon: 'pencil-fill',
+                                label: t('common.edit'),
+                                onSelect: () => openEditInvoice(inv),
+                              },
+                              {
+                                icon: 'trash-fill',
+                                label: t('common.remove'),
+                                tone: 'danger',
+                                onSelect: () => handleDeleteInvoice(inv),
+                              },
+                            ]}
+                          />
+                        </div>
+                      ) : null}
                     </li>
                   ))}
                 </ul>
@@ -723,6 +755,7 @@ function POActions({
   busy,
   onDelete,
   onEditDraft,
+  onModify,
   onSubmit,
   onApprove,
   onReject,
@@ -736,6 +769,7 @@ function POActions({
   busy: null | 'submit' | 'close' | 'reopen' | 'delete';
   onDelete: () => void;
   onEditDraft: () => void;
+  onModify: () => void;
   onSubmit: () => void;
   onApprove: () => void;
   onReject: () => void;
@@ -788,27 +822,41 @@ function POActions({
     );
   }
 
-  // Pending approval: the assigned approver can decide.
-  if (po.status === 'pending_approval' && approverHere) {
+  // Pending approval: owners can modify; assigned approver can decide.
+  if (po.status === 'pending_approval' && (isOwner || approverHere)) {
     return (
       <>
         {deleteBtn}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onReject}
-          leading={<Icon name="x-circle-fill" size={13} />}
-        >
-          {t('poActions.rejectCta')}
-        </Button>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={onApprove}
-          leading={<Icon name="check-circle-fill" size={13} />}
-        >
-          {t('poActions.approveCta')}
-        </Button>
+        {isOwner && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onModify}
+            leading={<Icon name="pencil-fill" size={13} />}
+          >
+            {t('poActions.modifyCta')}
+          </Button>
+        )}
+        {approverHere && (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReject}
+              leading={<Icon name="x-circle-fill" size={13} />}
+            >
+              {t('poActions.rejectCta')}
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={onApprove}
+              leading={<Icon name="check-circle-fill" size={13} />}
+            >
+              {t('poActions.approveCta')}
+            </Button>
+          </>
+        )}
       </>
     );
   }

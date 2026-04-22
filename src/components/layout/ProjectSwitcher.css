@@ -133,10 +133,19 @@
 .project-switcher-option-text {
   flex: 1;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   min-width: 0;
 }
+.project-switcher-option-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+}
+
 .project-switcher-option-name {
   font-size: 13px;
   font-weight: 500;

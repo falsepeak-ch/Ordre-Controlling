@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { SEOHead } from '~/components/SEOHead';
 import { Button } from '~/components/ui/Button';
 import { useConsent } from '~/hooks/useConsent';
+import '~/theme/page-layout.css';
 import './LegalPage.css';
 
 export function PrivacyPage() {
@@ -15,7 +16,7 @@ export function PrivacyPage() {
         description={t('privacy.metaDescription')}
         canonical="https://ordre.app/privacy"
       />
-      <article className="legal-page">
+      <article className="legal-page page-container page-container--compact">
         <header className="legal-head">
           <span className="eyebrow">{t('privacy.eyebrow')}</span>
           <h1 className="display-xl">{t('privacy.title')}</h1>

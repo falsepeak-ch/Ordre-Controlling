@@ -29,7 +29,7 @@ export function ProjectShell() {
   if (notFound || !project) {
     return (
       <div className="project-shell-empty">
-        <Logo size="md" />
+        <Logo variant="stacked" size="md" />
         <h1 className="display-xl" style={{ margin: '16px 0 6px' }}>{t('notFound.projectTitle')}</h1>
         <p className="muted" style={{ fontSize: 15, maxWidth: 480, lineHeight: 1.5 }}>{t('notFound.projectBody')}</p>
         <ButtonAnchor href="/app" variant="primary" size="md">
@@ -43,7 +43,7 @@ export function ProjectShell() {
   if (!role) {
     return (
       <div className="project-shell-empty">
-        <Logo size="md" />
+        <Logo variant="stacked" size="md" />
         <h1 className="display-xl" style={{ margin: '16px 0 6px' }}>{t('notFound.projectTitle')}</h1>
         <p className="muted" style={{ fontSize: 15, maxWidth: 480, lineHeight: 1.5 }}>{t('notFound.projectBody')}</p>
         <ButtonAnchor href="/app" variant="primary" size="md">

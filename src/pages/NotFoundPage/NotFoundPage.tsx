@@ -16,7 +16,7 @@ export function NotFoundPage() {
       }}
     >
       <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
-        <Logo size="lg" />
+        <Logo variant="stacked" size="lg" />
         <h1 className="display-xl" style={{ margin: '16px 0 4px' }}>{t('notFound.title')}</h1>
         <p className="muted" style={{ fontSize: 15 }}>{t('notFound.body')}</p>
         <ButtonAnchor href="/" variant="primary" size="md">

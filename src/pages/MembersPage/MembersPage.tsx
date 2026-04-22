@@ -14,6 +14,7 @@ import { useConfirm } from '~/hooks/useConfirm';
 import { addMemberByEmail, removeMember, updateMemberRole } from '~/lib/projects';
 import { canManage } from '~/lib/roles';
 import type { Role } from '~/types';
+import '~/theme/page-layout.css';
 import './MembersPage.css';
 
 const ROLE_ORDER: Role[] = ['owner', 'editor', 'approver', 'viewer'];
@@ -103,21 +104,20 @@ export function MembersPage() {
 
   return (
     <>
-      <Topbar title={t('members.title')} />
+      <Topbar
+        title={t('members.title')}
+        subtitle={
+          members.length > 0 ? (
+            <span className="muted" style={{ fontSize: 13 }}>
+              {members.length === 1
+                ? t('members.countOne')
+                : t('members.countOther', { count: members.length })}
+            </span>
+          ) : null
+        }
+      />
 
-      <div className="members-page">
-        <section className="members-hero reveal">
-          <span className="eyebrow">
-            {members.length === 1
-              ? t('members.countOne')
-              : t('members.countOther', { count: members.length })}
-          </span>
-          <h1 className="display-xl">{t('members.title')}</h1>
-          <p className="members-hero-sub">
-            {t('members.subtitle', { count: members.length, project: project.name })}
-          </p>
-        </section>
-
+      <div className="members-page page-container page-container--narrow">
         {canEditMembers ? (
           <section className="members-add reveal reveal-d1">
             <Card size="md">

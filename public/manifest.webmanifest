@@ -10,7 +10,8 @@
   "theme_color": "#0f0f10",
   "lang": "ca",
   "icons": [
-    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "/logo/square/no-name-yellow.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "/logo/square/name-white.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "maskable" },
     { "src": "/apple-touch-icon.png", "type": "image/png", "sizes": "180x180", "purpose": "any" }
   ]
 }

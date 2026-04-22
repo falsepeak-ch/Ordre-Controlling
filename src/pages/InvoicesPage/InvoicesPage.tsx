@@ -11,6 +11,7 @@ import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { useProjectData } from '~/hooks/useProjectData';
 import { eur, eurFull, formatDate } from '~/lib/format';
 import type { Invoice, PurchaseOrder, Supplier } from '~/types';
+import '~/theme/page-layout.css';
 import './InvoicesPage.css';
 
 type PaidFilter = 'all' | 'unpaid' | 'paid' | 'overdue';
@@ -96,21 +97,20 @@ export function InvoicesPage() {
 
   return (
     <>
-      <Topbar title={t('invoices.pageTitle')} />
+      <Topbar
+        title={t('invoices.pageTitle')}
+        subtitle={
+          allRows.length > 0 ? (
+            <span className="muted" style={{ fontSize: 13 }}>
+              {allRows.length === 1
+                ? t('invoices.countOne')
+                : t('invoices.countOther', { count: allRows.length })}
+            </span>
+          ) : null
+        }
+      />
 
-      <div className="inv-page">
-        <section className="inv-hero reveal">
-          <span className="eyebrow">
-            {allRows.length === 1
-              ? t('invoices.countOne')
-              : t('invoices.countOther', { count: allRows.length })}
-          </span>
-          <h1 className="display-xl">{t('invoices.pageTitle')}</h1>
-          <p className="inv-hero-sub">
-            {t('invoices.heroSubtitle', { project: project.name })}
-          </p>
-        </section>
-
+      <div className="inv-page page-container">
         {allRows.length > 0 ? (
           <section className="inv-totals reveal reveal-d1">
             <div className="inv-total-cell">
@@ -257,7 +257,7 @@ export function InvoicesPage() {
                   <div className="inv-row-date">{formatDate(row.invoice.dueDate)}</div>
                   <div className="inv-row-total">{eur(row.invoice.total)}</div>
                   <div>
-                    <Pill status={status === 'paid' ? 'closed' : status === 'overdue' ? 'rejected' : 'pending_approval'}>
+                    <Pill status={status === 'paid' ? 'paid' : status === 'overdue' ? 'rejected' : 'pending_approval'}>
                       {t(`invoices.paidFilter.${status}`)}
                     </Pill>
                   </div>

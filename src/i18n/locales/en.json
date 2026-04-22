@@ -42,6 +42,7 @@
     "done": "Done",
     "optional": "optional",
     "more": "More",
+    "moreActions": "More actions",
     "empty": "Nothing to show",
     "add": "Add",
     "remove": "Remove",
@@ -193,8 +194,35 @@
         "a": "Accounting codes import via CSV today. Supplier import is on the roadmap. Invoices — intentionally not, every invoice needs a human to map it back to the PO lines."
       }
     },
+    "heroBadge": "Beta · Free for early teams",
+    "stats": {
+      "languagesValue": "3 languages",
+      "languagesLabel": "so international teams can work together",
+      "freeValue": "Free",
+      "freeLabel": "start for free, scale when you're ready",
+      "setupValue": "<5 min",
+      "setupLabel": "from sign-up to your first approved PO"
+    },
+    "showcase": {
+      "eyebrow": "Approvals built for momentum",
+      "title": "Approve from anywhere, in seconds.",
+      "body": "Pending POs land in a clean queue, sorted by who's blocking what. Approve with a comment, reject with a reason — every decision is logged with a timestamp.",
+      "bullet1": "Slack-style queue, sorted by urgency",
+      "bullet2": "Comment-on-approval, no extra screens",
+      "bullet3": "Searchable audit log, forever",
+      "mockTitle": "Approvals queue",
+      "mockSubtitle": "3 waiting · €1,240 in scope",
+      "mockRow1": "Sound stage rental",
+      "mockRow2": "Lighting kit · 2 weeks",
+      "mockRow3": "Catering · day 4"
+    },
     "finalCtaTitle": "Stop losing track of what you've committed.",
     "finalCtaBody": "Create your first project in under a minute. Free forever for small teams."
+  },
+  "auth": {
+    "bullet1": "Raise and approve POs in minutes.",
+    "bullet2": "Reconcile every invoice line by line.",
+    "bullet3": "Free for a single project, no card needed."
   },
   "login": {
     "title": "Welcome back.",
@@ -700,8 +728,10 @@
   "poForm": {
     "createTitle": "New purchase order",
     "editTitle": "Edit draft",
+    "modifyTitle": "Modify PO",
     "createSubtitle": "Add the lines and submit for approval when it's ready.",
     "editSubtitle": "This PO is still a draft. Edit freely until you submit it.",
+    "modifySubtitle": "This PO is pending approval. Changes are visible to the approver.",
     "supplierLabel": "Supplier",
     "supplierPlaceholder": "Pick a supplier…",
     "supplierMissing": "No suppliers yet. Create one first.",
@@ -721,6 +751,7 @@
     "totalCommitted": "Total committed",
     "saveDraft": "Save as draft",
     "saveDraftShort": "Save draft",
+    "saveCta": "Save",
     "submit": "Submit for approval",
     "submitting": "Submitting…",
     "savingDraft": "Saving…",
@@ -740,6 +771,7 @@
     "rejectCta": "Reject",
     "closeCta": "Close PO",
     "editDraftCta": "Edit draft",
+    "modifyCta": "Modify",
     "submitForApproval": "Submit for approval",
     "commentPlaceholder": "Optional comment for the requester",
     "approveTitle": "Approve {{number}}",

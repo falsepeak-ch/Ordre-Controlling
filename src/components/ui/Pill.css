@@ -55,6 +55,13 @@
 }
 .pill-status-partially_invoiced .pill-dot { background: var(--status-success); }
 
+.pill-status-paid {
+  background: var(--status-success-soft);
+  color: var(--status-success);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--status-success) 22%, transparent);
+}
+.pill-status-paid .pill-dot { background: var(--status-success); }
+
 .pill-status-partially_approved {
   background: var(--status-warning-soft);
   color: var(--status-warning);

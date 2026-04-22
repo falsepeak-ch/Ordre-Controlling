@@ -1,19 +1,6 @@
 .rpt-page {
-  padding: var(--s-8);
-  max-width: 1280px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-7);
+  /* Layout handled by .page-container */
 }
-.rpt-hero {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-  max-width: 720px;
-}
-.rpt-hero-sub { color: var(--fg-muted); font-size: 15.5px; line-height: 1.55; }
-
 /* ===== Date filter (in topbar actions) ===== */
 .rpt-date-filter {
   display: flex;
@@ -147,5 +134,4 @@
   .rpt-kpis { grid-template-columns: repeat(2, 1fr); }
   .rpt-charts { grid-template-columns: 1fr; }
   .rpt-chart-full { grid-column: 1; }
-  .rpt-page { padding: var(--s-5); }
 }

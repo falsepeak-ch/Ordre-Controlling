@@ -9,12 +9,12 @@ import { RolePill } from '~/components/ui/RolePill';
 import { Spinner } from '~/components/ui/Spinner';
 import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { useProjectData } from '~/hooks/useProjectData';
-import { useAuth } from '~/hooks/useAuth';
 import { projectMetrics, poTotals } from '~/lib/reconcile';
 import { canApprove, canEdit, canManage } from '~/lib/roles';
 import { eur, relDate } from '~/lib/format';
 import type { IconName } from '~/icons/manifest';
 import type { PurchaseOrder } from '~/types';
+import '~/theme/page-layout.css';
 import './DashboardPage.css';
 
 interface ActivityEntry {
@@ -32,7 +32,6 @@ const APPROVAL_QUEUE_LIMIT = 5;
 export function DashboardPage() {
   const { t } = useTranslation();
   const { project, role } = useCurrentProject();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const { suppliers, purchaseOrders, loading } = useProjectData(project.id);
 
@@ -49,7 +48,6 @@ export function DashboardPage() {
   const showApprovalQueue = canApprove(role);
 
   const isEmpty = metrics.poCount === 0 && metrics.supplierCount === 0;
-  const firstName = (user?.displayName ?? '').split(' ')[0] ?? '';
 
   const goSuppliers = () => navigate(`/app/p/${project.id}/suppliers`);
   const goPOs = () => navigate(`/app/p/${project.id}/purchase-orders`);
@@ -78,17 +76,7 @@ export function DashboardPage() {
         }
       />
 
-      <div className="dashboard-page">
-        <section className="dashboard-hero reveal">
-          <span className="eyebrow">{t('nav.dashboard')}</span>
-          <h1 className="display-xl">
-            {firstName
-              ? t('dashboard.welcome', { name: firstName })
-              : t('dashboard.welcomeAnonymous')}
-          </h1>
-          <p className="dashboard-hero-sub">{t('dashboard.subtitle', { project: project.name })}</p>
-        </section>
-
+      <div className="dashboard-page page-container">
         <section className="dashboard-metrics reveal reveal-d1">
           <MetricCard
             label={t('dashboard.metricCommitted')}

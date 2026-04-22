@@ -22,6 +22,7 @@ import {
   updateProjectMeta,
   type ProjectContentsCheck,
 } from '~/lib/projects';
+import '~/theme/page-layout.css';
 import './ProjectSettingsPage.css';
 
 export function ProjectSettingsPage() {
@@ -39,15 +40,7 @@ export function ProjectSettingsPage() {
     <>
       <Topbar title={t('projectSettings.pageTitle')} />
 
-      <div className="settings-page">
-        <section className="settings-hero reveal">
-          <span className="eyebrow">{t('nav.settings')}</span>
-          <h1 className="display-xl">{t('projectSettings.pageTitle')}</h1>
-          <p className="settings-hero-sub">
-            {t('projectSettings.subtitle', { project: project.name })}
-          </p>
-        </section>
-
+      <div className="settings-page page-container page-container--narrow">
         {project.archived ? (
           <div className="settings-banner reveal reveal-d1">
             <Icon name="clock-fill" size={14} />

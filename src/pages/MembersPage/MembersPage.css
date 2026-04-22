@@ -1,22 +1,5 @@
 .members-page {
-  padding: var(--s-8);
-  max-width: 980px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-7);
-}
-
-.members-hero {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-  max-width: 640px;
-}
-.members-hero-sub {
-  color: var(--fg-muted);
-  font-size: 15.5px;
-  line-height: 1.55;
+  /* Layout handled by .page-container */
 }
 
 /* ===== Add form ===== */
@@ -158,8 +141,7 @@
   gap: var(--s-3);
 }
 
-@media (max-width: 820px) {
+@media (max-width: 720px) {
   .members-add-form { grid-template-columns: 1fr; }
   .member-row { flex-direction: column; align-items: flex-start; gap: var(--s-3); }
-  .members-page { padding: var(--s-5); }
 }

@@ -84,7 +84,7 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <Logo size="md" />
+        <Logo variant="wordmark" size="md" />
       </div>
 
       <ProjectSwitcher current={project} />

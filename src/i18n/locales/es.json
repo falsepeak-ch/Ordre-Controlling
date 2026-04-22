@@ -42,6 +42,7 @@
     "done": "Hecho",
     "optional": "opcional",
     "more": "Más",
+    "moreActions": "Más acciones",
     "empty": "Nada que mostrar",
     "add": "Añadir",
     "remove": "Quitar",
@@ -193,8 +194,35 @@
         "a": "Los códigos se pueden importar por CSV hoy. La importación de proveedores está en el roadmap. Las facturas — expresamente no, cada factura necesita a alguien que la asigne a las líneas."
       }
     },
+    "heroBadge": "Beta · Gratis para los primeros equipos",
+    "stats": {
+      "languagesValue": "3 idiomas",
+      "languagesLabel": "para que los equipos internacionales trabajen juntos",
+      "freeValue": "Gratis",
+      "freeLabel": "empieza gratis y crece cuando quieras",
+      "setupValue": "<5 min",
+      "setupLabel": "del registro a tu primera PO aprobada"
+    },
+    "showcase": {
+      "eyebrow": "Aprobaciones que no frenan",
+      "title": "Aprueba desde cualquier lugar, en segundos.",
+      "body": "Las POs pendientes aterrizan en una cola limpia, ordenadas por quién está bloqueando qué. Aprueba con un comentario o rechaza con un motivo — cada decisión queda registrada con su fecha y hora.",
+      "bullet1": "Cola estilo Slack, ordenada por urgencia",
+      "bullet2": "Comentario al aprobar, sin pantallas extra",
+      "bullet3": "Registro auditable, para siempre",
+      "mockTitle": "Cola de aprobaciones",
+      "mockSubtitle": "3 en espera · 1.240 € en juego",
+      "mockRow1": "Alquiler de plató",
+      "mockRow2": "Equipo de iluminación · 2 semanas",
+      "mockRow3": "Catering · día 4"
+    },
     "finalCtaTitle": "Deja de perder la pista de lo que has comprometido.",
     "finalCtaBody": "Crea tu primer proyecto en menos de un minuto. Gratis para siempre para equipos pequeños."
+  },
+  "auth": {
+    "bullet1": "Crea y aprueba órdenes de compra en minutos.",
+    "bullet2": "Concilia cada factura línea a línea.",
+    "bullet3": "Gratis para un proyecto, sin tarjeta."
   },
   "login": {
     "title": "Vuelve a entrar.",
@@ -700,8 +728,10 @@
   "poForm": {
     "createTitle": "Nueva orden de compra",
     "editTitle": "Editar borrador",
+    "modifyTitle": "Modificar orden",
     "createSubtitle": "Añade las líneas y envíala a aprobación cuando esté lista.",
     "editSubtitle": "La orden está en borrador. Puedes modificarla libremente hasta enviarla.",
+    "modifySubtitle": "Esta orden está pendiente de aprobación. Los cambios son visibles para quien apruebe.",
     "supplierLabel": "Proveedor",
     "supplierPlaceholder": "Elige un proveedor…",
     "supplierMissing": "Sin proveedores disponibles. Crea uno primero.",
@@ -721,6 +751,7 @@
     "totalCommitted": "Total comprometido",
     "saveDraft": "Guardar borrador",
     "saveDraftShort": "Guardar",
+    "saveCta": "Guardar",
     "submit": "Enviar a aprobación",
     "submitting": "Enviando…",
     "savingDraft": "Guardando…",
@@ -740,6 +771,7 @@
     "rejectCta": "Rechazar",
     "closeCta": "Cerrar orden",
     "editDraftCta": "Editar borrador",
+    "modifyCta": "Modificar",
     "submitForApproval": "Enviar a aprobación",
     "commentPlaceholder": "Comentario opcional para quien la pidió",
     "approveTitle": "Aprobar {{number}}",

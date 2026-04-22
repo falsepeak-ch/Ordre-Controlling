@@ -29,6 +29,7 @@ import {
   type DateRange,
 } from '~/lib/reportHelpers';
 import { eur } from '~/lib/format';
+import '~/theme/page-layout.css';
 import './ReportsPage.css';
 
 // Reads CSS custom property values (SVG fill cannot use var(--x)).
@@ -132,15 +133,7 @@ export function ReportsPage() {
         }
       />
 
-      <div className="rpt-page">
-        <section className="rpt-hero reveal">
-          <span className="eyebrow">{t('nav.reports')}</span>
-          <h1 className="display-xl">{t('reports.pageTitle')}</h1>
-          <p className="rpt-hero-sub">
-            {t('reports.heroSubtitle', { project: project.name })}
-          </p>
-        </section>
-
+      <div className="rpt-page page-container">
         {loading ? (
           <div className="rpt-loader">
             <Spinner size={22} />

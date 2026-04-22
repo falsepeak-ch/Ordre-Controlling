@@ -1,10 +1,5 @@
 .po-form-page {
-  padding: var(--s-8);
-  max-width: 1280px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-7);
+  /* Layout handled by .page-container */
 }
 .po-form-loader { display: grid; place-items: center; padding: var(--s-section) 0; }
 
@@ -144,5 +139,4 @@
   .po-form-line-head { display: none; }
   .po-form-line input.text-right { text-align: left; }
   .po-form-line-subtotal { text-align: left; }
-  .po-form-page { padding: var(--s-5); }
 }

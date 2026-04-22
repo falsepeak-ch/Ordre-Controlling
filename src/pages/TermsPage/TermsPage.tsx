@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { SEOHead } from '~/components/SEOHead';
+import '~/theme/page-layout.css';
 import './LegalPage.css';
 
 export function TermsPage() {
@@ -12,7 +13,7 @@ export function TermsPage() {
         description={t('terms.metaDescription')}
         canonical="https://ordre.app/terms"
       />
-      <article className="legal-page">
+      <article className="legal-page page-container page-container--compact">
         <header className="legal-head">
           <span className="eyebrow">{t('terms.eyebrow')}</span>
           <h1 className="display-xl">{t('terms.title')}</h1>

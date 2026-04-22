@@ -141,7 +141,7 @@ export type POStatus = 'draft' | 'pending_approval' | 'approved' | 'rejected' | 
  * `partially_approved` — both are computed at render time. See
  * `displayPOStatus`.
  */
-export type DisplayPOStatus = POStatus | 'partially_invoiced' | 'partially_approved';
+export type DisplayPOStatus = POStatus | 'partially_invoiced' | 'partially_approved' | 'paid';
 
 /**
  * An append-only approval log entry. Created when an approver records

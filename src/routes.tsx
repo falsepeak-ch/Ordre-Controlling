@@ -1,44 +1,50 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { PublicLayout } from '~/components/layout/PublicLayout';
 import { ProjectShell } from '~/components/layout/ProjectShell';
 import { RequireAuth } from '~/components/RequireAuth';
-import { LandingPage } from '~/pages/LandingPage';
-import { LoginPage } from '~/pages/LoginPage';
-import { SignupPage } from '~/pages/SignupPage';
-import { ProjectsListPage } from '~/pages/ProjectsListPage';
-import { DashboardPage } from '~/pages/DashboardPage';
-import { MembersPage } from '~/pages/MembersPage';
-import { SuppliersPage } from '~/pages/SuppliersPage';
-import { PurchaseOrdersPage } from '~/pages/PurchaseOrdersPage';
-import { PODetailPage } from '~/pages/PODetailPage';
-import { POFormPage } from '~/pages/POFormPage';
-import { ApprovalsQueuePage } from '~/pages/ApprovalsQueuePage';
-import { CategoriesPage } from '~/pages/CategoriesPage';
-import { ProjectSettingsPage } from '~/pages/ProjectSettingsPage';
-import { InvoicesPage } from '~/pages/InvoicesPage';
-import { ReportsPage } from '~/pages/ReportsPage';
 import { NotFoundPage } from '~/pages/NotFoundPage';
 import { ErrorPage } from '~/pages/ErrorPage';
-import { TermsPage } from '~/pages/TermsPage';
-import { PrivacyPage } from '~/pages/PrivacyPage';
+
+const LandingPage = lazy(() => import('~/pages/LandingPage').then(m => ({ default: m.LandingPage })));
+const LoginPage = lazy(() => import('~/pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const SignupPage = lazy(() => import('~/pages/SignupPage').then(m => ({ default: m.SignupPage })));
+const TermsPage = lazy(() => import('~/pages/TermsPage').then(m => ({ default: m.TermsPage })));
+const PrivacyPage = lazy(() => import('~/pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
+const ProjectsListPage = lazy(() => import('~/pages/ProjectsListPage').then(m => ({ default: m.ProjectsListPage })));
+const DashboardPage = lazy(() => import('~/pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const MembersPage = lazy(() => import('~/pages/MembersPage').then(m => ({ default: m.MembersPage })));
+const SuppliersPage = lazy(() => import('~/pages/SuppliersPage').then(m => ({ default: m.SuppliersPage })));
+const CategoriesPage = lazy(() => import('~/pages/CategoriesPage').then(m => ({ default: m.CategoriesPage })));
+const ApprovalsQueuePage = lazy(() => import('~/pages/ApprovalsQueuePage').then(m => ({ default: m.ApprovalsQueuePage })));
+const ProjectSettingsPage = lazy(() => import('~/pages/ProjectSettingsPage').then(m => ({ default: m.ProjectSettingsPage })));
+const InvoicesPage = lazy(() => import('~/pages/InvoicesPage').then(m => ({ default: m.InvoicesPage })));
+const ReportsPage = lazy(() => import('~/pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
+const PurchaseOrdersPage = lazy(() => import('~/pages/PurchaseOrdersPage').then(m => ({ default: m.PurchaseOrdersPage })));
+const PODetailPage = lazy(() => import('~/pages/PODetailPage').then(m => ({ default: m.PODetailPage })));
+const POFormPage = lazy(() => import('~/pages/POFormPage').then(m => ({ default: m.POFormPage })));
+
+const Page = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={null}>{children}</Suspense>
+);
 
 export const router = createBrowserRouter([
   {
     element: <PublicLayout />,
     errorElement: <ErrorPage />,
     children: [
-      { path: '/', element: <LandingPage /> },
-      { path: '/login', element: <LoginPage /> },
-      { path: '/signup', element: <SignupPage /> },
-      { path: '/terms', element: <TermsPage /> },
-      { path: '/privacy', element: <PrivacyPage /> },
+      { path: '/', element: <Page><LandingPage /></Page> },
+      { path: '/login', element: <Page><LoginPage /></Page> },
+      { path: '/signup', element: <Page><SignupPage /></Page> },
+      { path: '/terms', element: <Page><TermsPage /></Page> },
+      { path: '/privacy', element: <Page><PrivacyPage /></Page> },
     ],
   },
   {
     path: '/app',
     element: (
       <RequireAuth>
-        <ProjectsListPage />
+        <Page><ProjectsListPage /></Page>
       </RequireAuth>
     ),
     errorElement: <ErrorPage />,
@@ -52,18 +58,18 @@ export const router = createBrowserRouter([
     ),
     errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <DashboardPage /> },
-      { path: 'members', element: <MembersPage /> },
-      { path: 'suppliers', element: <SuppliersPage /> },
-      { path: 'categories', element: <CategoriesPage /> },
-      { path: 'approvals', element: <ApprovalsQueuePage /> },
-      { path: 'settings', element: <ProjectSettingsPage /> },
-      { path: 'invoices', element: <InvoicesPage /> },
-      { path: 'reports', element: <ReportsPage /> },
-      { path: 'purchase-orders', element: <PurchaseOrdersPage /> },
-      { path: 'purchase-orders/new', element: <POFormPage /> },
-      { path: 'purchase-orders/:poId', element: <PODetailPage /> },
-      { path: 'purchase-orders/:poId/edit', element: <POFormPage /> },
+      { index: true, element: <Page><DashboardPage /></Page> },
+      { path: 'members', element: <Page><MembersPage /></Page> },
+      { path: 'suppliers', element: <Page><SuppliersPage /></Page> },
+      { path: 'categories', element: <Page><CategoriesPage /></Page> },
+      { path: 'approvals', element: <Page><ApprovalsQueuePage /></Page> },
+      { path: 'settings', element: <Page><ProjectSettingsPage /></Page> },
+      { path: 'invoices', element: <Page><InvoicesPage /></Page> },
+      { path: 'reports', element: <Page><ReportsPage /></Page> },
+      { path: 'purchase-orders', element: <Page><PurchaseOrdersPage /></Page> },
+      { path: 'purchase-orders/new', element: <Page><POFormPage /></Page> },
+      { path: 'purchase-orders/:poId', element: <Page><PODetailPage /></Page> },
+      { path: 'purchase-orders/:poId/edit', element: <Page><POFormPage /></Page> },
       { path: '*', element: <Navigate to="." replace /> },
     ],
   },

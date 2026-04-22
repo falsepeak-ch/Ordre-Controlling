@@ -45,13 +45,7 @@
 
 .projects-main {
   flex: 1;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: var(--s-section) var(--s-8);
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-8);
+  /* Layout handled by .page-container; keep flex: 1 for layout */
 }
 
 .projects-hero {
@@ -247,7 +241,6 @@
 @media (max-width: 720px) {
   .projects-topbar { padding: var(--s-4); }
   .projects-user-name { display: none; }
-  .projects-main { padding: var(--s-7) var(--s-4); }
   .projects-hero { flex-direction: column; align-items: flex-start; }
   .projects-grid { grid-template-columns: 1fr; }
 }

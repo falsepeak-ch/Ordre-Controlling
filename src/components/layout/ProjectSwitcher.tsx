@@ -88,14 +88,16 @@ export function ProjectSwitcher({ current }: ProjectSwitcherProps) {
                   >
                     <span className="project-switcher-option-monogram">{p.initial}</span>
                     <span className="project-switcher-option-text">
-                      <span className="project-switcher-option-name">{p.name}</span>
+                      <span className="project-switcher-option-name-row">
+                        <span className="project-switcher-option-name">{p.name}</span>
+                        {isCurrent ? (
+                          <span className="project-switcher-check">
+                            <Icon name="check" size={13} />
+                          </span>
+                        ) : null}
+                      </span>
                       <RolePill role={role} size="sm" />
                     </span>
-                    {isCurrent ? (
-                      <span className="project-switcher-check">
-                        <Icon name="check" size={13} />
-                      </span>
-                    ) : null}
                   </Link>
                 </li>
               );

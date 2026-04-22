@@ -39,7 +39,7 @@ export function ErrorPage() {
           maxWidth: 440,
         }}
       >
-        <Logo size="lg" />
+        <Logo variant="stacked" size="lg" />
         <h1 className="display-xl" style={{ margin: '16px 0 4px' }}>{title}</h1>
         <p className="muted" style={{ fontSize: 15 }}>{body}</p>
         {detail ? (

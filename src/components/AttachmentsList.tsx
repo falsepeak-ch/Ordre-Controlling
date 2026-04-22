@@ -3,7 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '~/components/ui/Icon';
 import { Button } from '~/components/ui/Button';
 import { Spinner } from '~/components/ui/Spinner';
+import { ImageViewer } from '~/components/ui/ImageViewer';
 import './AttachmentsList.css';
+
+function isViewable(fileName?: string, url?: string | null): boolean {
+  return /\.(jpe?g|png|gif|webp|svg|avif|heic|pdf)$/i.test(fileName ?? url ?? '');
+}
 
 export interface AttachmentItem {
   id?: string;
@@ -49,6 +54,7 @@ export function AttachmentsList({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [sizeError, setSizeError] = useState<string | null>(null);
+  const [viewer, setViewer] = useState<{ url: string; name: string } | null>(null);
 
   function pick() {
     inputRef.current?.click();
@@ -120,21 +126,37 @@ export function AttachmentsList({
             const url = item.fileUrl ?? item.url ?? null;
             return (
               <li key={item.id ?? name} className="att-item">
-                <a
-                  className="att-item-doc"
-                  href={url ?? undefined}
-                  target={url ? '_blank' : undefined}
-                  rel={url ? 'noopener noreferrer' : undefined}
-                  aria-disabled={!url}
-                >
-                  <Icon name="file-earmark-text-fill" size={16} />
-                </a>
+                {url && isViewable(name, url) ? (
+                  <button
+                    type="button"
+                    className="att-item-doc"
+                    onClick={() => setViewer({ url, name })}
+                  >
+                    <Icon name="file-earmark-text-fill" size={16} />
+                  </button>
+                ) : (
+                  <a
+                    className="att-item-doc"
+                    href={url ?? undefined}
+                    target={url ? '_blank' : undefined}
+                    rel={url ? 'noopener noreferrer' : undefined}
+                    aria-disabled={!url}
+                  >
+                    <Icon name="file-earmark-text-fill" size={16} />
+                  </a>
+                )}
                 <div className="att-item-main">
                   <span className="att-item-name">
                     {url ? (
-                      <a href={url} target="_blank" rel="noopener noreferrer">
-                        {name}
-                      </a>
+                      isViewable(name, url) ? (
+                        <button type="button" className="att-item-link" onClick={() => setViewer({ url, name })}>
+                          {name}
+                        </button>
+                      ) : (
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          {name}
+                        </a>
+                      )
                     ) : (
                       name
                     )}
@@ -165,6 +187,7 @@ export function AttachmentsList({
           })}
         </ul>
       )}
+      <ImageViewer url={viewer?.url ?? null} fileName={viewer?.name} onClose={() => setViewer(null)} />
     </div>
   );
 }

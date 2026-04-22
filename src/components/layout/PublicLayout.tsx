@@ -16,7 +16,7 @@ export function PublicLayout() {
     <div className="public-shell">
       <header className="public-nav">
         <Link to="/" className="public-nav-brand" aria-label="Ordre">
-          <Logo size="md" />
+          <Logo variant="wordmark" size="md" />
         </Link>
         <nav className="public-nav-actions">
           <LocaleToggle />
@@ -34,7 +34,7 @@ export function PublicLayout() {
 
       <footer className="public-footer">
         <div className="public-footer-inner">
-          <Logo size="sm" />
+          <Logo variant="mark" size="sm" />
           <span className="public-footer-copy">{t('landing.footerCopy', { year })}</span>
           <span className="public-footer-note">{t('landing.footerNote')}</span>
           <div className="public-footer-spacer" />
