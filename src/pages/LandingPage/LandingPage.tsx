@@ -342,7 +342,7 @@ function ApprovalsMockCard() {
           <h4 className="landing-showcase-card-title">{t('landing.showcase.mockTitle')}</h4>
           <p className="landing-showcase-card-sub">{t('landing.showcase.mockSubtitle')}</p>
         </div>
-        <Pill status="pending">3</Pill>
+        <Pill status="pending_approval">3</Pill>
       </header>
       <ul className="landing-showcase-card-list">
         {rows.map((r, i) => (
