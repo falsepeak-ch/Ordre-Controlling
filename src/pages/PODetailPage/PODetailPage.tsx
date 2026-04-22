@@ -463,6 +463,7 @@ export function PODetailPage() {
               />
             </div>
 
+            {po.status !== 'draft' ? (
             <div className="po-block">
               <div className="po-block-head">
                 <h3 className="display-sm mb-0">{t('poDetail.invoicesTitle')}</h3>
@@ -602,6 +603,7 @@ export function PODetailPage() {
                 </ul>
               )}
             </div>
+            ) : null}
           </div>
 
           <aside className="po-split-aside">
