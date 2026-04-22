@@ -326,7 +326,15 @@
     "roleLabel": "Role",
     "addCta": "Add to project",
     "adding": "Adding…",
-    "emailNotFound": "This person doesn't have an Ordre account yet. Ask them to sign in with Google first.",
+    "errors": {
+      "userNotFound": "This person doesn't have an Ordre account yet. Ask them to sign in with Google first.",
+      "alreadyMember": "{{name}} is already a member of this project.",
+      "targetProjectLimit": "{{name}} is already an owner or editor of another project. Free plan accounts can only own or edit one project. Add them as Viewer or Approver instead, or ask them to upgrade to Pro.",
+      "permissionDenied": "You don't have permission to make this change.",
+      "generic": "Couldn't add the member. Please try again.",
+      "roleChangeFailed": "Couldn't update the role. Please try again.",
+      "removeFailed": "Couldn't remove the member. Please try again."
+    },
     "addedToast": "{{name}} is now {{role}}",
     "removedToast": "{{name}} left the project",
     "roleChangedToast": "{{name}} is now {{role}}",

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Topbar } from '~/components/layout/Topbar';
 import { Card } from '~/components/ui/Card';
 import { Icon } from '~/components/ui/Icon';
@@ -11,13 +12,41 @@ import { useCurrentProject } from '~/hooks/useCurrentProject';
 import { useAuth } from '~/hooks/useAuth';
 import { useToast } from '~/hooks/useToast';
 import { useConfirm } from '~/hooks/useConfirm';
-import { addMemberByEmail, removeMember, updateMemberRole } from '~/lib/projects';
+import {
+  addMemberByEmail,
+  removeMember,
+  updateMemberRole,
+  MemberMutationError,
+} from '~/lib/projects';
 import { canManage } from '~/lib/roles';
 import type { Role } from '~/types';
 import '~/theme/page-layout.css';
 import './MembersPage.css';
 
 const ROLE_ORDER: Role[] = ['owner', 'editor', 'approver', 'viewer'];
+
+function memberErrorMessage(
+  err: unknown,
+  t: TFunction,
+  fallbackKey: 'generic' | 'roleChangeFailed',
+  targetName?: string,
+): string {
+  if (err instanceof MemberMutationError) {
+    switch (err.code) {
+      case 'user-not-found':
+        return t('members.errors.userNotFound');
+      case 'already-member':
+        return t('members.errors.alreadyMember', { name: targetName ?? '' });
+      case 'target-project-limit':
+        return t('members.errors.targetProjectLimit', { name: targetName ?? '' });
+      case 'permission-denied':
+        return t('members.errors.permissionDenied');
+      default:
+        return t(`members.errors.${fallbackKey}`);
+    }
+  }
+  return t(`members.errors.${fallbackKey}`);
+}
 
 export function MembersPage() {
   const { t } = useTranslation();
@@ -29,7 +58,6 @@ export function MembersPage() {
   const [email, setEmail] = useState('');
   const [newRole, setNewRole] = useState<Role>('editor');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const members = useMemo(() => {
     const entries = Object.entries(project.members);
@@ -52,25 +80,25 @@ export function MembersPage() {
 
   async function handleAdd(e?: React.FormEvent) {
     e?.preventDefault();
-    if (!email.trim()) return;
+    const normalized = email.trim();
+    if (!normalized) return;
     setBusy(true);
-    setError(null);
     try {
-      await addMemberByEmail(project.id, email, newRole);
+      await addMemberByEmail(project.id, normalized, newRole);
       push({
         message: t('members.addedToast', {
-          name: email,
+          name: normalized,
           role: t(`projects.roles.${newRole}`),
         }),
         icon: 'check-circle-fill',
       });
       setEmail('');
     } catch (err) {
-      if ((err as Error).message === 'user-not-found') {
-        setError(t('members.emailNotFound'));
-      } else {
-        setError(t('signup.error'));
-      }
+      push({
+        message: memberErrorMessage(err, t, 'generic', normalized),
+        icon: 'x-circle-fill',
+        tone: 'error',
+      });
     } finally {
       setBusy(false);
     }
@@ -83,8 +111,12 @@ export function MembersPage() {
         message: t('members.roleChangedToast', { name, role: t(`projects.roles.${newR}`) }),
         icon: 'check-circle-fill',
       });
-    } catch {
-      push({ message: t('signup.error'), icon: 'x-circle-fill', tone: 'error' });
+    } catch (err) {
+      push({
+        message: memberErrorMessage(err, t, 'roleChangeFailed', name),
+        icon: 'x-circle-fill',
+        tone: 'error',
+      });
     }
   }
 
@@ -98,7 +130,11 @@ export function MembersPage() {
       await removeMember(project.id, uid);
       push({ message: t('members.removedToast', { name }), icon: 'check-circle-fill' });
     } catch {
-      push({ message: t('signup.error'), icon: 'x-circle-fill', tone: 'error' });
+      push({
+        message: t('members.errors.removeFailed'),
+        icon: 'x-circle-fill',
+        tone: 'error',
+      });
     }
   }
 
@@ -127,17 +163,14 @@ export function MembersPage() {
               </div>
 
               <form className="members-add-form" onSubmit={handleAdd}>
-                <Field label={t('members.emailLabel')} error={error ?? undefined}>
+                <Field label={t('members.emailLabel')}>
                   <Input
                     type="email"
                     inputMode="email"
                     autoComplete="off"
                     placeholder={t('members.emailPlaceholder')}
                     value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setError(null);
-                    }}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </Field>
 

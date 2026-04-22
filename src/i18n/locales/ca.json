@@ -326,7 +326,15 @@
     "roleLabel": "Rol",
     "addCta": "Afegeix al projecte",
     "adding": "Afegint…",
-    "emailNotFound": "Aquesta persona encara no té compte a Ordre. Demana-li que entri amb Google i torna-ho a provar.",
+    "errors": {
+      "userNotFound": "Aquesta persona encara no té compte a Ordre. Demana-li que entri amb Google i torna-ho a provar.",
+      "alreadyMember": "{{name}} ja és membre d'aquest projecte.",
+      "targetProjectLimit": "{{name}} ja és propietari o editor d'un altre projecte. Al pla gratuït només es pot ser propietari o editor d'un projecte. Pots afegir-la com a Lector o Aprovador, o demana-li que passi a Pro.",
+      "permissionDenied": "No tens permís per fer aquest canvi.",
+      "generic": "No s'ha pogut afegir el membre. Torna-ho a provar.",
+      "roleChangeFailed": "No s'ha pogut actualitzar el rol. Torna-ho a provar.",
+      "removeFailed": "No s'ha pogut treure el membre. Torna-ho a provar."
+    },
     "addedToast": "{{name}} ara és {{role}}",
     "removedToast": "{{name}} ha deixat el projecte",
     "roleChangedToast": "{{name}} ara és {{role}}",

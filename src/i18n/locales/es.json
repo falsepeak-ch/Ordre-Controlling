@@ -326,7 +326,15 @@
     "roleLabel": "Rol",
     "addCta": "Añadir al proyecto",
     "adding": "Añadiendo…",
-    "emailNotFound": "Esa persona aún no tiene cuenta en Ordre. Pídele que entre con Google y prueba otra vez.",
+    "errors": {
+      "userNotFound": "Esa persona aún no tiene cuenta en Ordre. Pídele que entre con Google y prueba otra vez.",
+      "alreadyMember": "{{name}} ya es miembro de este proyecto.",
+      "targetProjectLimit": "{{name}} ya es propietario o editor de otro proyecto. En el plan gratuito solo puedes ser propietario o editor de un proyecto. Puedes añadirla como Lector o Aprobador, o pídele que pase a Pro.",
+      "permissionDenied": "No tienes permiso para hacer este cambio.",
+      "generic": "No se ha podido añadir el miembro. Inténtalo de nuevo.",
+      "roleChangeFailed": "No se ha podido actualizar el rol. Inténtalo de nuevo.",
+      "removeFailed": "No se ha podido quitar al miembro. Inténtalo de nuevo."
+    },
     "addedToast": "{{name}} ahora es {{role}}",
     "removedToast": "{{name}} ha dejado el proyecto",
     "roleChangedToast": "{{name}} ahora es {{role}}",

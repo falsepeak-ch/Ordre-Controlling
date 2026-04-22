@@ -8,4 +8,6 @@ setGlobalOptions({ region: 'europe-west1', maxInstances: 10 });
 
 export { sendProjectInvite } from './sendProjectInvite';
 export { createProject } from './createProject';
+export { addProjectMember } from './addProjectMember';
+export { setMemberRole } from './setMemberRole';
 export { onStorageObjectFinalized, onStorageObjectDeleted } from './storageQuota';

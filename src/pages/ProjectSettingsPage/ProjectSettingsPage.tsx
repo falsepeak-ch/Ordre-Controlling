@@ -20,6 +20,7 @@ import {
   transferOwnership,
   unarchiveProject,
   updateProjectMeta,
+  MemberMutationError,
   type ProjectContentsCheck,
 } from '~/lib/projects';
 import '~/theme/page-layout.css';
@@ -253,9 +254,13 @@ function OwnershipSection({ uid }: { uid: string | undefined }) {
         icon: 'check-circle-fill',
       });
       setTarget('');
-    } catch {
+    } catch (err) {
+      const message =
+        err instanceof MemberMutationError && err.code === 'target-project-limit'
+          ? t('members.errors.targetProjectLimit', { name })
+          : t('projectSettings.deleteError');
       push({
-        message: t('projectSettings.deleteError'),
+        message,
         icon: 'x-circle-fill',
         tone: 'error',
       });

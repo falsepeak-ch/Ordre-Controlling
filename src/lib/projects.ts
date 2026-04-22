@@ -9,13 +9,12 @@ import {
   serverTimestamp,
   updateDoc,
   where,
-  writeBatch,
   type Unsubscribe,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import i18next from 'i18next';
 import { db, functions } from './firebase';
-import { findUserByEmail, projectDoc, projectsCol } from './firestore';
+import { projectDoc, projectsCol } from './firestore';
 import type { Project, Role } from '~/types';
 
 type InviteLocale = 'ca' | 'es' | 'en';
@@ -46,12 +45,80 @@ const createProjectCallable = httpsCallable<CreateProjectPayload, { projectId: s
   'createProject',
 );
 
+interface AddProjectMemberPayload {
+  projectId: string;
+  email: string;
+  role: Role;
+}
+
+const addProjectMemberCallable = httpsCallable<AddProjectMemberPayload, { ok: true; uid: string }>(
+  functions,
+  'addProjectMember',
+);
+
+interface SetMemberRolePayload {
+  projectId: string;
+  uid: string;
+  role: Role;
+  demote?: { uid: string; role: Role };
+}
+
+const setMemberRoleCallable = httpsCallable<SetMemberRolePayload, { ok: true }>(
+  functions,
+  'setMemberRole',
+);
+
 /** Thrown when the free-tier project limit blocks creation. */
 export class ProjectLimitReachedError extends Error {
   constructor() {
     super('project-limit-reached');
     this.name = 'ProjectLimitReachedError';
   }
+}
+
+export type MemberMutationErrorCode =
+  | 'user-not-found'
+  | 'already-member'
+  | 'target-project-limit'
+  | 'permission-denied'
+  | 'unknown';
+
+/**
+ * Typed error surface for add / promote / transfer flows. The UI
+ * maps `code` to a localised toast — any unmapped code falls back
+ * to the generic copy.
+ */
+export class MemberMutationError extends Error {
+  readonly code: MemberMutationErrorCode;
+  constructor(code: MemberMutationErrorCode) {
+    super(code);
+    this.name = 'MemberMutationError';
+    this.code = code;
+  }
+}
+
+function toMemberMutationError(err: unknown): MemberMutationError {
+  const asFns = err as {
+    code?: string;
+    details?: { code?: MemberMutationErrorCode };
+  };
+  const detail = asFns?.details?.code;
+  if (
+    detail === 'user-not-found' ||
+    detail === 'already-member' ||
+    detail === 'target-project-limit'
+  ) {
+    return new MemberMutationError(detail);
+  }
+  if (asFns?.code === 'functions/permission-denied') {
+    return new MemberMutationError('permission-denied');
+  }
+  if (asFns?.code === 'functions/not-found' && !detail) {
+    // The callables only throw bare `not-found` for things like missing
+    // project doc, which shouldn't happen in normal flows.
+    return new MemberMutationError('unknown');
+  }
+  return new MemberMutationError('unknown');
 }
 
 function currentInviteLocale(): InviteLocale {
@@ -130,19 +197,11 @@ export async function addMemberByEmail(
   role: Role = 'editor',
 ): Promise<void> {
   const normalized = email.toLowerCase().trim();
-  const user = await findUserByEmail(normalized);
-  if (!user) {
-    throw new Error('user-not-found');
+  try {
+    await addProjectMemberCallable({ projectId, email: normalized, role });
+  } catch (err) {
+    throw toMemberMutationError(err);
   }
-  await updateDoc(projectDoc(projectId), {
-    [`members.${user.uid}`]: role,
-    [`memberEmails.${user.uid}`]: normalized,
-    [`memberProfiles.${user.uid}`]: {
-      displayName: user.displayName,
-      email: normalized,
-      photoURL: user.photoURL ?? null,
-    },
-  });
 
   // Fire-and-forget invite email. A failure here should never block the
   // role write — the member already has access; the email is a courtesy.
@@ -151,7 +210,6 @@ export async function addMemberByEmail(
       projectId,
       email: normalized,
       role,
-      recipientName: user.displayName,
       locale: currentInviteLocale(),
     });
   } catch (err) {
@@ -164,7 +222,11 @@ export async function updateMemberRole(
   uid: string,
   role: Role,
 ): Promise<void> {
-  await updateDoc(projectDoc(projectId), { [`members.${uid}`]: role });
+  try {
+    await setMemberRoleCallable({ projectId, uid, role });
+  } catch (err) {
+    throw toMemberMutationError(err);
+  }
 }
 
 export async function removeMember(projectId: string, uid: string): Promise<void> {
@@ -228,8 +290,9 @@ export async function unarchiveProject(projectId: string): Promise<void> {
 
 /**
  * Hand the `owner` role to another member. The previous owner is
- * demoted to `editor` in the same batched write so the project never
- * ends up ownerless.
+ * demoted to `editor` in the same server-side write so the project
+ * never ends up ownerless and the pro-tier limit is re-checked on
+ * the new owner.
  */
 export async function transferOwnership(
   projectId: string,
@@ -238,12 +301,16 @@ export async function transferOwnership(
 ): Promise<void> {
   if (fromUid === toUid) return;
   if (!toUid) throw new Error('target-required');
-  const batch = writeBatch(db);
-  batch.update(projectDoc(projectId), {
-    [`members.${toUid}`]: 'owner',
-    [`members.${fromUid}`]: 'editor',
-  });
-  await batch.commit();
+  try {
+    await setMemberRoleCallable({
+      projectId,
+      uid: toUid,
+      role: 'owner',
+      demote: { uid: fromUid, role: 'editor' },
+    });
+  } catch (err) {
+    throw toMemberMutationError(err);
+  }
 }
 
 export interface ProjectContentsCheck {
